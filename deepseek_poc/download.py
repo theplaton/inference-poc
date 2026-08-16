@@ -14,11 +14,10 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from envfile import load_env  # noqa: E402
 from prepare_model import ALLOW_PATTERNS, prepare_model  # noqa: E402
 
 logger = logging.getLogger("deepseek_poc.download")
-
-DEFAULT_MODEL_ID = "deepseek-ai/DeepSeek-V4-Pro-0813"
 
 # Custom modelling code for --trust-remote-code, on top of the usual weights.
 V4_PRO_PATTERNS = [*ALLOW_PATTERNS, "*.py"]
@@ -28,7 +27,12 @@ def main() -> int:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
     logging.getLogger("httpx").setLevel(logging.WARNING)
 
-    model_id = os.environ.get("MODEL_ID") or DEFAULT_MODEL_ID
+    load_env()
+    model_id = os.environ.get("MODEL_ID")
+    if not model_id:
+        logger.error("MODEL_ID is not set -- run 'cp .env.example .env' in the repo root")
+        return 1
+
     logger.info("Fetching %s (this is ~893 GB)", model_id)
 
     path = prepare_model(model_id, allow_patterns=V4_PRO_PATTERNS)

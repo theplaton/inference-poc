@@ -9,6 +9,7 @@ set -euo pipefail
 RECIPE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=recipe.env
 source "$RECIPE_DIR/recipe.env"
+: "${MODEL_ID:?not set -- run 'cp .env.example .env' in the repo root and edit it}"
 
 NUM_PROMPTS="${1:-32}"
 CONCURRENCY="${2:-8}"

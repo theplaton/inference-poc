@@ -56,9 +56,27 @@ check_gpus() {
   fi
 }
 
+check_shm() {
+  # vLLM's multiproc executor puts its RPC ring buffers in POSIX shared memory:
+  # one broadcast queue (~160 MiB) plus a 240 MiB response queue per worker. The
+  # 64 MiB that containers get by default dies at engine init, ~40 s in.
+  local required_mib avail_mib
+  required_mib=$((160 + 240 * GPU_COUNT))
+  avail_mib=$(($(df -Pk /dev/shm | awk 'NR==2 {print $4}') / 1024))
+
+  if [ "$avail_mib" -lt "$required_mib" ]; then
+    fail "/dev/shm has ${avail_mib} MiB, need >= ${required_mib} MiB for ${GPU_COUNT} workers -- remount it or add --shm-size / --ipc=host (k8s: an emptyDir with medium: Memory at /dev/shm)"
+  elif [ "$avail_mib" -lt $((required_mib * 2)) ]; then
+    warn "/dev/shm has ${avail_mib} MiB, just over the ${required_mib} MiB floor -- NCCL and torch also draw on it"
+  else
+    pass "/dev/shm has $((avail_mib / 1024)) GiB (need ~$((required_mib / 1024)) GiB)"
+  fi
+}
+
 check_disk() {
   local cache avail_gb
-  cache="${HF_HOME:-$HOME/.cache/huggingface}"
+  cache="${HF_HUB_CACHE:-${HF_HOME:+$HF_HOME/hub}}"
+  cache="${cache:-$HOME/.cache/huggingface}"
   # Walk up to the nearest existing parent; the cache dir may not exist yet.
   while [ ! -d "$cache" ] && [ "$cache" != "/" ]; do cache="$(dirname "$cache")"; done
 
@@ -109,6 +127,7 @@ check_context() {
 
 printf 'Preflight: DeepSeek-V4-Pro on %sx H200 (strategy=%s)\n' "$GPU_COUNT" "$STRATEGY"
 check_gpus
+check_shm
 check_disk
 check_vllm
 check_context

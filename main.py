@@ -4,6 +4,7 @@ import logging
 import os
 import sys
 
+from envfile import load_env
 from prepare_model import prepare_model
 
 logger = logging.getLogger("main")
@@ -20,9 +21,11 @@ def main() -> int:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
     logging.getLogger("httpx").setLevel(logging.WARNING)
 
+    load_env()
     model_id = os.environ.get("MODEL_ID")
     if not model_id:
-        logger.error("MODEL_ID is not set. Example: MODEL_ID=Qwen/Qwen2.5-0.5B-Instruct")
+        logger.error("MODEL_ID is not set. Run 'cp .env.example .env', or inline: "
+                     "MODEL_ID=Qwen/Qwen2.5-0.5B-Instruct python main.py")
         return 1
 
     return run_inference(model_id)

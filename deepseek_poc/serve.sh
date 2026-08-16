@@ -11,6 +11,7 @@ set -euo pipefail
 RECIPE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=recipe.env
 source "$RECIPE_DIR/recipe.env"
+: "${MODEL_ID:?not set -- run 'cp .env.example .env' in the repo root and edit it}"
 
 RUNTIME=native
 DRY_RUN=0
@@ -70,17 +71,7 @@ SERVE_ARGS=(
   --port "$PORT"
 )
 
-if [ "$RUNTIME" = "docker" ]; then
-  CMD=(
-    docker run --gpus all --privileged --ipc=host
-    -p "$PORT:$PORT"
-    -v "${HF_HOME:-$HOME/.cache/huggingface}:/root/.cache/huggingface"
-    "$VLLM_DOCKER_IMAGE"
-    "${SERVE_ARGS[@]}"
-  )
-else
-  CMD=(vllm serve "${SERVE_ARGS[@]}")
-fi
+CMD=(vllm serve "${SERVE_ARGS[@]}")
 
 printf 'Launching (%s, %s):\n\n' "$RUNTIME" "$STRATEGY"
 printf '%q ' "${CMD[@]}"

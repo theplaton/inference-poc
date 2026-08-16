@@ -14,6 +14,10 @@ import time
 
 from openai import OpenAI
 
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from envfile import load_env  # noqa: E402
+
 # DeepSeek's recommendation for the 0813 release: temperature 1.0 always,
 # top_p 0.95 for agentic work and 1.0 otherwise.
 TEMPERATURE = 1.0
@@ -60,11 +64,16 @@ def run_mode(client: OpenAI, model: str, name: str, extra_body: dict | None) -> 
 
 
 def main() -> int:
+    load_env()  # before the parser, so MODEL_ID can supply the --model default
+
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--all", action="store_true", help="include Think Max")
     parser.add_argument("--base-url", default=os.environ.get("BASE_URL", "http://localhost:8000/v1"))
-    parser.add_argument("--model", default=os.environ.get("MODEL_ID", "deepseek-ai/DeepSeek-V4-Pro-0813"))
+    parser.add_argument("--model", default=os.environ.get("MODEL_ID"))
     args = parser.parse_args()
+
+    if not args.model:
+        parser.error("no model: set MODEL_ID in .env (cp .env.example .env) or pass --model")
 
     client = OpenAI(base_url=args.base_url, api_key="EMPTY")
     print(f"Server: {args.base_url}\nModel:  {args.model}\n")

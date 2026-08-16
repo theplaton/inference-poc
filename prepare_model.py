@@ -84,6 +84,9 @@ def prepare_model(
 
 
 if __name__ == "__main__":
+    from envfile import load_env
+
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
     logging.getLogger("httpx").setLevel(logging.WARNING)
+    load_env()
     print(prepare_model())
