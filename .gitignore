@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+
+# Model weights: repo-local HF hub cache (many GB).
+.hf-cache/
