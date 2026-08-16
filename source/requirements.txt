@@ -1,0 +1,16 @@
+# Serving stack for the DeepSeek-V4-Pro recipe. Installed by install.sh with
+# `uv pip install --torch-backend auto`, which resolves the CUDA wheel matching
+# the driver -- so torch is deliberately not pinned here.
+
+# The recipe's hard floor: the fused 0813 checkpoint needs the DSpark draft
+# module. recipe.env parses this exact line for MIN_VLLM_VERSION, which is what
+# preflight.sh checks the installed vllm against -- keep the `vllm>=X.Y.Z` shape.
+vllm>=0.25.0
+
+# Client for smoke_test.py and bench.sh.
+openai>=1.40.0
+
+# prepare_model.py / download.py. vLLM happens to pull huggingface_hub in
+# transitively; declaring it keeps that from being luck. hf_xet is what gives
+# the ~900 GB checkpoint its chunked, resumable transfer.
+huggingface_hub[hf_xet]>=1.0.0
