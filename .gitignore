@@ -6,3 +6,6 @@ venv/
 
 # Model weights: repo-local HF hub cache (many GB).
 .hf-cache/
+
+# Background server log from demo.sh.
+serve.log
