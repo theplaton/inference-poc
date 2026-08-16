@@ -31,10 +31,14 @@ if command -v uv >/dev/null; then
 else
   echo "==> installing uv"
   curl -LsSf https://astral.sh/uv/install.sh | sh
-  # installer drops uv in ~/.local/bin, which may not be on PATH yet
-  export PATH="$HOME/.local/bin:$PATH"
+  # The installer drops these in ~/.local/bin. Exporting PATH here would only
+  # affect this script, so expose them in a system PATH directory as well.
+  for bin in uv uvx; do
+    if [[ -x "$HOME/.local/bin/$bin" ]]; then
+      $SUDO ln -sfn "$HOME/.local/bin/$bin" "/usr/local/bin/$bin"
+    fi
+  done
   echo "==> uv installed: $(uv --version)"
-  echo "    add to PATH in your shell rc:  export PATH=\"\$HOME/.local/bin:\$PATH\""
 fi
 
 echo "==> done"

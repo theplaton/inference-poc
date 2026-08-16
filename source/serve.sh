@@ -71,7 +71,7 @@ SERVE_ARGS=(
   --port "$PORT"
 )
 
-CMD=(vllm serve "${SERVE_ARGS[@]}")
+CMD=("$VLLM_BIN" serve "${SERVE_ARGS[@]}")
 
 printf 'Launching (%s, %s):\n\n' "$RUNTIME" "$STRATEGY"
 printf '%q ' "${CMD[@]}"

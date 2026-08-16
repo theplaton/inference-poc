@@ -25,13 +25,13 @@ a serving engine.
 | --- | --- | --- |
 | `MODEL_ID` | yes | Hub repo id, e.g. `Qwen/Qwen2.5-0.5B-Instruct` |
 | `MODEL_REVISION` | no | Branch/tag/commit, defaults to `main` |
-| `HF_TOKEN` | no | Only needed for gated/private repos (Llama, Gemma, ...) |
+| `HF_TOKEN` | no | Hugging Face access token for gated/private repos |
 | `HF_HUB_CACHE` | no | Hub cache dir, overrides the repo-local default |
 | `HF_HOME` | no | Cache root; the hub cache becomes `$HF_HOME/hub` |
 | `HF_XET_HIGH_PERFORMANCE` | no | `1` for faster Xet-backed downloads |
 
 Open-weight models on the Hub are public, so no credentials are required — the
-script only calls `login()` when `HF_TOKEN` is present.
+script only authenticates when `HF_TOKEN` is populated.
 
 ## VS Code
 

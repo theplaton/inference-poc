@@ -25,7 +25,7 @@ if [ "$CONCURRENCY" -gt "$MAX_NUM_SEQS" ]; then
   echo "note: concurrency $CONCURRENCY exceeds --max-num-seqs $MAX_NUM_SEQS, requests will queue"
 fi
 
-exec vllm bench serve \
+exec "$VLLM_BIN" bench serve \
   --backend openai-chat \
   --endpoint /v1/chat/completions \
   --host localhost \

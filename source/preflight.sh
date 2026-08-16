@@ -98,13 +98,21 @@ check_vllm() {
     return
   fi
 
-  if ! command -v vllm >/dev/null 2>&1; then
-    fail "vllm not on PATH -- see install.sh"
+  if [ ! -x "$VLLM_BIN" ]; then
+    fail "vllm not installed at $VLLM_BIN -- run source/install.sh"
+    return
+  fi
+
+  if ! command -v ninja >/dev/null 2>&1; then
+    fail "ninja not found -- run source/install.sh (FlashInfer needs it for JIT warmup)"
     return
   fi
 
   local version
-  version="$(vllm --version 2>/dev/null | tr -d '[:space:]')"
+  # This file is sourced by serve.sh under `set -e`. Keep a transient failure
+  # here inside the explicit warning path instead of aborting the caller in the
+  # middle of preflight with no diagnostic.
+  version="$("$VLLM_BIN" --version 2>/dev/null | tr -d '[:space:]' || true)"
   if [ -z "$version" ]; then
     warn "could not read 'vllm --version'; need >= $MIN_VLLM_VERSION"
   elif version_ge "$version" "$MIN_VLLM_VERSION"; then

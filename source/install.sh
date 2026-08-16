@@ -13,12 +13,11 @@ source "$RECIPE_DIR/recipe.env"
 VENV="$REPO_ROOT/venv"
 
 if ! command -v uv >/dev/null 2>&1; then
-  echo "uv not found. Install it with:  curl -LsSf https://astral.sh/uv/install.sh | sh" >&2
+  echo "uv not found." >&2
   exit 1
 fi
 
 if [ -d "$VENV" ]; then
-  # Re-running should not throw away a multi-GB torch build.
   echo "Reusing $VENV"
 else
   echo "Creating $VENV"
@@ -27,10 +26,22 @@ fi
 
 # One install from requirements.txt: vllm (>= $MIN_VLLM_VERSION, the floor
 # declared there), the openai client, and -r ../requirements.txt for the Hub.
-# --torch-backend auto lets uv resolve the CUDA wheel that matches the driver.
 echo "Installing from $RECIPE_DIR/requirements.txt (vllm >= $MIN_VLLM_VERSION)"
-VIRTUAL_ENV="$VENV" uv pip install -U -r "$RECIPE_DIR/requirements.txt" --torch-backend auto
+VIRTUAL_ENV="$VENV" uv pip install -U -r "$RECIPE_DIR/requirements.txt"
 
 echo
-echo "Done. Activate with:  source $VENV/bin/activate"
+echo "Done. Project scripts use $VENV automatically; activation is not required."
+"$VENV/bin/python" - <<'PY'
+import torch
+import torchaudio
+import torchvision
+
+packages = {
+    "torch": torch.__version__,
+    "torchvision": torchvision.__version__,
+    "torchaudio": torchaudio.__version__,
+}
+print("Torch stack:", ", ".join(f"{name}={version}" for name, version in packages.items()))
+print("PyTorch CUDA:", torch.version.cuda)
+PY
 "$VENV/bin/vllm" --version

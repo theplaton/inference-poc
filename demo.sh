@@ -42,14 +42,17 @@ step() { STEP=$((STEP + 1)); printf '\n\033[1m[%d/5] %s\033[0m\n' "$STEP" "$1"; 
 
 SERVE_PID=""
 cleanup() {
-  # Always reap the server on failure or Ctrl-C; on success --keep decides.
-  if [ -n "$SERVE_PID" ] && kill -0 "$SERVE_PID" 2>/dev/null; then
-    echo "Stopping server (pid $SERVE_PID)"
-    kill "$SERVE_PID" 2>/dev/null || true
+  # Always stop the server and its workers on failure or Ctrl-C; on success
+  # --keep clears SERVE_PID and leaves them running.
+  if [ -n "$SERVE_PID" ]; then
+    "$SRC/cleanup_vllm.sh" || true
     wait "$SERVE_PID" 2>/dev/null || true
   fi
 }
 trap cleanup EXIT INT TERM
+
+echo "Clearing any vLLM processes left by an earlier run"
+"$SRC/cleanup_vllm.sh"
 
 step "Install"
 if [ "$SKIP_INSTALL" -eq 1 ]; then
@@ -105,6 +108,6 @@ fi
 printf '\n\033[1mDone.\033[0m %s on http://localhost:%s\n' "$MODEL_ID" "$PORT"
 if [ "$KEEP" -eq 1 ]; then
   SERVE_PID=""  # defuse the trap so the server outlives this script
-  echo "Server left running. Stop it with: pkill -f 'vllm serve'"
+  echo "Server left running. Stop it with: $SRC/cleanup_vllm.sh"
   echo "Logs: $SERVE_LOG"
 fi

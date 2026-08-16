@@ -10,15 +10,43 @@ node's 1128 GB. vLLM only takes 95% of that (`--gpu-memory-utilization 0.95`),
 so the real budget is ~1072 GB, leaving ~112 GB for KV cache and activations --
 about 14 GB per GPU. That margin drives every tuning decision below.
 
-## Run it
+## Major steps
+
+1. **Install the runtime — `./install.sh`.** Creates or reuses the repo-level
+   `venv/` and installs vLLM, the OpenAI client, and the Hugging Face tooling
+   from `requirements.txt`. The scripts use this environment directly, so it
+   does not need to be activated.
+
+2. **Validate the host — `./preflight.sh`.** Checks that all eight GPUs are
+   visible, the checkpoint fits in aggregate VRAM, `/dev/shm` is large enough
+   for vLLM workers, the model cache has enough free disk, and the installed
+   vLLM version supports the checkpoint. Fix failures before downloading or
+   starting the server.
+
+3. **Download the checkpoint — `python download.py`.** Fetches the roughly
+   893 GB model and its remote-code Python files into the repo-local Hugging
+   Face cache used by `serve.sh`.
+
+4. **Start inference — `./serve.sh`.** Runs the preflight checks again and then
+   launches an OpenAI-compatible vLLM server on port 8000 using the pinned H200
+   recipe. Keep this process running.
+
+5. **Verify the endpoint — `python smoke_test.py`.** From another shell, sends
+   representative non-thinking and thinking requests to the live server and
+   checks that complete responses come back.
+
+6. **Benchmark if needed — `./bench.sh`.** Optionally measures serving
+   throughput and latency after the smoke test succeeds.
+
+Run the required steps in order:
 
 ```bash
-./install.sh                              # vllm >= 0.25.0 into ./venv
-source venv/bin/activate
-./preflight.sh                            # GPUs, VRAM, disk, version
-python download.py                        # ~893 GB, go get a coffee
-./serve.sh                                # OpenAI server on :8000
-python smoke_test.py                      # in another shell
+./install.sh
+./preflight.sh
+python download.py
+./serve.sh
+# In another shell, while serve.sh is still running:
+python smoke_test.py
 ```
 
 `./serve.sh --dry-run` prints the exact command without launching, which is the
@@ -33,6 +61,7 @@ fastest way to diff against the recipe page.
 | `preflight.sh` | Fails fast on GPU count, VRAM, disk, vLLM version. |
 | `download.py` | Wraps the repo's `prepare_model()`, plus `*.py` for `--trust-remote-code`. |
 | `serve.sh` | The launch command. `--strategy`, `--docker`, `--dry-run`. |
+| `cleanup_vllm.sh` | Gracefully stops all vLLM processes, then force-stops stragglers. |
 | `smoke_test.py` | Non-think / Think High / Think Max round trips. |
 | `bench.sh` | Optional `vllm bench serve` against a live server. |
 

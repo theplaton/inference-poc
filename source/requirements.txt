@@ -1,11 +1,20 @@
-# Serving stack for the DeepSeek-V4-Pro recipe. Installed by install.sh with
-# `uv pip install --torch-backend auto`, which resolves the CUDA wheel matching
-# the driver -- so torch is deliberately not pinned here.
+# Serving stack for the DeepSeek-V4-Pro recipe on the CUDA 13.0 H200 image.
+# Keep the local `+cu130` suffixes: without them, uv can consider a cu132 wheel
+# equivalent and produce a mixed Torch/TorchAudio environment.
 
 # The recipe's hard floor: the fused 0813 checkpoint needs the DSpark draft
 # module. recipe.env parses this exact line for MIN_VLLM_VERSION, which is what
 # preflight.sh checks the installed vllm against -- keep the `vllm>=X.Y.Z` shape.
 vllm>=0.25.0
+
+# vLLM's CUDA requirements for the current release line. vLLM itself pins these
+# base versions; the local suffix additionally locks every wheel to CUDA 13.0.
+torch==2.13.0+cu130
+torchvision==0.28.0+cu130
+torchaudio==2.11.0+cu130
+
+# FlashInfer compiles SM90 kernels during vLLM warmup and invokes this binary.
+ninja>=1.11.0
 
 # Client for smoke_test.py and bench.sh.
 openai>=1.40.0

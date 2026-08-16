@@ -42,9 +42,14 @@ def hub_cache_dir() -> str:
     return str(REPO_HUB_CACHE)
 
 
-def hf_login() -> bool:
+def hub_token() -> str | None:
+    """Return the configured Hub token."""
+    return os.environ.get("HF_TOKEN") or None
+
+
+def hf_login(token: str | None = None) -> bool:
     """Log into the Hub if a token is available. Returns True when authenticated."""
-    token = os.environ.get("HF_TOKEN") or os.environ.get("HUGGING_FACE_HUB_TOKEN")
+    token = token or hub_token()
     if not token:
         logger.info("No HF_TOKEN set, continuing anonymously (public models only)")
         return False
@@ -70,7 +75,8 @@ def prepare_model(
 
     revision = revision or os.environ.get("MODEL_REVISION") or "main"
 
-    hf_login()
+    token = hub_token()
+    hf_login(token)
 
     cache_dir = hub_cache_dir()
     logger.info("Downloading %s (revision %s) into %s", model_id, revision, cache_dir)
@@ -79,6 +85,7 @@ def prepare_model(
         revision=revision,
         cache_dir=cache_dir,
         allow_patterns=allow_patterns or ALLOW_PATTERNS,
+        token=token,
     )
     logger.info("Model available at %s", path)
     return path
