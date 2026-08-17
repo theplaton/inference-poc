@@ -1,0 +1,3 @@
+results/*
+!results/.gitkeep
+!results/example-report.txt
