@@ -144,79 +144,6 @@ GPU_POLL_PID=""
 GPU_POLL_BEGAN=0
 GPU_SAMPLED_S=0
 
-# Averaging and appending in python for the same reason the sweep's CSV writer
-# is: one place builds the row, so the header and the values cannot drift apart.
-GPU_CSV_PY="$(
-  cat <<'PY'
-import csv
-import os
-import sys
-
-samples_path, csv_path = sys.argv[1:3]
-run, concurrency, isl, osl, num_prompts, sampled_s = sys.argv[3:9]
-
-# index -> [samples, temperature sum, power sum, SM util sum, memory util sum]
-totals = {}
-with open(samples_path) as f:
-    for line in f:
-        parts = [p.strip() for p in line.split(",")]
-        if len(parts) != 5:
-            continue
-        try:
-            index = int(parts[0])
-            temp, power, util, mem_util = (float(p) for p in parts[1:])
-        except ValueError:
-            continue  # "[N/A]" from a GPU that did not answer that round
-        seen = totals.setdefault(index, [0, 0.0, 0.0, 0.0, 0.0])
-        seen[0] += 1
-        seen[1] += temp
-        seen[2] += power
-        seen[3] += util
-        seen[4] += mem_util
-
-if not totals:
-    sys.exit("warning: no usable GPU samples, so no telemetry row was written")
-
-row = {
-    "run": run,
-    "concurrency": concurrency,
-    "isl": isl,
-    "osl": osl,
-    "num_prompts": num_prompts,
-    "sampled_s": sampled_s,
-    # The thinnest average in the row, so a figure from three samples is not
-    # read with the confidence of one from three hundred.
-    "samples": min(seen[0] for seen in totals.values()),
-}
-for index in sorted(totals):
-    count, temp_sum, power_sum, util_sum, mem_util_sum = totals[index]
-    row[f"GPU_{index}_avg_temp"] = round(temp_sum / count, 1)
-    row[f"GPU_{index}_avg_power"] = round(power_sum / count, 1)
-    row[f"GPU_{index}_avg_util"] = round(util_sum / count, 1)
-    row[f"GPU_{index}_avg_mem_util"] = round(mem_util_sum / count, 1)
-
-is_new = not (os.path.exists(csv_path) and os.path.getsize(csv_path) > 0)
-if not is_new:
-    with open(csv_path, newline="") as f:
-        have = next(csv.reader(f), [])
-    if have != list(row):
-        # A different GPU count, or a different CUDA_VISIBLE_DEVICES. Not worth
-        # failing a benchmark that has already produced good numbers.
-        sys.exit(
-            f"warning: {csv_path} has the columns of a different node, so this "
-            f"run's telemetry was not appended.\n  in the file: {','.join(have)}"
-            f"\n  this run writes: {','.join(row)}\nMove or delete it, or point "
-            f"GPU_TELEMETRY_CSV somewhere else."
-        )
-
-with open(csv_path, "a", newline="") as f:
-    writer = csv.DictWriter(f, fieldnames=list(row))
-    if is_new:
-        writer.writeheader()
-    writer.writerow(row)
-PY
-)"
-
 start_gpu_poll() {
   [ -n "${GPU_TELEMETRY_CSV:-}" ] || return 0
 
@@ -313,7 +240,7 @@ stop_gpu_poll
 # Only a run that finished gets a row: a failed one's partial averages would sit
 # in the CSV looking like a measurement of something.
 if [ "$BENCH_STATUS" -eq 0 ] && [ -n "${GPU_TELEMETRY_CSV:-}" ] && [ -n "$GPU_SAMPLES" ]; then
-  "$PYTHON_BIN" -c "$GPU_CSV_PY" "$GPU_SAMPLES" "$GPU_TELEMETRY_CSV" \
+  "$PYTHON_BIN" "$SCRIPT_DIR/gpu_telemetry.py" "$GPU_SAMPLES" "$GPU_TELEMETRY_CSV" \
     "${RUN_LABEL:-}" "$CONCURRENCY" "$RANDOM_INPUT_LEN" "$RANDOM_OUTPUT_LEN" \
     "$NUM_PROMPTS" "$GPU_SAMPLED_S" ||
     true # its own message says what went wrong; the numbers above still stand

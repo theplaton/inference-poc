@@ -163,75 +163,13 @@ fi
 # --- what to measure -----------------------------------------------------------
 
 # The plan is a list, not a rule: which shapes and concurrencies are worth an
-# hour of this node is a judgement, so it is written down in one file. Parsing
-# and validation live in python because that is what reads the JSON anyway; it
-# prints one "level isl osl prompts" line per run, level-ascending so a level's
-# shapes are adjacent and can share a server.
-RUNS_TEXT="$("$PYTHON_BIN" - "$SWEEP_CONFIG" "$RANDOM_INPUT_LEN" "$RANDOM_OUTPUT_LEN" \
-  "$PROMPTS_PER_LEVEL" <<'PY'
-import json
-import sys
-
-path, default_isl, default_osl, default_prompts = sys.argv[1:5]
-
-try:
-    with open(path) as f:
-        doc = json.load(f)
-except OSError as e:
-    sys.exit(f"cannot read the sweep config: {e}")
-except ValueError as e:
-    sys.exit(f"{path} is not valid JSON: {e}")
-
-
-def whole(value, what):
-    if isinstance(value, bool) or not isinstance(value, int) or value < 1:
-        sys.exit(f"{path}: {what} must be a positive whole number, got {value!r}")
-    return value
-
-
-# Three spellings, one meaning: a list of sweeps, the older bare level list, or
-# a bare array of levels. The last two describe one sweep at the ISL/OSL
-# settings, which is what they meant before shapes existed.
-if isinstance(doc, list):
-    entries = [{"concurrency_levels": doc}]
-elif isinstance(doc, dict) and "sweeps" in doc:
-    entries = doc["sweeps"]
-    if not isinstance(entries, list) or not entries:
-        sys.exit(f'{path}: "sweeps" must be a non-empty array')
-elif isinstance(doc, dict) and "concurrency_levels" in doc:
-    entries = [doc]
-else:
-    sys.exit(f'{path}: expected a "sweeps" array or a "concurrency_levels" array')
-
-runs = []
-for i, entry in enumerate(entries):
-    if not isinstance(entry, dict):
-        sys.exit(f"{path}: sweep {i} must be an object, got {entry!r}")
-
-    levels = entry.get("concurrency_levels")
-    if not isinstance(levels, list) or not levels:
-        sys.exit(f'{path}: sweep {i} needs a non-empty "concurrency_levels" array')
-
-    isl = whole(entry.get("isl", int(default_isl)), f"sweep {i} isl")
-    osl = whole(entry.get("osl", int(default_osl)), f"sweep {i} osl")
-    per_level = whole(
-        entry.get("prompts_per_level", int(default_prompts)),
-        f"sweep {i} prompts_per_level",
-    )
-
-    for level in levels:
-        whole(level, f"sweep {i} concurrency level")
-        runs.append((level, isl, osl, level * per_level))
-
-# Level-ascending, and stable within a level so the config's order survives.
-# Ascending because a level that cannot fit should fail after the smaller ones
-# have already been recorded, not before.
-runs.sort(key=lambda r: r[0])
-
-for level, isl, osl, prompts in runs:
-    print(level, isl, osl, prompts)
-PY
-)" || exit 1
+# hour of this node is a judgement, so it is written down in one file rather
+# than derived here. benchmark/sweep_config.py reads and validates it and prints
+# one "level isl osl prompts" line per run, level-ascending so a level's shapes
+# are adjacent and can share a server.
+RUNS_TEXT="$("$PYTHON_BIN" "$REPO_ROOT/benchmark/sweep_config.py" \
+  "$SWEEP_CONFIG" "$RANDOM_INPUT_LEN" "$RANDOM_OUTPUT_LEN" "$PROMPTS_PER_LEVEL")" ||
+  exit 1
 
 RUN_LEVELS=() RUN_ISLS=() RUN_OSLS=() RUN_PROMPTS=()
 while read -r level isl osl prompts; do
@@ -257,173 +195,18 @@ done
 # the last one". All three are appended per run, so an interrupted sweep still
 # leaves what it finished.
 #
-# One script, two entry points: `check` refuses to append to a file whose
-# columns came from an older version of this script, and `write` appends a row.
-# Both build their rows from the same code, so the columns cannot drift apart.
-CSV_PY="$(
-  cat <<'PY'
-import csv
-import json
-import os
-import sys
-
-
-def build_rows(r, ctx):
-    def num(key, digits=2):
-        v = r.get(key)
-        return round(v, digits) if isinstance(v, (int, float)) else ""
-
-    def sec(key, digits=3):
-        """A latency vLLM reports in ms, in seconds -- easier to compare."""
-        v = r.get(key)
-        return round(v / 1000, digits) if isinstance(v, (int, float)) else ""
-
-    # What share of the engine's KV cache this run's requests want at once.
-    # Over 100% means the level could not have run at full width whatever the
-    # numbers say, because the scheduler was queueing.
-    kv_fit = ""
-    try:
-        pool = int(ctx["kv_tokens"])
-        wanted = int(ctx["level"]) * (int(ctx["isl"]) + int(ctx["osl"]))
-        kv_fit = round(100 * wanted / pool, 1) if pool else ""
-    except (KeyError, TypeError, ValueError):
-        pass
-
-    summary = {
-        "concurrency": ctx["level"],
-        "isl": ctx["isl"],
-        "osl": ctx["osl"],
-        "mean_request_latency_s": sec("mean_e2el_ms"),
-        "total_throughput_tok_s": num("total_token_throughput"),
-    }
-
-    # No separate column for the server's batch width: the sweep always starts
-    # the server at the concurrency it then drives, so it would repeat the first
-    # column in every row.
-    detailed = {
-        "concurrency": ctx["level"],
-        "num_prompts": ctx["prompts"],
-        "completed": r.get("completed", ""),
-        "input_len": ctx["isl"],
-        "output_len": ctx["osl"],
-        "total_output_tokens": r.get("total_output_tokens", ""),
-        "duration_s": num("duration"),
-        "request_throughput_req_s": num("request_throughput", 4),
-        "output_throughput_tok_s": num("output_throughput"),
-        "total_throughput_tok_s": num("total_token_throughput"),
-        "mean_request_latency_s": sec("mean_e2el_ms"),
-        "median_request_latency_s": sec("median_e2el_ms"),
-        "p99_request_latency_s": sec("p99_e2el_ms"),
-        "mean_ttft_ms": num("mean_ttft_ms"),
-        "p99_ttft_ms": num("p99_ttft_ms"),
-        "mean_tpot_ms": num("mean_tpot_ms"),
-        "p99_tpot_ms": num("p99_tpot_ms"),
-        "mean_itl_ms": num("mean_itl_ms"),
-        "p99_itl_ms": num("p99_itl_ms"),
-        "spec_decode_acceptance_rate": num("spec_decode_acceptance_rate", 4),
-        "kv_pool_tokens": ctx["kv_tokens"],
-        "kv_fit_pct": kv_fit,
-        "ignore_eos": r.get("ignore_eos", ""),
-        "random_range_ratio": r.get("random_range_ratio", ""),
-        "model_id": r.get("model_id", ""),
-        "date": r.get("date", ""),
-    }
-
-    # Carries the settings that make two sweeps different -- without them a row
-    # from a dep/131072 sweep is indistinguishable from a tep/200000 one.
-    rollup = {
-        "run": ctx["run_id"],
-        "concurrency": ctx["level"],
-        "isl": ctx["isl"],
-        "osl": ctx["osl"],
-        "strategy": ctx["strategy"],
-        "max_model_len": ctx["max_model_len"],
-        "mean_request_latency_s": sec("mean_e2el_ms"),
-        "total_throughput_tok_s": num("total_token_throughput"),
-        "output_throughput_tok_s": num("output_throughput"),
-        "p99_request_latency_s": sec("p99_e2el_ms"),
-        "kv_fit_pct": kv_fit,
-        "ignore_eos": r.get("ignore_eos", ""),
-        "random_range_ratio": r.get("random_range_ratio", ""),
-        "model_id": r.get("model_id", ""),
-    }
-
-    return summary, detailed, rollup
-
-
-BLANK_CTX = dict.fromkeys(
-    ("level", "isl", "osl", "prompts", "kv_tokens", "run_id", "strategy", "max_model_len"),
-    "",
-)
-
-def header_of(path):
-    if not (os.path.exists(path) and os.path.getsize(path) > 0):
-        return None
-    with open(path, newline="") as f:
-        return next(csv.reader(f), None)
-
-
-mode = sys.argv[1]
-
-# A rollup written by an older version of this script has fewer columns. Widen
-# it in place rather than refusing to append: the file exists to accumulate,
-# and old rows simply have nothing to say about the new columns.
-if mode == "migrate":
-    for path, row in zip(sys.argv[2:5], build_rows({}, BLANK_CTX)):
-        have = header_of(path)
-        if have is None or have == list(row):
-            continue
-        added = [c for c in row if c not in have]
-        if not added:
-            continue
-        with open(path, newline="") as f:
-            old_rows = list(csv.DictReader(f))
-        merged = have + added
-        with open(path, "w", newline="") as f:
-            writer = csv.DictWriter(f, fieldnames=merged)
-            writer.writeheader()
-            for old in old_rows:
-                writer.writerow({c: old.get(c, "") for c in merged})
-        print(f"note: added {', '.join(added)} to {path}; earlier rows left blank there")
-    sys.exit(0)
-
-(result_path, summary_csv, detailed_csv, rollup_csv) = sys.argv[2:6]
-ctx = dict(
-    zip(
-        ("level", "isl", "osl", "prompts", "kv_tokens", "run_id", "strategy", "max_model_len"),
-        sys.argv[6:14],
-    )
-)
-
-with open(result_path) as f:
-    result = json.load(f)
-
-for path, row in zip(
-    (summary_csv, detailed_csv, rollup_csv), build_rows(result, ctx)
-):
-    # Follow the file's own column order when it already has one, so a widened
-    # rollup keeps its shape and a row missing a column writes an empty cell
-    # instead of shifting every value one place left.
-    header = header_of(path)
-    with open(path, "a", newline="") as f:
-        writer = csv.DictWriter(
-            f, fieldnames=header or list(row), extrasaction="ignore"
-        )
-        if header is None:
-            writer.writeheader()
-            writer.writerow(row)
-        else:
-            writer.writerow({c: row.get(c, "") for c in header})
-PY
-)"
+# benchmark/sweep_csv.py owns their columns: `migrate` widens a CSV written by
+# an older version of it, `write` appends a row, and both build the row from the
+# same code so the columns cannot drift apart.
 
 # Before the first checkpoint load, not after: widening the rollup is worth ten
 # seconds now rather than a surprise twenty minutes in.
-"$PYTHON_BIN" -c "$CSV_PY" migrate "$SUMMARY_CSV" "$DETAILED_CSV" "$ROLLUP_CSV" || exit 1
+"$PYTHON_BIN" "$REPO_ROOT/benchmark/sweep_csv.py" migrate \
+  "$SUMMARY_CSV" "$DETAILED_CSV" "$ROLLUP_CSV" || exit 1
 
 append_csv() {
   local json="$1" level="$2" isl="$3" osl="$4" prompts="$5" kv_tokens="$6"
-  "$PYTHON_BIN" -c "$CSV_PY" write "$json" \
+  "$PYTHON_BIN" "$REPO_ROOT/benchmark/sweep_csv.py" write "$json" \
     "$SUMMARY_CSV" "$DETAILED_CSV" "$ROLLUP_CSV" \
     "$level" "$isl" "$osl" "$prompts" "$kv_tokens" "$RUN_ID" \
     "${STRATEGY:-}" "${MAX_MODEL_LEN:-}"
