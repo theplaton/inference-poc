@@ -138,6 +138,9 @@ RUN_ID="$(basename "$RESULTS_DIR")"
 
 SUMMARY_CSV="$RESULTS_DIR/benchmark_sweep.csv"
 DETAILED_CSV="$RESULTS_DIR/benchmark_sweep_detailed.csv"
+# Written by benchmark.sh rather than from here: only it knows when a
+# measurement starts and stops, which is the only window worth sampling.
+THERMALS_CSV="$RESULTS_DIR/gpu_thermals.csv"
 # One row per run per sweep, next to the numbered folders rather than inside
 # one: the point of it is comparing sweeps that differ in strategy, context or
 # checkpoint, which no single folder can hold.
@@ -448,10 +451,11 @@ if [ "$PLAN_ONLY" -eq 1 ]; then
     printf '  %s/serve_model.sh DEFAULT_NUM_SEQS=%s\n' "$REPO_ROOT" "$level"
     for i in "${!RUN_LEVELS[@]}"; do
       [ "${RUN_LEVELS[$i]}" = "$level" ] || continue
-      printf '  %s/benchmark.sh --bench-only HOST=%s PORT=%s CONCURRENCY=%s DEFAULT_NUM_SEQS=%s NUM_PROMPTS=%s RANDOM_INPUT_LEN=%s RANDOM_OUTPUT_LEN=%s RESULT_FILE=%s\n' \
+      printf '  %s/benchmark.sh --bench-only HOST=%s PORT=%s CONCURRENCY=%s DEFAULT_NUM_SEQS=%s NUM_PROMPTS=%s RANDOM_INPUT_LEN=%s RANDOM_OUTPUT_LEN=%s RESULT_FILE=%s GPU_THERMALS_CSV=%s RUN_LABEL=%s\n' \
         "$REPO_ROOT" "$health_host" "$PORT" "$level" "$level" "${RUN_PROMPTS[$i]}" \
         "${RUN_ISLS[$i]}" "${RUN_OSLS[$i]}" \
-        "$RESULTS_DIR/result-c$level-i${RUN_ISLS[$i]}o${RUN_OSLS[$i]}.json"
+        "$RESULTS_DIR/result-c$level-i${RUN_ISLS[$i]}o${RUN_OSLS[$i]}.json" \
+        "$THERMALS_CSV" "$RUN_ID"
     done
     printf '\n'
   done
@@ -467,6 +471,7 @@ if [ ! -d "$RESULTS_DIR" ]; then
     RUN_ID="$(basename "$RESULTS_DIR")"
     SUMMARY_CSV="$RESULTS_DIR/benchmark_sweep.csv"
     DETAILED_CSV="$RESULTS_DIR/benchmark_sweep_detailed.csv"
+    THERMALS_CSV="$RESULTS_DIR/gpu_thermals.csv"
     printf 'Run %s: %s\n' "$RUN_ID" "$RESULTS_DIR"
   else
     mkdir -p "$RESULTS_DIR"
@@ -593,7 +598,9 @@ for level in "${DISTINCT_LEVELS[@]}"; do
       HOST="$health_host" PORT="$PORT" \
       CONCURRENCY="$level" DEFAULT_NUM_SEQS="$level" NUM_PROMPTS="$prompts" \
       RANDOM_INPUT_LEN="$isl" RANDOM_OUTPUT_LEN="$osl" \
-      RESULT_FILE="$result_json" 2>&1 | tee "$bench_log"; then
+      RESULT_FILE="$result_json" \
+      GPU_THERMALS_CSV="$THERMALS_CSV" RUN_LABEL="$RUN_ID" \
+      2>&1 | tee "$bench_log"; then
       append_csv "$result_json" "$level" "$isl" "$osl" "$prompts" "$kv_tokens"
     else
       echo "  benchmark failed at c$level $isl/$osl -- see $bench_log" >&2
@@ -618,6 +625,8 @@ if [ -f "$SUMMARY_CSV" ]; then
     cat "$SUMMARY_CSV"
   fi
   printf '\n%s\n%s  (every metric the run reported)\n' "$SUMMARY_CSV" "$DETAILED_CSV"
+  [ -f "$THERMALS_CSV" ] &&
+    printf '%s  (average temperature and power per GPU)\n' "$THERMALS_CSV"
   if [ -f "$ROLLUP_CSV" ]; then
     printf '%s  (%s rows, every sweep so far)\n' \
       "$ROLLUP_CSV" "$(($(wc -l <"$ROLLUP_CSV") - 1))"

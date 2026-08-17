@@ -99,6 +99,38 @@ Think Max is opt-in (`--all`) because it truncates unless the server was started
 with `--max-model-len >= 393216`, which does not fit on 8x H200 without a KV
 offload tier.
 
+## GPU thermals
+
+`GPU_THERMALS_CSV` appends one row per throughput run — the average temperature
+and power draw of each GPU while that run was in flight:
+
+```bash
+./benchmark.sh --bench-only GPU_THERMALS_CSV=runs/gpu_thermals.csv RUN_LABEL=c8
+```
+
+```
+run,concurrency,isl,osl,num_prompts,sampled_s,samples,GPU_0_avg_temp,GPU_0_avg_power,...
+c8,8,2048,512,64,84,42,63.4,611.2,...
+```
+
+The window is the benchmark and nothing else. Polling from the serving side
+would be easier, but the server is up across many measurements and the idle gaps
+between them would be averaged into every figure; only the client knows when a
+measurement starts and stops.
+
+`sampled_s` is that window in seconds, and `samples` the number of readings
+behind the thinnest average in the row — a figure from three samples deserves
+less confidence than one from three hundred. `GPU_POLL_INTERVAL` (default 2s)
+sets the spacing. Temperatures are °C, power W, columns ordered by `nvidia-smi`
+index.
+
+Unset — the default — nothing is polled. It needs `nvidia-smi` on the machine
+running the benchmark, so it measures the local node or nothing: pointed at a
+remote endpoint it prints a note and the run continues unaffected. A failed run
+gets no row, and neither does one whose CSV was written by a node with a
+different GPU count; both say so on stderr rather than failing a benchmark whose
+numbers are good.
+
 ## Concurrency
 
 `CONCURRENCY` above the batch width the server was started with does not

@@ -96,6 +96,7 @@ everything one invocation measures lands inside its own folder, one row per
 | --- | --- |
 | `benchmark_sweep.csv` | concurrency, ISL, OSL, mean request latency (s), total throughput (tok/s) |
 | `benchmark_sweep_detailed.csv` | the same rows with p99s, TTFT/TPOT/ITL, actual output tokens, KV fit, spec-decode acceptance |
+| `gpu_thermals.csv` | average temperature and power per GPU, sampled only while each measurement was running |
 | `result-c<N>-i<ISL>o<OSL>.json` | the raw `vllm bench serve` result for one measurement |
 | `serve-c<N>.log` | that level's server output — one per level, shared by its shapes |
 | `bench-c<N>-i<ISL>o<OSL>.log` | that measurement's client output |
@@ -107,8 +108,15 @@ checkpoint — so comparing today's run against last week's is one file, not two
 folders. When a newer version of the sweep adds columns, the rollup is widened
 in place and older rows keep empty cells rather than being refused.
 
-All three CSVs are appended per measurement, so an interrupted sweep still
-leaves what it finished. Read one at the terminal with `column -s, -t < FILE`.
+Every CSV is appended per measurement, so an interrupted sweep still leaves what
+it finished. Read one at the terminal with `column -s, -t < FILE`.
+
+`gpu_thermals.csv` answers what the hardware was doing while those numbers were
+produced — two runs at the same throughput are not the same result if one held
+620 W at 62 °C and the other throttled at 84 °C, and one hot GPU can pace the
+whole group without showing up anywhere else. `benchmark.sh` writes it, not the
+sweep: the server is up far longer than any one measurement, so only the client
+knows the window worth sampling.
 
 ## Configuration
 
