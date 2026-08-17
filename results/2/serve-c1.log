@@ -1,0 +1,434 @@
+Launching deepseek_v4 (tep):
+
+/root/inference-poc/venv/bin/vllm serve deepseek-ai/DeepSeek-V4-Pro-0813 --trust-remote-code --kv-cache-dtype fp8 --block-size 256 --no-enable-flashinfer-autotune --compilation-config \{\"mode\":\ 0\,\ \"cudagraph_mode\":\ \"FULL_DECODE_ONLY\"\} --tokenizer-mode deepseek_v4 --tool-call-parser deepseek_v4 --enable-auto-tool-choice --reasoning-parser deepseek_v4 --speculative-config \{\"method\":\"dspark\"\,\"num_speculative_tokens\":7\,\"draft_sample_method\":\"probabilistic\"\} --enable-expert-parallel --tensor-parallel-size 8 --max-model-len 200000 --gpu-memory-utilization 0.95 --max-num-seqs 1 --host 0.0.0.0 --port 8000 
+
+Waiting up to 1800s for http://localhost:8000/health (weights load + compile is ~10-20 min)
+(APIServer pid=199737) INFO 08-17 03:32:03 [api_utils.py:345] 
+(APIServer pid=199737) INFO 08-17 03:32:03 [api_utils.py:345]        █     █     █▄   ▄█
+(APIServer pid=199737) INFO 08-17 03:32:03 [api_utils.py:345]  ▄▄ ▄█ █     █     █ ▀▄▀ █  version 0.27.1
+(APIServer pid=199737) INFO 08-17 03:32:03 [api_utils.py:345]   █▄█▀ █     █     █     █  model   deepseek-ai/DeepSeek-V4-Pro-0813
+(APIServer pid=199737) INFO 08-17 03:32:03 [api_utils.py:345]    ▀▀  ▀▀▀▀▀ ▀▀▀▀▀ ▀     ▀
+(APIServer pid=199737) INFO 08-17 03:32:03 [api_utils.py:345] 
+(APIServer pid=199737) INFO 08-17 03:32:03 [api_utils.py:273] non-default args: {'model_tag': 'deepseek-ai/DeepSeek-V4-Pro-0813', 'enable_auto_tool_choice': True, 'tool_call_parser': 'deepseek_v4', 'host': '0.0.0.0', 'model': 'deepseek-ai/DeepSeek-V4-Pro-0813', 'tokenizer_mode': 'deepseek_v4', 'trust_remote_code': True, 'max_model_len': 200000, 'reasoning_parser': 'deepseek_v4', 'tensor_parallel_size': 8, 'enable_expert_parallel': True, 'block_size': 256, 'gpu_memory_utilization': 0.95, 'kv_cache_dtype': 'fp8', 'max_num_seqs': 1, 'enable_flashinfer_autotune': False, 'speculative_config': {'method': 'dspark', 'num_speculative_tokens': 7, 'draft_sample_method': 'probabilistic'}, 'compilation_config': {'mode': <CompilationMode.NONE: 0>, 'debug_dump_path': None, 'cache_dir': '', 'compile_cache_save_format': 'binary', 'backend': 'inductor', 'custom_ops': [], 'ir_enable_torch_wrap': None, 'splitting_ops': None, 'compile_mm_encoder': False, 'cudagraph_mm_encoder': False, 'encoder_cudagraph_token_budgets': [], 'encoder_cudagraph_max_vision_items_per_batch': 0, 'encoder_cudagraph_max_frames_per_batch': None, 'compile_sizes': None, 'compile_ranges_endpoints': None, 'inductor_compile_config': {'enable_auto_functionalized_v2': False, 'combo_kernels': True, 'benchmark_combo_kernel': True}, 'inductor_passes': {}, 'cudagraph_mode': <CUDAGraphMode.FULL_DECODE_ONLY: (2, 0)>, 'cudagraph_num_of_warmups': 0, 'cudagraph_capture_sizes': None, 'cudagraph_copy_inputs': False, 'cudagraph_specialize_lora': True, 'use_inductor_graph_partition': None, 'pass_config': {}, 'max_cudagraph_capture_size': None, 'dynamic_shapes_config': {'type': <DynamicShapesType.BACKED: 'backed'>, 'evaluate_guards': False, 'assume_32_bit_indexing': False}, 'local_cache_dir': None, 'fast_moe_cold_start': None, 'static_all_moe_layers': []}}
+(APIServer pid=199737) WARNING 08-17 03:32:03 [envs.py:2128] Unknown vLLM environment variable detected: VLLM_BIN
+(APIServer pid=199737) WARNING 08-17 03:32:03 [envs.py:2128] Unknown vLLM environment variable detected: VLLM_DOCKER_IMAGE
+(APIServer pid=199737) WARNING 08-17 03:32:03 [envs.py:2128] Unknown vLLM environment variable detected: VLLM_CLEANUP_TIMEOUT
+(APIServer pid=199737) INFO 08-17 03:32:04 [config.py:774] Detected quantization_config.scale_fmt=ue8m0; enabling UE8M0 for DeepGEMM.
+(APIServer pid=199737) INFO 08-17 03:32:04 [model.py:645] Resolved architecture: DeepseekV4ForCausalLM
+(APIServer pid=199737) INFO 08-17 03:32:04 [model.py:1883] Using max model len 200000
+(APIServer pid=199737) INFO 08-17 03:32:05 [cache.py:296] Using fp8 data type to store kv cache. It reduces the GPU memory footprint and boosts the performance. Meanwhile, it may cause accuracy drop without a proper scaling factor
+(APIServer pid=199737) INFO 08-17 03:32:05 [model.py:645] Resolved architecture: DeepSeekV4MTPModel
+(APIServer pid=199737) INFO 08-17 03:32:05 [model.py:1883] Using max model len 1048576
+(APIServer pid=199737) INFO 08-17 03:32:05 [speculative.py:1157] Overriding draft model max model len from 1048576 to 200000
+(APIServer pid=199737) INFO 08-17 03:32:05 [scheduler.py:242] Chunked prefill is enabled with max_num_batched_tokens=8192.
+(APIServer pid=199737) INFO 08-17 03:32:05 [vllm.py:1231] Auto-enabling VLLM_USE_BREAKABLE_CUDAGRAPH=1. Set VLLM_USE_BREAKABLE_CUDAGRAPH=0 to opt out.
+(APIServer pid=199737) WARNING 08-17 03:32:05 [vllm.py:1237] VLLM_USE_BREAKABLE_CUDAGRAPH is set, disabling vLLM's torch.compile pipeline. Equivalent to -cc.mode=none.
+(APIServer pid=199737) WARNING 08-17 03:32:05 [vllm.py:1247] Inductor compilation was disabled by user settings, optimizations settings that are only active during inductor compilation will be ignored.
+(APIServer pid=199737) INFO 08-17 03:32:05 [kernel.py:306] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(APIServer pid=199737) WARNING 08-17 03:32:05 [vllm.py:1757] max_num_scheduled_tokens is set to 8186 based on the speculative decoding settings. This may lead to suboptimal performance. Consider increasing max_num_batched_tokens to accommodate the additional draft token slots, or decrease num_speculative_tokens or max_num_seqs.
+(APIServer pid=199737) WARNING 08-17 03:32:05 [vllm.py:2267] Model Runner V2 does not yet support the thinking_token_budget request parameter. Set VLLM_USE_V2_MODEL_RUNNER=0 if this is required.
+(APIServer pid=199737) Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+(APIServer pid=199737) INFO 08-17 03:32:11 [compilation.py:329] Enabled custom fusions: norm_quant, act_quant, allreduce_rms
+(EngineCore pid=200371) INFO 08-17 03:32:17 [core.py:121] Initializing a V1 LLM engine (v0.27.1) with config: model='deepseek-ai/DeepSeek-V4-Pro-0813', speculative_config=SpeculativeConfig(method='dspark', model='deepseek-ai/DeepSeek-V4-Pro-0813', num_spec_tokens=7), tokenizer='deepseek-ai/DeepSeek-V4-Pro-0813', skip_tokenizer_init=False, tokenizer_mode=deepseek_v4, revision=None, tokenizer_revision=None, trust_remote_code=True, dtype=torch.bfloat16, max_seq_len=200000, download_dir=None, load_format=auto, tensor_parallel_size=8, pipeline_parallel_size=1, data_parallel_size=1, decode_context_parallel_size=1, dcp_comm_backend=ag_rs, disable_custom_all_reduce=False, quantization=deepseek_v4_fp8, quantization_config=None, enforce_eager=False, enable_return_routed_experts=False, kv_cache_dtype=fp8, device_config=cuda, structured_outputs_config=StructuredOutputsConfig(backend='auto', disable_any_whitespace=False, disable_additional_properties=False, reasoning_parser='deepseek_v4', reasoning_parser_plugin='', enable_in_reasoning=False), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None, kv_cache_metrics=False, kv_cache_metrics_sample=0.01, cudagraph_metrics=False, enable_layerwise_nvtx_tracing=False, enable_mfu_metrics=False, enable_mm_processor_stats=False, enable_logging_iteration_details=False, jit_monitor_mode='warn', jit_monitor_verbose=False), seed=0, served_model_name=deepseek-ai/DeepSeek-V4-Pro-0813, enable_prefix_caching=True, enable_chunked_prefill=True, pooler_config=None, compilation_config={'mode': <CompilationMode.NONE: 0>, 'debug_dump_path': None, 'cache_dir': '', 'compile_cache_save_format': 'binary', 'backend': 'inductor', 'custom_ops': ['+quant_fp8', 'all', '+quant_fp8'], 'ir_enable_torch_wrap': False, 'splitting_ops': [], 'compile_mm_encoder': False, 'cudagraph_mm_encoder': False, 'encoder_cudagraph_token_budgets': [], 'encoder_cudagraph_max_vision_items_per_batch': 0, 'encoder_cudagraph_max_frames_per_batch': None, 'compile_sizes': [], 'compile_ranges_endpoints': [36, 8192], 'inductor_compile_config': {'enable_auto_functionalized_v2': False, 'combo_kernels': True, 'benchmark_combo_kernel': True}, 'inductor_passes': {}, 'cudagraph_mode': <CUDAGraphMode.FULL_DECODE_ONLY: (2, 0)>, 'cudagraph_num_of_warmups': 1, 'cudagraph_capture_sizes': [1, 2, 4, 8, 16], 'cudagraph_copy_inputs': False, 'cudagraph_specialize_lora': True, 'use_inductor_graph_partition': False, 'pass_config': {'fuse_norm_quant': True, 'fuse_act_quant': True, 'fuse_attn_quant': False, 'enable_sp': False, 'fuse_gemm_comms': False, 'fuse_allreduce_rms': True, 'enable_qk_norm_rope_fusion': False, 'fuse_rope_kvcache_cat_mla': False, 'fuse_act_padding': False, 'fuse_qk_norm_rope_kvcache': False}, 'max_cudagraph_capture_size': 16, 'dynamic_shapes_config': {'type': <DynamicShapesType.BACKED: 'backed'>, 'evaluate_guards': False, 'assume_32_bit_indexing': False}, 'local_cache_dir': None, 'fast_moe_cold_start': False, 'static_all_moe_layers': []}, kernel_config=KernelConfig(ir_op_priority=IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native']), enable_flashinfer_autotune=False, enable_cutedsl_warmup=True, enable_jit_warmup=True, enable_bf16x3_router_gemm=False, moe_backend='auto', linear_backend='auto')
+(EngineCore pid=200371) WARNING 08-17 03:32:17 [multiproc_executor.py:1081] Reducing Torch parallelism from 64 threads to 1 to avoid unnecessary CPU contention. Set OMP_NUM_THREADS in the external environment to tune this value as needed.
+(EngineCore pid=200371) INFO 08-17 03:32:17 [multiproc_executor.py:140] DP group leader: node_rank=0, node_rank_within_dp=0, master_addr=127.0.0.1, mq_connect_ip=10.24.63.34 (local), world_size=8, local_world_size=8
+(Worker pid=200773) INFO 08-17 03:32:27 [parallel_state.py:1640] world_size=8 rank=4 local_rank=4 distributed_init_method=tcp://127.0.0.1:59745 backend=nccl
+(Worker pid=200776) INFO 08-17 03:32:30 [parallel_state.py:1640] world_size=8 rank=7 local_rank=7 distributed_init_method=tcp://127.0.0.1:59745 backend=nccl
+(Worker pid=200769) INFO 08-17 03:32:31 [parallel_state.py:1640] world_size=8 rank=0 local_rank=0 distributed_init_method=tcp://127.0.0.1:59745 backend=nccl
+(Worker pid=200775) INFO 08-17 03:32:31 [parallel_state.py:1640] world_size=8 rank=6 local_rank=6 distributed_init_method=tcp://127.0.0.1:59745 backend=nccl
+(Worker pid=200772) INFO 08-17 03:32:31 [parallel_state.py:1640] world_size=8 rank=3 local_rank=3 distributed_init_method=tcp://127.0.0.1:59745 backend=nccl
+(Worker pid=200774) INFO 08-17 03:32:31 [parallel_state.py:1640] world_size=8 rank=5 local_rank=5 distributed_init_method=tcp://127.0.0.1:59745 backend=nccl
+(Worker pid=200770) INFO 08-17 03:32:31 [parallel_state.py:1640] world_size=8 rank=1 local_rank=1 distributed_init_method=tcp://127.0.0.1:59745 backend=nccl
+(Worker pid=200771) INFO 08-17 03:32:31 [parallel_state.py:1640] world_size=8 rank=2 local_rank=2 distributed_init_method=tcp://127.0.0.1:59745 backend=nccl
+(Worker pid=200769) INFO 08-17 03:32:32 [pynccl.py:113] vLLM is using nccl==2.29.7
+(Worker pid=200769) INFO 08-17 03:32:35 [cuda_communicator.py:266] Using ['CUSTOM', 'SYMM_MEM', 'PYNCCL'] all-reduce backends (in dispatch order) for group 'tp:0' out of potential backends: ['NCCL_SYMM_MEM', 'QUICK_REDUCE', 'FLASHINFER', 'AITER_CUSTOM', 'CUSTOM', 'SYMM_MEM', 'PYNCCL'].
+(Worker pid=200769) INFO 08-17 03:32:36 [cuda_communicator.py:266] Using ['PYNCCL'] all-reduce backends (in dispatch order) for group 'ep:0' out of potential backends: ['NCCL_SYMM_MEM', 'QUICK_REDUCE', 'FLASHINFER', 'AITER_CUSTOM', 'CUSTOM', 'SYMM_MEM', 'PYNCCL'].
+(Worker pid=200769) INFO 08-17 03:32:36 [parallel_state.py:1977] rank 0 in world size 8 is assigned as DP rank 0, PP rank 0, PCP rank 0, TP rank 0, EP rank 0, EPLB rank N/A
+(Worker pid=200769) INFO 08-17 03:32:36 [gpu_worker.py:385] Using V2 Model Runner
+(Worker_TP0_EP0 pid=200769) INFO 08-17 03:32:37 [model_runner.py:308] Loading model from scratch...
+(Worker_TP0_EP0 pid=200769) INFO 08-17 03:32:37 [quant_config.py:75] DeepSeek V4 expert_dtype resolved to 'fp4'
+(Worker_TP0_EP0 pid=200769) INFO 08-17 03:32:37 [__init__.py:634] Selected FlashInferFp8DeepGEMMDynamicBlockScaledKernel for Fp8LinearMethod
+(Worker_TP0_EP0 pid=200769) INFO 08-17 03:32:37 [deep_gemm.py:175] deep_gemm not found in site-packages, trying vendored vllm.third_party.deep_gemm
+(Worker_TP0_EP0 pid=200769) INFO 08-17 03:32:37 [deep_gemm.py:202] DeepGEMM PDL enabled on vllm.third_party.deep_gemm.
+(Worker_TP0_EP0 pid=200769) INFO 08-17 03:32:37 [deep_gemm.py:120] DeepGEMM E8M0 enabled on current platform.
+(Worker_TP0_EP0 pid=200769) INFO 08-17 03:32:37 [attention.py:113] Using DeepSeek's fp8_ds_mla KV cache format.
+(Worker_TP0_EP0 pid=200769) INFO 08-17 03:32:37 [expert_map_manager.py:245] [EP Rank 0/8] Expert parallelism is enabled. Expert placement strategy: linear. Local/global number of experts: 48/384. Experts local to global index map: 0->0, 1->1, 2->2, 3->3, 4->4, 5->5, 6->6, 7->7, 8->8, 9->9, 10->10, 11->11, 12->12, 13->13, 14->14, 15->15, 16->16, 17->17, 18->18, 19->19, 20->20, 21->21, 22->22, 23->23, 24->24, 25->25, 26->26, 27->27, 28->28, 29->29, 30->30, 31->31, 32->32, 33->33, 34->34, 35->35, 36->36, 37->37, 38->38, 39->39, 40->40, 41->41, 42->42, 43->43, 44->44, 45->45, 46->46, 47->47.
+(Worker_TP0_EP0 pid=200769) INFO 08-17 03:32:37 [mxfp4.py:626] Using 'MARLIN' Mxfp4 MoE backend.
+(Worker_TP0_EP0 pid=200769) INFO 08-17 03:32:37 [attention.py:746] Using FP8 indexer cache for Lightning Indexer.
+(Worker_TP7_EP7 pid=200776) Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+(Worker_TP4_EP4 pid=200773) Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+(Worker_TP6_EP6 pid=200775) Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+(Worker_TP3_EP3 pid=200772) Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+(Worker_TP2_EP2 pid=200771) Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+(Worker_TP0_EP0 pid=200769) Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+(Worker_TP0_EP0 pid=200769) INFO 08-17 03:32:40 [weight_utils.py:867] Filesystem type for checkpoints: EXT4. Checkpoint size: 831.43 GiB. Available RAM: 1533.08 GiB.
+(Worker_TP0_EP0 pid=200769) INFO 08-17 03:32:40 [weight_utils.py:890] Auto-prefetch is disabled because the filesystem (EXT4) is not a recognized network FS (NFS/Lustre). If you want to force prefetching, start vLLM with --safetensors-load-strategy=prefetch.
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:   0% Completed | 0/66 [00:00<?, ?it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:   3% Completed | 2/66 [00:00<00:24,  2.61it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:   5% Completed | 3/66 [00:01<00:31,  2.00it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:   6% Completed | 4/66 [00:02<00:34,  1.81it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:   8% Completed | 5/66 [00:02<00:37,  1.63it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:   9% Completed | 6/66 [00:03<00:39,  1.52it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  11% Completed | 7/66 [00:04<00:38,  1.51it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  12% Completed | 8/66 [00:04<00:38,  1.53it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  14% Completed | 9/66 [00:05<00:36,  1.55it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  15% Completed | 10/66 [00:06<00:36,  1.54it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  17% Completed | 11/66 [00:06<00:35,  1.55it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  18% Completed | 12/66 [00:07<00:35,  1.51it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  20% Completed | 13/66 [00:08<00:34,  1.53it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  21% Completed | 14/66 [00:08<00:33,  1.55it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  23% Completed | 15/66 [00:09<00:33,  1.50it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  24% Completed | 16/66 [00:10<00:33,  1.49it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  26% Completed | 17/66 [00:10<00:32,  1.49it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  27% Completed | 18/66 [00:11<00:32,  1.50it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  29% Completed | 19/66 [00:12<00:30,  1.53it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  30% Completed | 20/66 [00:12<00:30,  1.50it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  32% Completed | 21/66 [00:13<00:29,  1.50it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  33% Completed | 22/66 [00:14<00:29,  1.49it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  35% Completed | 23/66 [00:14<00:29,  1.46it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  36% Completed | 24/66 [00:15<00:29,  1.44it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  38% Completed | 25/66 [00:16<00:27,  1.47it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  39% Completed | 26/66 [00:16<00:26,  1.50it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  41% Completed | 27/66 [00:17<00:25,  1.52it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  42% Completed | 28/66 [00:18<00:24,  1.53it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  44% Completed | 29/66 [00:18<00:23,  1.55it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  45% Completed | 30/66 [00:19<00:23,  1.51it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  47% Completed | 31/66 [00:20<00:23,  1.52it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  48% Completed | 32/66 [00:20<00:22,  1.54it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  50% Completed | 33/66 [00:21<00:21,  1.50it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  52% Completed | 34/66 [00:22<00:21,  1.46it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  53% Completed | 35/66 [00:22<00:21,  1.45it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  55% Completed | 36/66 [00:23<00:20,  1.46it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  56% Completed | 37/66 [00:24<00:20,  1.45it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  58% Completed | 38/66 [00:24<00:18,  1.48it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  59% Completed | 39/66 [00:25<00:17,  1.52it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  61% Completed | 40/66 [00:26<00:16,  1.54it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  62% Completed | 41/66 [00:26<00:15,  1.57it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  64% Completed | 42/66 [00:27<00:15,  1.52it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  65% Completed | 43/66 [00:28<00:14,  1.55it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  67% Completed | 44/66 [00:28<00:14,  1.57it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  68% Completed | 45/66 [00:29<00:13,  1.56it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  70% Completed | 46/66 [00:29<00:13,  1.54it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  71% Completed | 47/66 [00:30<00:12,  1.49it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  73% Completed | 48/66 [00:31<00:12,  1.47it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  74% Completed | 49/66 [00:32<00:11,  1.49it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  76% Completed | 50/66 [00:32<00:10,  1.48it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  77% Completed | 51/66 [00:33<00:10,  1.48it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  79% Completed | 52/66 [00:34<00:09,  1.50it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  80% Completed | 53/66 [00:34<00:08,  1.48it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  82% Completed | 54/66 [00:35<00:08,  1.48it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  83% Completed | 55/66 [00:36<00:07,  1.46it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  85% Completed | 56/66 [00:36<00:06,  1.48it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  86% Completed | 57/66 [00:37<00:05,  1.51it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  88% Completed | 58/66 [00:38<00:05,  1.49it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  89% Completed | 59/66 [00:38<00:04,  1.50it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  91% Completed | 60/66 [00:39<00:03,  1.53it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  92% Completed | 61/66 [00:40<00:03,  1.51it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  94% Completed | 62/66 [00:40<00:02,  1.49it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  97% Completed | 64/66 [00:40<00:00,  2.55it/s]
+(Worker_TP2_EP2 pid=200771) INFO 08-17 03:33:21 [eagle3_utils.py:28] Using Eagle3 auxiliary layers from config: (59, 60, 61)
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards: 100% Completed | 66/66 [00:41<00:00,  3.87it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards: 100% Completed | 66/66 [00:41<00:00,  1.61it/s]
+(Worker_TP0_EP0 pid=200769) 
+(Worker_TP2_EP2 pid=200771) INFO 08-17 03:33:21 [kernel.py:306] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(Worker_TP0_EP0 pid=200769) INFO 08-17 03:33:21 [default_loader.py:430] Loading weights took 41.04 seconds
+(Worker_TP0_EP0 pid=200769) INFO 08-17 03:33:21 [mxfp4.py:1730] Using MoEPrepareAndFinalizeNoDPEPModular
+(Worker_TP0_EP0 pid=200769) INFO 08-17 03:33:21 [mxfp4.py:1731] Using MarlinExperts
+(Worker_TP1_EP1 pid=200770) INFO 08-17 03:33:22 [eagle3_utils.py:28] Using Eagle3 auxiliary layers from config: (59, 60, 61)
+(Worker_TP1_EP1 pid=200770) INFO 08-17 03:33:22 [kernel.py:306] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(Worker_TP1_EP1 pid=200770) Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+(Worker_TP4_EP4 pid=200773) INFO 08-17 03:33:22 [eagle3_utils.py:28] Using Eagle3 auxiliary layers from config: (59, 60, 61)
+(Worker_TP4_EP4 pid=200773) INFO 08-17 03:33:22 [kernel.py:306] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(Worker_TP3_EP3 pid=200772) INFO 08-17 03:33:22 [eagle3_utils.py:28] Using Eagle3 auxiliary layers from config: (59, 60, 61)
+(Worker_TP3_EP3 pid=200772) INFO 08-17 03:33:22 [kernel.py:306] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(Worker_TP0_EP0 pid=200769) INFO 08-17 03:33:22 [eagle3_utils.py:28] Using Eagle3 auxiliary layers from config: (59, 60, 61)
+(Worker_TP0_EP0 pid=200769) WARNING 08-17 03:33:22 [vllm.py:1237] VLLM_USE_BREAKABLE_CUDAGRAPH is set, disabling vLLM's torch.compile pipeline. Equivalent to -cc.mode=none.
+(Worker_TP0_EP0 pid=200769) WARNING 08-17 03:33:22 [vllm.py:1247] Inductor compilation was disabled by user settings, optimizations settings that are only active during inductor compilation will be ignored.
+(Worker_TP0_EP0 pid=200769) INFO 08-17 03:33:22 [kernel.py:306] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(Worker_TP0_EP0 pid=200769) WARNING 08-17 03:33:22 [vllm.py:1757] max_num_scheduled_tokens is set to 8186 based on the speculative decoding settings. This may lead to suboptimal performance. Consider increasing max_num_batched_tokens to accommodate the additional draft token slots, or decrease num_speculative_tokens or max_num_seqs.
+(Worker_TP0_EP0 pid=200769) WARNING 08-17 03:33:22 [vllm.py:2267] Model Runner V2 does not yet support the thinking_token_budget request parameter. Set VLLM_USE_V2_MODEL_RUNNER=0 if this is required.
+(Worker_TP0_EP0 pid=200769) INFO 08-17 03:33:22 [compilation.py:329] Enabled custom fusions: norm_quant, act_quant, allreduce_rms
+(Worker_TP7_EP7 pid=200776) INFO 08-17 03:33:23 [eagle3_utils.py:28] Using Eagle3 auxiliary layers from config: (59, 60, 61)
+(Worker_TP7_EP7 pid=200776) INFO 08-17 03:33:23 [kernel.py:306] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(Worker_TP6_EP6 pid=200775) INFO 08-17 03:33:23 [eagle3_utils.py:28] Using Eagle3 auxiliary layers from config: (59, 60, 61)
+(Worker_TP6_EP6 pid=200775) INFO 08-17 03:33:23 [kernel.py:306] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(Worker_TP0_EP0 pid=200769) INFO 08-17 03:33:23 [weight_utils.py:867] Filesystem type for checkpoints: EXT4. Checkpoint size: 831.43 GiB. Available RAM: 1532.90 GiB.
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:   0% Completed | 0/66 [00:00<?, ?it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:   6% Completed | 4/66 [00:00<00:02, 29.24it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  11% Completed | 7/66 [00:00<00:02, 24.33it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  15% Completed | 10/66 [00:00<00:02, 23.49it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  20% Completed | 13/66 [00:00<00:02, 21.89it/s]
+(Worker_TP5_EP5 pid=200774) INFO 08-17 03:33:24 [eagle3_utils.py:28] Using Eagle3 auxiliary layers from config: (59, 60, 61)
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  24% Completed | 16/66 [00:00<00:02, 21.25it/s]
+(Worker_TP5_EP5 pid=200774) INFO 08-17 03:33:24 [kernel.py:306] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  29% Completed | 19/66 [00:00<00:02, 20.93it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  33% Completed | 22/66 [00:01<00:02, 20.66it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  38% Completed | 25/66 [00:01<00:02, 20.39it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  42% Completed | 28/66 [00:01<00:01, 20.49it/s]
+(Worker_TP5_EP5 pid=200774) Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  47% Completed | 31/66 [00:01<00:01, 20.54it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  52% Completed | 34/66 [00:01<00:01, 20.21it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  56% Completed | 37/66 [00:01<00:01, 19.96it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  59% Completed | 39/66 [00:01<00:01, 19.88it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  64% Completed | 42/66 [00:02<00:01, 19.94it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  68% Completed | 45/66 [00:02<00:01, 20.13it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  73% Completed | 48/66 [00:02<00:00, 19.95it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  76% Completed | 50/66 [00:02<00:00, 19.86it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  79% Completed | 52/66 [00:02<00:00, 19.86it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  82% Completed | 54/66 [00:02<00:00, 19.84it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  85% Completed | 56/66 [00:02<00:00, 19.74it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  89% Completed | 59/66 [00:02<00:00, 19.95it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  94% Completed | 62/66 [00:03<00:00, 19.99it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards:  97% Completed | 64/66 [00:03<00:00,  8.55it/s]
+(Worker_TP2_EP2 pid=200771) INFO 08-17 03:33:28 [model_runner.py:329] Model loading took 108.9 GiB and 51.631211 seconds
+(Worker_TP1_EP1 pid=200770) INFO 08-17 03:33:28 [model_runner.py:329] Model loading took 108.9 GiB and 52.108755 seconds
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards: 100% Completed | 66/66 [00:04<00:00,  4.05it/s]
+(Worker_TP0_EP0 pid=200769) Loading safetensors checkpoint shards: 100% Completed | 66/66 [00:04<00:00, 13.49it/s]
+(Worker_TP0_EP0 pid=200769) 
+(Worker_TP0_EP0 pid=200769) INFO 08-17 03:33:28 [dspark.py:491] DSpark draft model loaded: 96 params
+(Worker_TP0_EP0 pid=200769) INFO 08-17 03:33:28 [default_loader.py:430] Loading weights took 4.92 seconds
+(Worker_TP4_EP4 pid=200773) INFO 08-17 03:33:29 [model_runner.py:329] Model loading took 108.9 GiB and 52.914417 seconds
+(Worker_TP3_EP3 pid=200772) INFO 08-17 03:33:29 [model_runner.py:329] Model loading took 108.9 GiB and 52.866080 seconds
+(Worker_TP0_EP0 pid=200769) INFO 08-17 03:33:29 [model_runner.py:329] Model loading took 108.9 GiB and 53.032427 seconds
+(Worker_TP0_EP0 pid=200769) INFO 08-17 03:33:29 [topk_topp_sampler.py:62] Using FlashInfer for top-p & top-k sampling.
+(Worker_TP7_EP7 pid=200776) INFO 08-17 03:33:30 [model_runner.py:329] Model loading took 108.9 GiB and 53.836260 seconds
+(Worker_TP6_EP6 pid=200775) INFO 08-17 03:33:30 [model_runner.py:329] Model loading took 108.9 GiB and 54.277540 seconds
+(Worker_TP5_EP5 pid=200774) INFO 08-17 03:33:31 [model_runner.py:329] Model loading took 108.9 GiB and 54.737528 seconds
+(Worker_TP0_EP0 pid=200769) INFO 08-17 03:33:37 [gpu_worker.py:563] Available KV cache memory: 19.0 GiB
+(EngineCore pid=200371) INFO 08-17 03:33:38 [kv_cache_utils.py:2235] GPU KV cache size: 380,600 tokens
+(EngineCore pid=200371) INFO 08-17 03:33:38 [kv_cache_utils.py:2236] Maximum concurrency for 200,000 tokens per request: 1.90x
+(Worker_TP0_EP0 pid=200769) INFO 08-17 03:33:38 [indexer.py:518] DSA indexer decode path: use_flattening=True (next_n=8, use_fp4_indexer_cache=False)
+(Worker_TP6_EP6 pid=200775) INFO 08-17 03:33:38 [kernel.py:306] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(Worker_TP0_EP0 pid=200769) INFO 08-17 03:33:38 [kernel.py:306] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(Worker_TP5_EP5 pid=200774) INFO 08-17 03:33:38 [kernel.py:306] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(Worker_TP2_EP2 pid=200771) INFO 08-17 03:33:38 [kernel.py:306] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(Worker_TP1_EP1 pid=200770) INFO 08-17 03:33:38 [kernel.py:306] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(Worker_TP3_EP3 pid=200772) INFO 08-17 03:33:38 [kernel.py:306] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(Worker_TP7_EP7 pid=200776) INFO 08-17 03:33:38 [kernel.py:306] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(Worker_TP4_EP4 pid=200773) INFO 08-17 03:33:38 [kernel.py:306] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(Worker_TP0_EP0 pid=200769) INFO 08-17 03:33:38 [kernel_warmup.py:92] Warming up ll_bf16 router GEMM kernels for shapes: ((7168, 384),).
+(Worker_TP0_EP0 pid=200769) INFO 08-17 03:33:40 [flashinfer_sparse_mla_warmup.py:233] Warming up DeepSeek V4 sparse MLA attention for mixed tokens=16.
+(Worker_TP3_EP3 pid=200772) INFO 08-17 03:33:40 [flashinfer_sparse_mla_warmup.py:233] Warming up DeepSeek V4 sparse MLA attention for mixed tokens=16.
+(Worker_TP1_EP1 pid=200770) INFO 08-17 03:33:40 [flashinfer_sparse_mla_warmup.py:233] Warming up DeepSeek V4 sparse MLA attention for mixed tokens=16.
+(Worker_TP2_EP2 pid=200771) INFO 08-17 03:33:40 [flashinfer_sparse_mla_warmup.py:233] Warming up DeepSeek V4 sparse MLA attention for mixed tokens=16.
+(Worker_TP4_EP4 pid=200773) INFO 08-17 03:33:40 [flashinfer_sparse_mla_warmup.py:233] Warming up DeepSeek V4 sparse MLA attention for mixed tokens=16.
+(Worker_TP6_EP6 pid=200775) INFO 08-17 03:33:40 [flashinfer_sparse_mla_warmup.py:233] Warming up DeepSeek V4 sparse MLA attention for mixed tokens=16.
+(Worker_TP5_EP5 pid=200774) INFO 08-17 03:33:40 [flashinfer_sparse_mla_warmup.py:233] Warming up DeepSeek V4 sparse MLA attention for mixed tokens=16.
+(Worker_TP7_EP7 pid=200776) INFO 08-17 03:33:40 [flashinfer_sparse_mla_warmup.py:233] Warming up DeepSeek V4 sparse MLA attention for mixed tokens=16.
+(Worker_TP0_EP0 pid=200769) DeepGEMM warmup:   0%|          | 0/1321 [00:00<?, ?it/s]DeepGEMM warmup: 100%|██████████| 1321/1321 [00:00<00:00, 13328.03it/s]
+(Worker_TP0_EP0 pid=200769) INFO 08-17 03:33:44 [kernel_warmup.py:166] Skipping FlashInfer autotune because it is disabled.
+(Worker_TP0_EP0 pid=200769) Capturing CUDA graphs (FULL):   0%|          | 0/1 [00:00<?, ?it/s]Capturing CUDA graphs (FULL): 100%|██████████| 1/1 [00:00<00:00,  2.60it/s]Capturing CUDA graphs (FULL): 100%|██████████| 1/1 [00:00<00:00,  2.60it/s]
+(Worker_TP6_EP6 pid=200775) INFO 08-17 03:33:45 [speculator.py:137] Capturing model for DSpark speculator...
+(Worker_TP7_EP7 pid=200776) INFO 08-17 03:33:45 [speculator.py:137] Capturing model for DSpark speculator...
+(Worker_TP5_EP5 pid=200774) INFO 08-17 03:33:45 [speculator.py:137] Capturing model for DSpark speculator...
+(Worker_TP1_EP1 pid=200770) INFO 08-17 03:33:45 [speculator.py:137] Capturing model for DSpark speculator...
+(Worker_TP4_EP4 pid=200773) INFO 08-17 03:33:45 [speculator.py:137] Capturing model for DSpark speculator...
+(Worker_TP3_EP3 pid=200772) INFO 08-17 03:33:45 [speculator.py:137] Capturing model for DSpark speculator...
+(Worker_TP0_EP0 pid=200769) INFO 08-17 03:33:45 [speculator.py:137] Capturing model for DSpark speculator...
+(Worker_TP2_EP2 pid=200771) INFO 08-17 03:33:45 [speculator.py:137] Capturing model for DSpark speculator...
+(Worker_TP0_EP0 pid=200769) Capturing dspark CUDA graphs (FULL):   0%|          | 0/1 [00:00<?, ?it/s]Capturing dspark CUDA graphs (FULL): 100%|██████████| 1/1 [00:00<00:00, 36.74it/s]
+(Worker_TP7_EP7 pid=200776) INFO 08-17 03:33:45 [model_runner.py:791] Graph capturing finished in 1 secs, took 0.17 GiB
+(Worker_TP0_EP0 pid=200769) INFO 08-17 03:33:45 [model_runner.py:791] Graph capturing finished in 1 secs, took 0.17 GiB
+(Worker_TP1_EP1 pid=200770) INFO 08-17 03:33:45 [model_runner.py:791] Graph capturing finished in 1 secs, took 0.17 GiB
+(Worker_TP3_EP3 pid=200772) INFO 08-17 03:33:45 [model_runner.py:791] Graph capturing finished in 1 secs, took 0.17 GiB
+(Worker_TP4_EP4 pid=200773) INFO 08-17 03:33:45 [model_runner.py:791] Graph capturing finished in 1 secs, took 0.17 GiB
+(Worker_TP2_EP2 pid=200771) INFO 08-17 03:33:45 [model_runner.py:791] Graph capturing finished in 1 secs, took 0.17 GiB
+(Worker_TP6_EP6 pid=200775) INFO 08-17 03:33:45 [model_runner.py:791] Graph capturing finished in 1 secs, took 0.17 GiB
+(Worker_TP5_EP5 pid=200774) INFO 08-17 03:33:45 [model_runner.py:791] Graph capturing finished in 1 secs, took 0.17 GiB
+(Worker_TP0_EP0 pid=200769) INFO 08-17 03:33:45 [gpu_worker.py:789] Free memory on device (137.64/139.8 GiB) on startup. Desired GPU memory utilization is (0.95, 132.81 GiB). Actual usage is 110.8 GiB for consumed memory (weights + non-torch), 3.02 GiB for peak activation, and 0.17 GiB for CUDAGraph memory. Replace gpu_memory_utilization config with `--kv-cache-memory=20057044992` (18.68 GiB) to fit into requested memory, or `--kv-cache-memory=25240008704` (23.51 GiB) to fully utilize gpu memory. Current kv cache memory in use is 19.0 GiB.
+(Worker_TP7_EP7 pid=200776) INFO 08-17 03:33:45 [gpu_worker.py:789] Free memory on device (137.64/139.8 GiB) on startup. Desired GPU memory utilization is (0.95, 132.81 GiB). Actual usage is 110.8 GiB for consumed memory (weights + non-torch), 3.02 GiB for peak activation, and 0.17 GiB for CUDAGraph memory. Replace gpu_memory_utilization config with `--kv-cache-memory=20057044992` (18.68 GiB) to fit into requested memory, or `--kv-cache-memory=25240008704` (23.51 GiB) to fully utilize gpu memory. Current kv cache memory in use is 19.0 GiB.
+(Worker_TP3_EP3 pid=200772) INFO 08-17 03:33:45 [gpu_worker.py:789] Free memory on device (137.64/139.8 GiB) on startup. Desired GPU memory utilization is (0.95, 132.81 GiB). Actual usage is 110.8 GiB for consumed memory (weights + non-torch), 3.02 GiB for peak activation, and 0.17 GiB for CUDAGraph memory. Replace gpu_memory_utilization config with `--kv-cache-memory=20057044992` (18.68 GiB) to fit into requested memory, or `--kv-cache-memory=25240008704` (23.51 GiB) to fully utilize gpu memory. Current kv cache memory in use is 19.0 GiB.
+(Worker_TP4_EP4 pid=200773) INFO 08-17 03:33:45 [gpu_worker.py:789] Free memory on device (137.64/139.8 GiB) on startup. Desired GPU memory utilization is (0.95, 132.81 GiB). Actual usage is 110.8 GiB for consumed memory (weights + non-torch), 3.02 GiB for peak activation, and 0.17 GiB for CUDAGraph memory. Replace gpu_memory_utilization config with `--kv-cache-memory=20057044992` (18.68 GiB) to fit into requested memory, or `--kv-cache-memory=25240008704` (23.51 GiB) to fully utilize gpu memory. Current kv cache memory in use is 19.0 GiB.
+(Worker_TP1_EP1 pid=200770) INFO 08-17 03:33:45 [gpu_worker.py:789] Free memory on device (137.64/139.8 GiB) on startup. Desired GPU memory utilization is (0.95, 132.81 GiB). Actual usage is 110.8 GiB for consumed memory (weights + non-torch), 3.02 GiB for peak activation, and 0.17 GiB for CUDAGraph memory. Replace gpu_memory_utilization config with `--kv-cache-memory=20057044992` (18.68 GiB) to fit into requested memory, or `--kv-cache-memory=25240008704` (23.51 GiB) to fully utilize gpu memory. Current kv cache memory in use is 19.0 GiB.
+(Worker_TP2_EP2 pid=200771) INFO 08-17 03:33:45 [gpu_worker.py:789] Free memory on device (137.64/139.8 GiB) on startup. Desired GPU memory utilization is (0.95, 132.81 GiB). Actual usage is 110.8 GiB for consumed memory (weights + non-torch), 3.02 GiB for peak activation, and 0.17 GiB for CUDAGraph memory. Replace gpu_memory_utilization config with `--kv-cache-memory=20057044992` (18.68 GiB) to fit into requested memory, or `--kv-cache-memory=25240008704` (23.51 GiB) to fully utilize gpu memory. Current kv cache memory in use is 19.0 GiB.
+(Worker_TP6_EP6 pid=200775) INFO 08-17 03:33:45 [gpu_worker.py:789] Free memory on device (137.64/139.8 GiB) on startup. Desired GPU memory utilization is (0.95, 132.81 GiB). Actual usage is 110.8 GiB for consumed memory (weights + non-torch), 3.02 GiB for peak activation, and 0.17 GiB for CUDAGraph memory. Replace gpu_memory_utilization config with `--kv-cache-memory=20057044992` (18.68 GiB) to fit into requested memory, or `--kv-cache-memory=25240008704` (23.51 GiB) to fully utilize gpu memory. Current kv cache memory in use is 19.0 GiB.
+(Worker_TP5_EP5 pid=200774) INFO 08-17 03:33:45 [gpu_worker.py:789] Free memory on device (137.64/139.8 GiB) on startup. Desired GPU memory utilization is (0.95, 132.81 GiB). Actual usage is 110.8 GiB for consumed memory (weights + non-torch), 3.02 GiB for peak activation, and 0.17 GiB for CUDAGraph memory. Replace gpu_memory_utilization config with `--kv-cache-memory=20057044992` (18.68 GiB) to fit into requested memory, or `--kv-cache-memory=25240008704` (23.51 GiB) to fully utilize gpu memory. Current kv cache memory in use is 19.0 GiB.
+(Worker_TP5_EP5 pid=200774) INFO 08-17 03:33:46 [jit_monitor.py:79] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.
+(Worker_TP4_EP4 pid=200773) INFO 08-17 03:33:46 [jit_monitor.py:79] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.
+(Worker_TP6_EP6 pid=200775) INFO 08-17 03:33:46 [jit_monitor.py:79] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.
+(Worker_TP0_EP0 pid=200769) INFO 08-17 03:33:46 [jit_monitor.py:79] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.
+(Worker_TP7_EP7 pid=200776) INFO 08-17 03:33:46 [jit_monitor.py:79] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.
+(Worker_TP2_EP2 pid=200771) INFO 08-17 03:33:46 [jit_monitor.py:79] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.
+(Worker_TP1_EP1 pid=200770) INFO 08-17 03:33:46 [jit_monitor.py:79] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.
+(Worker_TP3_EP3 pid=200772) INFO 08-17 03:33:46 [jit_monitor.py:79] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.
+(EngineCore pid=200371) INFO 08-17 03:33:47 [core.py:355] init engine (profile, create kv cache, warmup model) took 15.56 s
+(EngineCore pid=200371) Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+(EngineCore pid=200371) WARNING 08-17 03:33:49 [vllm.py:1237] VLLM_USE_BREAKABLE_CUDAGRAPH is set, disabling vLLM's torch.compile pipeline. Equivalent to -cc.mode=none.
+(EngineCore pid=200371) WARNING 08-17 03:33:49 [vllm.py:1247] Inductor compilation was disabled by user settings, optimizations settings that are only active during inductor compilation will be ignored.
+(EngineCore pid=200371) INFO 08-17 03:33:49 [kernel.py:306] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(EngineCore pid=200371) WARNING 08-17 03:33:49 [vllm.py:1757] max_num_scheduled_tokens is set to 8186 based on the speculative decoding settings. This may lead to suboptimal performance. Consider increasing max_num_batched_tokens to accommodate the additional draft token slots, or decrease num_speculative_tokens or max_num_seqs.
+(EngineCore pid=200371) WARNING 08-17 03:33:49 [vllm.py:2267] Model Runner V2 does not yet support the thinking_token_budget request parameter. Set VLLM_USE_V2_MODEL_RUNNER=0 if this is required.
+(EngineCore pid=200371) INFO 08-17 03:33:50 [compilation.py:329] Enabled custom fusions: norm_quant, act_quant, allreduce_rms
+(APIServer pid=199737) INFO 08-17 03:33:50 [api_server.py:678] Supported tasks: ['generate']
+(APIServer pid=199737) INFO 08-17 03:33:50 [parser_manager.py:37] "auto" tool choice has been enabled.
+(APIServer pid=199737) WARNING 08-17 03:33:50 [model.py:1637] Default vLLM sampling parameters have been overridden by the model's `generation_config.json`: `{'temperature': 1.0, 'top_p': 1.0}`. If this is not intended, please relaunch vLLM instance with `--generation-config vllm`.
+(APIServer pid=199737) INFO 08-17 03:33:51 [api_server.py:682] Starting vLLM server on http://0.0.0.0:8000
+(APIServer pid=199737) INFO 08-17 03:33:51 [launcher.py:37] Available routes are:
+(APIServer pid=199737) INFO 08-17 03:33:51 [launcher.py:46] Route: /openapi.json, Methods: HEAD, GET
+(APIServer pid=199737) INFO 08-17 03:33:51 [launcher.py:46] Route: /docs, Methods: HEAD, GET
+(APIServer pid=199737) INFO 08-17 03:33:51 [launcher.py:46] Route: /docs/oauth2-redirect, Methods: HEAD, GET
+(APIServer pid=199737) INFO 08-17 03:33:51 [launcher.py:46] Route: /redoc, Methods: HEAD, GET
+(APIServer pid=199737) INFO 08-17 03:33:51 [launcher.py:46] Route: /load, Methods: GET
+(APIServer pid=199737) INFO 08-17 03:33:51 [launcher.py:46] Route: /version, Methods: GET
+(APIServer pid=199737) INFO 08-17 03:33:51 [launcher.py:46] Route: /health, Methods: GET
+(APIServer pid=199737) INFO 08-17 03:33:51 [launcher.py:46] Route: /metrics, Methods: GET
+(APIServer pid=199737) INFO 08-17 03:33:51 [launcher.py:46] Route: /tokenize, Methods: POST
+(APIServer pid=199737) INFO 08-17 03:33:51 [launcher.py:46] Route: /detokenize, Methods: POST
+(APIServer pid=199737) INFO 08-17 03:33:51 [launcher.py:46] Route: /v1/models, Methods: GET
+(APIServer pid=199737) INFO 08-17 03:33:51 [launcher.py:46] Route: /ping, Methods: GET
+(APIServer pid=199737) INFO 08-17 03:33:51 [launcher.py:46] Route: /ping, Methods: POST
+(APIServer pid=199737) INFO 08-17 03:33:51 [launcher.py:46] Route: /invocations, Methods: POST
+(APIServer pid=199737) INFO 08-17 03:33:51 [launcher.py:46] Route: /v1/chat/completions, Methods: POST
+(APIServer pid=199737) INFO 08-17 03:33:51 [launcher.py:46] Route: /v1/chat/completions/batch, Methods: POST
+(APIServer pid=199737) INFO 08-17 03:33:51 [launcher.py:46] Route: /v1/responses, Methods: POST
+(APIServer pid=199737) INFO 08-17 03:33:51 [launcher.py:46] Route: /v1/responses/{response_id}, Methods: GET
+(APIServer pid=199737) INFO 08-17 03:33:51 [launcher.py:46] Route: /v1/responses/{response_id}/cancel, Methods: POST
+(APIServer pid=199737) INFO 08-17 03:33:51 [launcher.py:46] Route: /v1/completions, Methods: POST
+(APIServer pid=199737) INFO 08-17 03:33:51 [launcher.py:46] Route: /v1/messages, Methods: POST
+(APIServer pid=199737) INFO 08-17 03:33:51 [launcher.py:46] Route: /v1/messages/count_tokens, Methods: POST
+(APIServer pid=199737) INFO 08-17 03:33:51 [launcher.py:46] Route: /generative_scoring, Methods: POST
+(APIServer pid=199737) INFO 08-17 03:33:51 [launcher.py:46] Route: /scale_elastic_ep, Methods: POST
+(APIServer pid=199737) INFO 08-17 03:33:51 [launcher.py:46] Route: /is_scaling_elastic_ep, Methods: POST
+(APIServer pid=199737) INFO 08-17 03:33:51 [launcher.py:46] Route: /v1/chat/completions/render, Methods: POST
+(APIServer pid=199737) INFO 08-17 03:33:51 [launcher.py:46] Route: /v1/completions/render, Methods: POST
+(APIServer pid=199737) INFO 08-17 03:33:51 [launcher.py:46] Route: /v1/chat/completions/derender, Methods: POST
+(APIServer pid=199737) INFO 08-17 03:33:51 [launcher.py:46] Route: /v1/completions/derender, Methods: POST
+(APIServer pid=199737) INFO 08-17 03:33:51 [launcher.py:46] Route: /inference/v1/generate, Methods: POST
+(APIServer pid=199737) INFO 08-17 03:33:51 [launcher.py:99] API server: waiting for HTTP server to start
+(APIServer pid=199737) INFO:     Started server process [199737]
+(APIServer pid=199737) INFO:     Waiting for application startup.
+(APIServer pid=199737) INFO:     Application startup complete.
+(APIServer pid=199737) INFO 08-17 03:33:51 [launcher.py:105] API server: HTTP server started
+(APIServer pid=199737) INFO:     127.0.0.1:39896 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=199737) INFO:     127.0.0.1:39908 - "GET /health HTTP/1.1" 200 OK
+
+Ready after 117s: deepseek-ai/DeepSeek-V4-Pro-0813 on http://localhost:8000
+Verify it from another shell: ../benchmark.sh --smoke-only
+Ctrl-C here stops the server.
+
+(APIServer pid=199737) INFO:     127.0.0.1:39922 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=199737) INFO:     127.0.0.1:41964 - "POST /tokenize HTTP/1.1" 200 OK
+(APIServer pid=199737) INFO:     127.0.0.1:41978 - "GET /metrics HTTP/1.1" 200 OK
+(APIServer pid=199737) INFO:     127.0.0.1:41978 - "GET /metrics HTTP/1.1" 200 OK
+(APIServer pid=199737) INFO:     127.0.0.1:41978 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(Worker_TP0_EP0 pid=200769) WARNING 08-17 03:34:03 [jit_monitor.py:135] TileLang JIT compilation during inference: mhc_pre_big_fuse_broadcast_with_norm_tilelang. This causes a latency spike; consider extending warmup to cover this shape/config.
+(Worker_TP0_EP0 pid=200769) WARNING 08-17 03:34:03 [jit_monitor.py:135] Triton kernel JIT compilation during inference: _prepare_dflash_inputs_kernel. This causes a latency spike; consider extending warmup to cover this shape/config.
+(Worker_TP0_EP0 pid=200769) WARNING 08-17 03:34:03 [jit_monitor.py:135] Triton kernel JIT compilation during inference: _compute_local_logits_stats_kernel. This causes a latency spike; consider extending warmup to cover this shape/config.
+(Worker_TP0_EP0 pid=200769) WARNING 08-17 03:34:03 [jit_monitor.py:135] Triton kernel JIT compilation during inference: _rejection_kernel. This causes a latency spike; consider extending warmup to cover this shape/config.
+(Worker_TP0_EP0 pid=200769) WARNING 08-17 03:34:03 [jit_monitor.py:135] Triton kernel JIT compilation during inference: _resample_kernel. This causes a latency spike; consider extending warmup to cover this shape/config.
+(APIServer pid=199737) INFO:     127.0.0.1:41978 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=199737) INFO 08-17 03:34:11 [loggers.py:310] Engine 000: Avg prompt throughput: 410.4 tokens/s, Avg generation throughput: 77.2 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.3%, Prefix cache hit rate: 0.0%
+(APIServer pid=199737) INFO 08-17 03:34:11 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 1.70, Accepted throughput: 14.15 tokens/s, Drafted throughput: 140.75 tokens/s, Accepted: 318 tokens, Drafted: 3164 tokens, Per-position acceptance rate: 0.356, 0.159, 0.088, 0.053, 0.031, 0.013, 0.002, Avg Draft acceptance rate: 10.1%
+(APIServer pid=199737) INFO:     127.0.0.1:41978 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=199737) INFO:     127.0.0.1:41978 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=199737) INFO 08-17 03:34:21 [loggers.py:310] Engine 000: Avg prompt throughput: 410.4 tokens/s, Avg generation throughput: 115.4 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.3%, Prefix cache hit rate: 0.0%
+(APIServer pid=199737) INFO 08-17 03:34:21 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 2.07, Accepted throughput: 59.80 tokens/s, Drafted throughput: 389.89 tokens/s, Accepted: 598 tokens, Drafted: 3899 tokens, Per-position acceptance rate: 0.429, 0.276, 0.174, 0.102, 0.056, 0.027, 0.009, Avg Draft acceptance rate: 15.3%
+(APIServer pid=199737) INFO:     127.0.0.1:41978 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=199737) INFO:     127.0.0.1:41978 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=199737) INFO:     127.0.0.1:41978 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=199737) INFO 08-17 03:34:31 [loggers.py:310] Engine 000: Avg prompt throughput: 615.5 tokens/s, Avg generation throughput: 149.3 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.3%, Prefix cache hit rate: 0.0%
+(APIServer pid=199737) INFO 08-17 03:34:31 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 2.71, Accepted throughput: 94.29 tokens/s, Drafted throughput: 384.97 tokens/s, Accepted: 943 tokens, Drafted: 3850 tokens, Per-position acceptance rate: 0.642, 0.433, 0.271, 0.155, 0.105, 0.067, 0.042, Avg Draft acceptance rate: 24.5%
+(APIServer pid=199737) INFO:     127.0.0.1:41978 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=199737) INFO:     127.0.0.1:41978 - "GET /metrics HTTP/1.1" 200 OK
+(APIServer pid=199737) INFO:     127.0.0.1:41978 - "GET /metrics HTTP/1.1" 200 OK
+(APIServer pid=199737) INFO:     127.0.0.1:43380 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=199737) INFO 08-17 03:34:41 [loggers.py:310] Engine 000: Avg prompt throughput: 205.2 tokens/s, Avg generation throughput: 67.7 tokens/s, Running: 0 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.0%, Prefix cache hit rate: 0.0%
+(APIServer pid=199737) INFO 08-17 03:34:41 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 2.16, Accepted throughput: 36.30 tokens/s, Drafted throughput: 219.78 tokens/s, Accepted: 363 tokens, Drafted: 2198 tokens, Per-position acceptance rate: 0.465, 0.277, 0.194, 0.115, 0.064, 0.032, 0.010, Avg Draft acceptance rate: 16.5%
+(APIServer pid=199737) INFO:     127.0.0.1:44964 - "POST /tokenize HTTP/1.1" 200 OK
+(APIServer pid=199737) INFO:     127.0.0.1:44970 - "GET /metrics HTTP/1.1" 200 OK
+(APIServer pid=199737) INFO:     127.0.0.1:44970 - "GET /metrics HTTP/1.1" 200 OK
+(APIServer pid=199737) INFO:     127.0.0.1:44970 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(Worker_TP0_EP0 pid=200769) WARNING 08-17 03:34:49 [jit_monitor.py:135] TileLang JIT compilation during inference: mhc_pre_big_fuse_with_norm_tilelang. This causes a latency spike; consider extending warmup to cover this shape/config.
+(APIServer pid=199737) INFO 08-17 03:34:51 [loggers.py:310] Engine 000: Avg prompt throughput: 230.8 tokens/s, Avg generation throughput: 4.6 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.4%, Prefix cache hit rate: 8.7%
+(APIServer pid=199737) INFO 08-17 03:34:51 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 2.37, Accepted throughput: 2.60 tokens/s, Drafted throughput: 13.30 tokens/s, Accepted: 26 tokens, Drafted: 133 tokens, Per-position acceptance rate: 0.684, 0.474, 0.158, 0.053, 0.000, 0.000, 0.000, Avg Draft acceptance rate: 19.5%
+(APIServer pid=199737) INFO:     127.0.0.1:44970 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=199737) INFO 08-17 03:35:01 [loggers.py:310] Engine 000: Avg prompt throughput: 230.8 tokens/s, Avg generation throughput: 123.2 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.4%, Prefix cache hit rate: 14.6%
+(APIServer pid=199737) INFO 08-17 03:35:01 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 2.18, Accepted throughput: 66.70 tokens/s, Drafted throughput: 394.81 tokens/s, Accepted: 667 tokens, Drafted: 3948 tokens, Per-position acceptance rate: 0.489, 0.312, 0.195, 0.106, 0.044, 0.021, 0.014, Avg Draft acceptance rate: 16.9%
+(APIServer pid=199737) INFO:     127.0.0.1:44970 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=199737) INFO:     127.0.0.1:44970 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=199737) INFO 08-17 03:35:11 [loggers.py:310] Engine 000: Avg prompt throughput: 230.8 tokens/s, Avg generation throughput: 179.4 tokens/s, Running: 0 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.0%, Prefix cache hit rate: 18.7%
+(APIServer pid=199737) INFO 08-17 03:35:11 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 3.17, Accepted throughput: 122.89 tokens/s, Drafted throughput: 396.18 tokens/s, Accepted: 1229 tokens, Drafted: 3962 tokens, Per-position acceptance rate: 0.677, 0.489, 0.360, 0.263, 0.177, 0.125, 0.080, Avg Draft acceptance rate: 31.0%
+(APIServer pid=199737) INFO:     127.0.0.1:44970 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=199737) INFO 08-17 03:35:21 [loggers.py:310] Engine 000: Avg prompt throughput: 461.5 tokens/s, Avg generation throughput: 130.7 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.4%, Prefix cache hit rate: 24.3%
+(APIServer pid=199737) INFO 08-17 03:35:21 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 2.37, Accepted throughput: 75.69 tokens/s, Drafted throughput: 385.66 tokens/s, Accepted: 757 tokens, Drafted: 3857 tokens, Per-position acceptance rate: 0.564, 0.347, 0.216, 0.125, 0.078, 0.031, 0.013, Avg Draft acceptance rate: 19.6%
+(APIServer pid=199737) INFO:     127.0.0.1:44970 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=199737) INFO 08-17 03:35:31 [loggers.py:310] Engine 000: Avg prompt throughput: 230.8 tokens/s, Avg generation throughput: 76.0 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.4%, Prefix cache hit rate: 26.2%
+(APIServer pid=199737) INFO 08-17 03:35:31 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 1.35, Accepted throughput: 19.80 tokens/s, Drafted throughput: 392.68 tokens/s, Accepted: 198 tokens, Drafted: 3927 tokens, Per-position acceptance rate: 0.253, 0.070, 0.027, 0.004, 0.000, 0.000, 0.000, Avg Draft acceptance rate: 5.0%
+(APIServer pid=199737) INFO 08-17 03:35:41 [loggers.py:310] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 84.8 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.4%, Prefix cache hit rate: 26.2%
+(APIServer pid=199737) INFO 08-17 03:35:41 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 1.45, Accepted throughput: 26.50 tokens/s, Drafted throughput: 408.05 tokens/s, Accepted: 265 tokens, Drafted: 4081 tokens, Per-position acceptance rate: 0.322, 0.091, 0.029, 0.009, 0.002, 0.002, 0.000, Avg Draft acceptance rate: 6.5%
+(APIServer pid=199737) INFO:     127.0.0.1:44970 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=199737) INFO 08-17 03:35:51 [loggers.py:310] Engine 000: Avg prompt throughput: 230.8 tokens/s, Avg generation throughput: 97.5 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.4%, Prefix cache hit rate: 27.8%
+(APIServer pid=199737) INFO 08-17 03:35:51 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 1.73, Accepted throughput: 41.00 tokens/s, Drafted throughput: 394.78 tokens/s, Accepted: 410 tokens, Drafted: 3948 tokens, Per-position acceptance rate: 0.418, 0.186, 0.078, 0.032, 0.009, 0.004, 0.000, Avg Draft acceptance rate: 10.4%
+(APIServer pid=199737) INFO:     127.0.0.1:44970 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=199737) INFO:     127.0.0.1:44970 - "GET /metrics HTTP/1.1" 200 OK
+(APIServer pid=199737) INFO:     127.0.0.1:44970 - "GET /metrics HTTP/1.1" 200 OK
+(APIServer pid=199737) INFO 08-17 03:36:01 [loggers.py:310] Engine 000: Avg prompt throughput: 230.8 tokens/s, Avg generation throughput: 123.0 tokens/s, Running: 0 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.0%, Prefix cache hit rate: 29.1%
+(APIServer pid=199737) INFO 08-17 03:36:01 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 2.21, Accepted throughput: 67.39 tokens/s, Drafted throughput: 388.47 tokens/s, Accepted: 674 tokens, Drafted: 3885 tokens, Per-position acceptance rate: 0.568, 0.305, 0.162, 0.094, 0.054, 0.023, 0.009, Avg Draft acceptance rate: 17.3%
+(APIServer pid=199737) INFO:     127.0.0.1:48430 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=199737) INFO 08-17 03:36:11 [loggers.py:310] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.0%, Prefix cache hit rate: 29.1%
+(APIServer pid=199737) INFO:     127.0.0.1:59494 - "POST /tokenize HTTP/1.1" 200 OK
+(APIServer pid=199737) INFO:     127.0.0.1:59510 - "GET /metrics HTTP/1.1" 200 OK
+(APIServer pid=199737) INFO:     127.0.0.1:59510 - "GET /metrics HTTP/1.1" 200 OK
+(APIServer pid=199737) INFO:     127.0.0.1:59510 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=199737) INFO 08-17 03:36:21 [loggers.py:310] Engine 000: Avg prompt throughput: 26.0 tokens/s, Avg generation throughput: 93.4 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.3%, Prefix cache hit rate: 30.1%
+(APIServer pid=199737) INFO 08-17 03:36:21 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 2.09, Accepted throughput: 24.35 tokens/s, Drafted throughput: 156.09 tokens/s, Accepted: 487 tokens, Drafted: 3122 tokens, Per-position acceptance rate: 0.439, 0.231, 0.148, 0.101, 0.085, 0.061, 0.027, Avg Draft acceptance rate: 15.6%
+(APIServer pid=199737) INFO 08-17 03:36:31 [loggers.py:310] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 177.5 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.3%, Prefix cache hit rate: 30.1%
+(APIServer pid=199737) INFO 08-17 03:36:31 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 3.00, Accepted throughput: 118.40 tokens/s, Drafted throughput: 413.71 tokens/s, Accepted: 1184 tokens, Drafted: 4137 tokens, Per-position acceptance rate: 0.697, 0.496, 0.327, 0.213, 0.137, 0.085, 0.049, Avg Draft acceptance rate: 28.6%
+(APIServer pid=199737) INFO:     127.0.0.1:59510 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=199737) INFO 08-17 03:36:41 [loggers.py:310] Engine 000: Avg prompt throughput: 26.0 tokens/s, Avg generation throughput: 176.9 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.3%, Prefix cache hit rate: 31.0%
+(APIServer pid=199737) INFO 08-17 03:36:41 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 3.08, Accepted throughput: 119.69 tokens/s, Drafted throughput: 402.47 tokens/s, Accepted: 1197 tokens, Drafted: 4025 tokens, Per-position acceptance rate: 0.697, 0.499, 0.372, 0.237, 0.155, 0.085, 0.037, Avg Draft acceptance rate: 29.7%
+(APIServer pid=199737) INFO 08-17 03:36:51 [loggers.py:310] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 225.8 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.3%, Prefix cache hit rate: 31.0%
+(APIServer pid=199737) INFO 08-17 03:36:51 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 3.85, Accepted throughput: 167.09 tokens/s, Drafted throughput: 410.86 tokens/s, Accepted: 1671 tokens, Drafted: 4109 tokens, Per-position acceptance rate: 0.814, 0.620, 0.487, 0.353, 0.250, 0.184, 0.138, Avg Draft acceptance rate: 40.7%
+(APIServer pid=199737) INFO:     127.0.0.1:59510 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=199737) INFO 08-17 03:37:01 [loggers.py:310] Engine 000: Avg prompt throughput: 26.0 tokens/s, Avg generation throughput: 212.6 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.3%, Prefix cache hit rate: 31.8%
+(APIServer pid=199737) INFO 08-17 03:37:01 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 3.71, Accepted throughput: 155.19 tokens/s, Drafted throughput: 401.07 tokens/s, Accepted: 1552 tokens, Drafted: 4011 tokens, Per-position acceptance rate: 0.798, 0.590, 0.415, 0.305, 0.253, 0.202, 0.145, Avg Draft acceptance rate: 38.7%
+(APIServer pid=199737) INFO 08-17 03:37:11 [loggers.py:310] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 264.7 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.4%, Prefix cache hit rate: 31.8%
+(APIServer pid=199737) INFO 08-17 03:37:11 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 4.48, Accepted throughput: 205.60 tokens/s, Drafted throughput: 413.70 tokens/s, Accepted: 2056 tokens, Drafted: 4137 tokens, Per-position acceptance rate: 0.876, 0.745, 0.579, 0.462, 0.365, 0.261, 0.191, Avg Draft acceptance rate: 49.7%
+(APIServer pid=199737) INFO:     127.0.0.1:59510 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=199737) INFO 08-17 03:37:21 [loggers.py:310] Engine 000: Avg prompt throughput: 26.0 tokens/s, Avg generation throughput: 159.8 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.3%, Prefix cache hit rate: 32.6%
+(APIServer pid=199737) INFO 08-17 03:37:21 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 2.77, Accepted throughput: 102.40 tokens/s, Drafted throughput: 404.59 tokens/s, Accepted: 1024 tokens, Drafted: 4046 tokens, Per-position acceptance rate: 0.656, 0.464, 0.291, 0.183, 0.102, 0.052, 0.024, Avg Draft acceptance rate: 25.3%
+(APIServer pid=199737) INFO 08-17 03:37:31 [loggers.py:310] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 237.0 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.4%, Prefix cache hit rate: 32.6%
+(APIServer pid=199737) INFO 08-17 03:37:31 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 4.09, Accepted throughput: 179.10 tokens/s, Drafted throughput: 405.30 tokens/s, Accepted: 1791 tokens, Drafted: 4053 tokens, Per-position acceptance rate: 0.869, 0.756, 0.634, 0.446, 0.231, 0.112, 0.045, Avg Draft acceptance rate: 44.2%
+(APIServer pid=199737) INFO:     127.0.0.1:59510 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=199737) INFO 08-17 03:37:41 [loggers.py:310] Engine 000: Avg prompt throughput: 26.0 tokens/s, Avg generation throughput: 279.7 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.3%, Prefix cache hit rate: 33.4%
+(APIServer pid=199737) INFO 08-17 03:37:41 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 4.76, Accepted throughput: 220.99 tokens/s, Drafted throughput: 411.58 tokens/s, Accepted: 2210 tokens, Drafted: 4116 tokens, Per-position acceptance rate: 0.827, 0.723, 0.629, 0.537, 0.432, 0.340, 0.270, Avg Draft acceptance rate: 53.7%
+(APIServer pid=199737) INFO:     127.0.0.1:59510 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=199737) INFO 08-17 03:37:51 [loggers.py:310] Engine 000: Avg prompt throughput: 26.0 tokens/s, Avg generation throughput: 268.0 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.3%, Prefix cache hit rate: 34.2%
+(APIServer pid=199737) INFO 08-17 03:37:51 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 4.48, Accepted throughput: 208.57 tokens/s, Drafted throughput: 419.95 tokens/s, Accepted: 2086 tokens, Drafted: 4200 tokens, Per-position acceptance rate: 0.663, 0.557, 0.507, 0.470, 0.450, 0.423, 0.407, Avg Draft acceptance rate: 49.7%
+(APIServer pid=199737) INFO 08-17 03:38:01 [loggers.py:310] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 123.5 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.3%, Prefix cache hit rate: 34.2%
+(APIServer pid=199737) INFO 08-17 03:38:01 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 2.09, Accepted throughput: 64.30 tokens/s, Drafted throughput: 414.38 tokens/s, Accepted: 643 tokens, Drafted: 4144 tokens, Per-position acceptance rate: 0.441, 0.252, 0.164, 0.106, 0.064, 0.037, 0.022, Avg Draft acceptance rate: 15.5%
+(APIServer pid=199737) INFO 08-17 03:38:11 [loggers.py:310] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 105.7 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.3%, Prefix cache hit rate: 34.2%
+(APIServer pid=199737) INFO 08-17 03:38:11 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 1.80, Accepted throughput: 47.10 tokens/s, Drafted throughput: 410.20 tokens/s, Accepted: 471 tokens, Drafted: 4102 tokens, Per-position acceptance rate: 0.430, 0.191, 0.087, 0.048, 0.026, 0.017, 0.005, Avg Draft acceptance rate: 11.5%
+(APIServer pid=199737) INFO 08-17 03:38:21 [loggers.py:310] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 129.3 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.4%, Prefix cache hit rate: 34.2%
+(APIServer pid=199737) INFO 08-17 03:38:21 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 2.21, Accepted throughput: 70.70 tokens/s, Drafted throughput: 410.17 tokens/s, Accepted: 707 tokens, Drafted: 4102 tokens, Per-position acceptance rate: 0.578, 0.314, 0.162, 0.075, 0.039, 0.026, 0.012, Avg Draft acceptance rate: 17.2%
+(APIServer pid=199737) INFO:     127.0.0.1:59510 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=199737) INFO 08-17 03:38:31 [loggers.py:310] Engine 000: Avg prompt throughput: 26.0 tokens/s, Avg generation throughput: 210.7 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.3%, Prefix cache hit rate: 34.9%
+(APIServer pid=199737) INFO 08-17 03:38:31 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 3.59, Accepted throughput: 152.09 tokens/s, Drafted throughput: 410.88 tokens/s, Accepted: 1521 tokens, Drafted: 4109 tokens, Per-position acceptance rate: 0.756, 0.620, 0.458, 0.319, 0.221, 0.136, 0.080, Avg Draft acceptance rate: 37.0%
+(APIServer pid=199737) INFO:     127.0.0.1:59510 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=199737) INFO 08-17 03:38:41 [loggers.py:310] Engine 000: Avg prompt throughput: 26.0 tokens/s, Avg generation throughput: 334.4 tokens/s, Running: 1 reqs, Waiting: 0 reqs, GPU KV cache usage: 0.3%, Prefix cache hit rate: 35.7%
+(APIServer pid=199737) INFO 08-17 03:38:41 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 5.64, Accepted throughput: 275.18 tokens/s, Drafted throughput: 415.08 tokens/s, Accepted: 2752 tokens, Drafted: 4151 tokens, Per-position acceptance rate: 0.848, 0.804, 0.777, 0.737, 0.732, 0.378, 0.364, Avg Draft acceptance rate: 66.3%
+(APIServer pid=199737) INFO:     127.0.0.1:59510 - "GET /metrics HTTP/1.1" 200 OK
+(APIServer pid=199737) INFO:     127.0.0.1:59510 - "GET /metrics HTTP/1.1" 200 OK
+
+Signal received -- stopping the server (up to 30s).
+(APIServer pid=199737) INFO 08-17 03:38:49 [launcher.py:112] [shutdown] API server: shutdown triggered
+(APIServer pid=199737) INFO 08-17 03:38:49 [launcher.py:128] [shutdown] API server: stopping engine client mode=abort timeout=0s
+(EngineCore pid=200371) INFO 08-17 03:38:49 [core.py:1332] [shutdown] EngineCore: trigger received signal=SIGTERM
+(EngineCore pid=200371) INFO 08-17 03:38:49 [core.py:1468] [shutdown] EngineCore: start mode=abort timeout=0s
+(EngineCore pid=200371) INFO 08-17 03:38:49 [core.py:1499] [shutdown] EngineCore: request processing complete; starting resource teardown
+(EngineCore pid=200371) INFO 08-17 03:38:49 [core.py:1345] [shutdown] EngineCore: exiting busy loop
+(APIServer pid=199737) INFO 08-17 03:38:49 [core_client.py:686] [shutdown] MPClient: start timeout=0s
+(APIServer pid=199737) INFO 08-17 03:38:49 [core_client.py:688] [shutdown] MPClient: stopping engine manager
+(APIServer pid=199737) INFO 08-17 03:38:49 [utils.py:612] [shutdown] Process manager: send sigterm to process EngineCore
+(Worker_TP0_EP0 pid=200769) INFO 08-17 03:38:49 [multiproc_executor.py:804] Parent process exited, terminating worker queues
+(APIServer pid=199737) WARNING 08-17 03:38:49 [utils.py:632] [shutdown] Process manager: force killing remaining processes count=1
+(APIServer pid=199737) WARNING 08-17 03:38:49 [utils.py:637] [shutdown] Process manager: force killing remaining process EngineCore pid 200371
+(APIServer pid=199737) INFO 08-17 03:38:49 [core_client.py:690] [shutdown] MPClient: engine manager stopped
+(APIServer pid=199737) INFO 08-17 03:38:49 [core_client.py:691] [shutdown] MPClient: cleaning up background resources
+(APIServer pid=199737) INFO 08-17 03:38:49 [core_client.py:693] [shutdown] MPClient: complete
+(APIServer pid=199737) INFO 08-17 03:38:49 [launcher.py:137] [shutdown] API server: engine client stopped
+(APIServer pid=199737) INFO 08-17 03:38:49 [launcher.py:140] [shutdown] API server: signalling HTTP server shutdown
+(APIServer pid=199737) INFO 08-17 03:38:49 [launcher.py:161] [shutdown] API server: shutting down FastAPI HTTP server
+(APIServer pid=199737) INFO:     Shutting down
+(APIServer pid=199737) INFO:     Waiting for application shutdown.
+(APIServer pid=199737) INFO:     Application shutdown complete.

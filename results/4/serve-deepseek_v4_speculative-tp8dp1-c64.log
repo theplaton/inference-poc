@@ -1,0 +1,2 @@
+error: no profile "deepseek_v4_speculative" -- /root/inference-poc/model_serving/profiles/deepseek_v4_speculative.env does not exist.
+Available: deepseek_v4_tp2dp4_speculative deepseek_v4_tp4dp2_speculative deepseek_v4_tp8dp1 deepseek_v4_tp8dp1_speculative granite 

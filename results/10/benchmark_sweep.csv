@@ -1,0 +1,2 @@
+concurrency,isl,osl,profile,strategy,mean_request_latency_s,total_throughput_tok_s
+128,2048,512,granite,tp1dp1,4.458,74602.91

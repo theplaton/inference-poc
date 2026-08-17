@@ -1,0 +1,1 @@
+TP_SIZE x DP_SIZE must equal GPU_COUNT: 1 x 8 = 8, not 1

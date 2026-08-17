@@ -1,0 +1,2 @@
+concurrency,max_num_seqs,num_prompts,completed,input_len,output_len,duration_s,request_throughput_req_s,output_throughput_tok_s,total_throughput_tok_s,mean_request_latency_s,median_request_latency_s,p99_request_latency_s,mean_ttft_ms,p99_ttft_ms,mean_tpot_ms,p99_tpot_ms,mean_itl_ms,p99_itl_ms,spec_decode_acceptance_rate,model_id,date
+1,1,8,8,2048,512,50.9,0.1572,80.48,403.01,6.362,4.341,18.648,2429.31,16407.19,7.7,12.89,17.34,34.06,17.2629,deepseek-ai/DeepSeek-V4-Pro-0813,20260817-012805

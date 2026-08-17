@@ -1,0 +1,4 @@
+concurrency,isl,osl,mean_request_latency_s,total_throughput_tok_s
+1,2048,512,0.858,3050.48
+1,4096,1024,1.585,3266.94
+1,1024,4096,6.165,840.04

@@ -1,0 +1,2 @@
+concurrency,isl,osl,profile,strategy,mean_request_latency_s,total_throughput_tok_s
+64,2048,512,deepseek_v4_tp8dp1_speculative,tp8dp1,34.316,4657.59

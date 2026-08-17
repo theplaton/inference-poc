@@ -1,0 +1,2 @@
+concurrency,mean_request_latency_s,total_throughput_tok_s
+1,6.362,403.01

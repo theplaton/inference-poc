@@ -1,0 +1,1111 @@
+Launching (tep):
+
+/root/inference-poc/venv/bin/vllm serve deepseek-ai/DeepSeek-V4-Pro-0813 --trust-remote-code --kv-cache-dtype fp8 --block-size 256 --enable-expert-parallel --tensor-parallel-size 8 --max-model-len 200000 --gpu-memory-utilization 0.95 --max-num-seqs 64 --no-enable-flashinfer-autotune --compilation-config \{\"mode\":\ 0\,\ \"cudagraph_mode\":\ \"FULL_DECODE_ONLY\"\} --tokenizer-mode deepseek_v4 --tool-call-parser deepseek_v4 --enable-auto-tool-choice --reasoning-parser deepseek_v4 --speculative-config \{\"method\":\"dspark\"\,\"num_speculative_tokens\":7\,\"draft_sample_method\":\"probabilistic\"\} --host 0.0.0.0 --port 8000 
+
+Waiting up to 1800s for http://localhost:8000/health (weights load + compile is ~10-20 min)
+(APIServer pid=114171) INFO 08-17 02:02:45 [api_utils.py:345] 
+(APIServer pid=114171) INFO 08-17 02:02:45 [api_utils.py:345]        █     █     █▄   ▄█
+(APIServer pid=114171) INFO 08-17 02:02:45 [api_utils.py:345]  ▄▄ ▄█ █     █     █ ▀▄▀ █  version 0.27.1
+(APIServer pid=114171) INFO 08-17 02:02:45 [api_utils.py:345]   █▄█▀ █     █     █     █  model   deepseek-ai/DeepSeek-V4-Pro-0813
+(APIServer pid=114171) INFO 08-17 02:02:45 [api_utils.py:345]    ▀▀  ▀▀▀▀▀ ▀▀▀▀▀ ▀     ▀
+(APIServer pid=114171) INFO 08-17 02:02:45 [api_utils.py:345] 
+(APIServer pid=114171) INFO 08-17 02:02:45 [api_utils.py:273] non-default args: {'model_tag': 'deepseek-ai/DeepSeek-V4-Pro-0813', 'enable_auto_tool_choice': True, 'tool_call_parser': 'deepseek_v4', 'host': '0.0.0.0', 'model': 'deepseek-ai/DeepSeek-V4-Pro-0813', 'tokenizer_mode': 'deepseek_v4', 'trust_remote_code': True, 'max_model_len': 200000, 'reasoning_parser': 'deepseek_v4', 'tensor_parallel_size': 8, 'enable_expert_parallel': True, 'block_size': 256, 'gpu_memory_utilization': 0.95, 'kv_cache_dtype': 'fp8', 'max_num_seqs': 64, 'enable_flashinfer_autotune': False, 'speculative_config': {'method': 'dspark', 'num_speculative_tokens': 7, 'draft_sample_method': 'probabilistic'}, 'compilation_config': {'mode': <CompilationMode.NONE: 0>, 'debug_dump_path': None, 'cache_dir': '', 'compile_cache_save_format': 'binary', 'backend': 'inductor', 'custom_ops': [], 'ir_enable_torch_wrap': None, 'splitting_ops': None, 'compile_mm_encoder': False, 'cudagraph_mm_encoder': False, 'encoder_cudagraph_token_budgets': [], 'encoder_cudagraph_max_vision_items_per_batch': 0, 'encoder_cudagraph_max_frames_per_batch': None, 'compile_sizes': None, 'compile_ranges_endpoints': None, 'inductor_compile_config': {'enable_auto_functionalized_v2': False, 'combo_kernels': True, 'benchmark_combo_kernel': True}, 'inductor_passes': {}, 'cudagraph_mode': <CUDAGraphMode.FULL_DECODE_ONLY: (2, 0)>, 'cudagraph_num_of_warmups': 0, 'cudagraph_capture_sizes': None, 'cudagraph_copy_inputs': False, 'cudagraph_specialize_lora': True, 'use_inductor_graph_partition': None, 'pass_config': {}, 'max_cudagraph_capture_size': None, 'dynamic_shapes_config': {'type': <DynamicShapesType.BACKED: 'backed'>, 'evaluate_guards': False, 'assume_32_bit_indexing': False}, 'local_cache_dir': None, 'fast_moe_cold_start': None, 'static_all_moe_layers': []}}
+(APIServer pid=114171) WARNING 08-17 02:02:45 [envs.py:2128] Unknown vLLM environment variable detected: VLLM_BIN
+(APIServer pid=114171) WARNING 08-17 02:02:45 [envs.py:2128] Unknown vLLM environment variable detected: VLLM_DOCKER_IMAGE
+(APIServer pid=114171) WARNING 08-17 02:02:45 [envs.py:2128] Unknown vLLM environment variable detected: VLLM_CLEANUP_TIMEOUT
+(APIServer pid=114171) Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+(APIServer pid=114171) INFO 08-17 02:02:46 [config.py:774] Detected quantization_config.scale_fmt=ue8m0; enabling UE8M0 for DeepGEMM.
+(APIServer pid=114171) INFO 08-17 02:02:46 [model.py:645] Resolved architecture: DeepseekV4ForCausalLM
+(APIServer pid=114171) INFO 08-17 02:02:46 [model.py:1883] Using max model len 200000
+(APIServer pid=114171) INFO 08-17 02:02:47 [cache.py:296] Using fp8 data type to store kv cache. It reduces the GPU memory footprint and boosts the performance. Meanwhile, it may cause accuracy drop without a proper scaling factor
+(APIServer pid=114171) INFO 08-17 02:02:47 [model.py:645] Resolved architecture: DeepSeekV4MTPModel
+(APIServer pid=114171) INFO 08-17 02:02:47 [model.py:1883] Using max model len 1048576
+(APIServer pid=114171) INFO 08-17 02:02:47 [speculative.py:1157] Overriding draft model max model len from 1048576 to 200000
+(APIServer pid=114171) INFO 08-17 02:02:47 [scheduler.py:242] Chunked prefill is enabled with max_num_batched_tokens=8192.
+(APIServer pid=114171) INFO 08-17 02:02:47 [vllm.py:1231] Auto-enabling VLLM_USE_BREAKABLE_CUDAGRAPH=1. Set VLLM_USE_BREAKABLE_CUDAGRAPH=0 to opt out.
+(APIServer pid=114171) WARNING 08-17 02:02:47 [vllm.py:1237] VLLM_USE_BREAKABLE_CUDAGRAPH is set, disabling vLLM's torch.compile pipeline. Equivalent to -cc.mode=none.
+(APIServer pid=114171) WARNING 08-17 02:02:47 [vllm.py:1247] Inductor compilation was disabled by user settings, optimizations settings that are only active during inductor compilation will be ignored.
+(APIServer pid=114171) INFO 08-17 02:02:47 [kernel.py:306] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(APIServer pid=114171) WARNING 08-17 02:02:47 [vllm.py:1757] max_num_scheduled_tokens is set to 7808 based on the speculative decoding settings. This may lead to suboptimal performance. Consider increasing max_num_batched_tokens to accommodate the additional draft token slots, or decrease num_speculative_tokens or max_num_seqs.
+(APIServer pid=114171) WARNING 08-17 02:02:47 [vllm.py:2267] Model Runner V2 does not yet support the thinking_token_budget request parameter. Set VLLM_USE_V2_MODEL_RUNNER=0 if this is required.
+(APIServer pid=114171) INFO 08-17 02:02:52 [compilation.py:329] Enabled custom fusions: norm_quant, act_quant, allreduce_rms
+(EngineCore pid=114806) INFO 08-17 02:02:59 [core.py:121] Initializing a V1 LLM engine (v0.27.1) with config: model='deepseek-ai/DeepSeek-V4-Pro-0813', speculative_config=SpeculativeConfig(method='dspark', model='deepseek-ai/DeepSeek-V4-Pro-0813', num_spec_tokens=7), tokenizer='deepseek-ai/DeepSeek-V4-Pro-0813', skip_tokenizer_init=False, tokenizer_mode=deepseek_v4, revision=None, tokenizer_revision=None, trust_remote_code=True, dtype=torch.bfloat16, max_seq_len=200000, download_dir=None, load_format=auto, tensor_parallel_size=8, pipeline_parallel_size=1, data_parallel_size=1, decode_context_parallel_size=1, dcp_comm_backend=ag_rs, disable_custom_all_reduce=False, quantization=deepseek_v4_fp8, quantization_config=None, enforce_eager=False, enable_return_routed_experts=False, kv_cache_dtype=fp8, device_config=cuda, structured_outputs_config=StructuredOutputsConfig(backend='auto', disable_any_whitespace=False, disable_additional_properties=False, reasoning_parser='deepseek_v4', reasoning_parser_plugin='', enable_in_reasoning=False), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None, kv_cache_metrics=False, kv_cache_metrics_sample=0.01, cudagraph_metrics=False, enable_layerwise_nvtx_tracing=False, enable_mfu_metrics=False, enable_mm_processor_stats=False, enable_logging_iteration_details=False, jit_monitor_mode='warn', jit_monitor_verbose=False), seed=0, served_model_name=deepseek-ai/DeepSeek-V4-Pro-0813, enable_prefix_caching=True, enable_chunked_prefill=True, pooler_config=None, compilation_config={'mode': <CompilationMode.NONE: 0>, 'debug_dump_path': None, 'cache_dir': '', 'compile_cache_save_format': 'binary', 'backend': 'inductor', 'custom_ops': ['+quant_fp8', 'all', '+quant_fp8'], 'ir_enable_torch_wrap': False, 'splitting_ops': [], 'compile_mm_encoder': False, 'cudagraph_mm_encoder': False, 'encoder_cudagraph_token_budgets': [], 'encoder_cudagraph_max_vision_items_per_batch': 0, 'encoder_cudagraph_max_frames_per_batch': None, 'compile_sizes': [], 'compile_ranges_endpoints': [36, 8192], 'inductor_compile_config': {'enable_auto_functionalized_v2': False, 'combo_kernels': True, 'benchmark_combo_kernel': True}, 'inductor_passes': {}, 'cudagraph_mode': <CUDAGraphMode.FULL_DECODE_ONLY: (2, 0)>, 'cudagraph_num_of_warmups': 1, 'cudagraph_capture_sizes': [1, 2, 4, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96, 104, 112, 120, 128, 136, 144, 152, 160, 168, 176, 184, 192, 200, 208, 216, 224, 232, 240, 248, 256, 272, 288, 304, 320, 336, 352, 368, 384, 400, 416, 432, 448, 464, 480, 496, 512], 'cudagraph_copy_inputs': False, 'cudagraph_specialize_lora': True, 'use_inductor_graph_partition': False, 'pass_config': {'fuse_norm_quant': True, 'fuse_act_quant': True, 'fuse_attn_quant': False, 'enable_sp': False, 'fuse_gemm_comms': False, 'fuse_allreduce_rms': True, 'enable_qk_norm_rope_fusion': False, 'fuse_rope_kvcache_cat_mla': False, 'fuse_act_padding': False, 'fuse_qk_norm_rope_kvcache': False}, 'max_cudagraph_capture_size': 512, 'dynamic_shapes_config': {'type': <DynamicShapesType.BACKED: 'backed'>, 'evaluate_guards': False, 'assume_32_bit_indexing': False}, 'local_cache_dir': None, 'fast_moe_cold_start': False, 'static_all_moe_layers': []}, kernel_config=KernelConfig(ir_op_priority=IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native']), enable_flashinfer_autotune=False, enable_cutedsl_warmup=True, enable_jit_warmup=True, enable_bf16x3_router_gemm=False, moe_backend='auto', linear_backend='auto')
+(EngineCore pid=114806) WARNING 08-17 02:02:59 [multiproc_executor.py:1081] Reducing Torch parallelism from 64 threads to 1 to avoid unnecessary CPU contention. Set OMP_NUM_THREADS in the external environment to tune this value as needed.
+(EngineCore pid=114806) INFO 08-17 02:02:59 [multiproc_executor.py:140] DP group leader: node_rank=0, node_rank_within_dp=0, master_addr=127.0.0.1, mq_connect_ip=10.24.63.34 (local), world_size=8, local_world_size=8
+(Worker pid=115196) INFO 08-17 02:03:11 [parallel_state.py:1640] world_size=8 rank=5 local_rank=5 distributed_init_method=tcp://127.0.0.1:53109 backend=nccl
+(Worker pid=115191) INFO 08-17 02:03:13 [parallel_state.py:1640] world_size=8 rank=0 local_rank=0 distributed_init_method=tcp://127.0.0.1:53109 backend=nccl
+(Worker pid=115192) INFO 08-17 02:03:13 [parallel_state.py:1640] world_size=8 rank=1 local_rank=1 distributed_init_method=tcp://127.0.0.1:53109 backend=nccl
+(Worker pid=115197) INFO 08-17 02:03:13 [parallel_state.py:1640] world_size=8 rank=6 local_rank=6 distributed_init_method=tcp://127.0.0.1:53109 backend=nccl
+(Worker pid=115195) INFO 08-17 02:03:13 [parallel_state.py:1640] world_size=8 rank=4 local_rank=4 distributed_init_method=tcp://127.0.0.1:53109 backend=nccl
+(Worker pid=115193) INFO 08-17 02:03:13 [parallel_state.py:1640] world_size=8 rank=2 local_rank=2 distributed_init_method=tcp://127.0.0.1:53109 backend=nccl
+(Worker pid=115194) INFO 08-17 02:03:13 [parallel_state.py:1640] world_size=8 rank=3 local_rank=3 distributed_init_method=tcp://127.0.0.1:53109 backend=nccl
+(Worker pid=115198) INFO 08-17 02:03:13 [parallel_state.py:1640] world_size=8 rank=7 local_rank=7 distributed_init_method=tcp://127.0.0.1:53109 backend=nccl
+(Worker pid=115191) INFO 08-17 02:03:14 [pynccl.py:113] vLLM is using nccl==2.29.7
+(Worker pid=115191) INFO 08-17 02:03:17 [cuda_communicator.py:266] Using ['CUSTOM', 'SYMM_MEM', 'PYNCCL'] all-reduce backends (in dispatch order) for group 'tp:0' out of potential backends: ['NCCL_SYMM_MEM', 'QUICK_REDUCE', 'FLASHINFER', 'AITER_CUSTOM', 'CUSTOM', 'SYMM_MEM', 'PYNCCL'].
+(Worker pid=115191) INFO 08-17 02:03:18 [cuda_communicator.py:266] Using ['PYNCCL'] all-reduce backends (in dispatch order) for group 'ep:0' out of potential backends: ['NCCL_SYMM_MEM', 'QUICK_REDUCE', 'FLASHINFER', 'AITER_CUSTOM', 'CUSTOM', 'SYMM_MEM', 'PYNCCL'].
+(Worker pid=115191) INFO 08-17 02:03:18 [parallel_state.py:1977] rank 0 in world size 8 is assigned as DP rank 0, PP rank 0, PCP rank 0, TP rank 0, EP rank 0, EPLB rank N/A
+(Worker pid=115191) INFO 08-17 02:03:18 [gpu_worker.py:385] Using V2 Model Runner
+(Worker_TP0_EP0 pid=115191) INFO 08-17 02:03:19 [model_runner.py:308] Loading model from scratch...
+(Worker_TP0_EP0 pid=115191) INFO 08-17 02:03:19 [quant_config.py:75] DeepSeek V4 expert_dtype resolved to 'fp4'
+(Worker_TP0_EP0 pid=115191) INFO 08-17 02:03:19 [__init__.py:634] Selected FlashInferFp8DeepGEMMDynamicBlockScaledKernel for Fp8LinearMethod
+(Worker_TP0_EP0 pid=115191) INFO 08-17 02:03:19 [deep_gemm.py:175] deep_gemm not found in site-packages, trying vendored vllm.third_party.deep_gemm
+(Worker_TP0_EP0 pid=115191) INFO 08-17 02:03:19 [deep_gemm.py:202] DeepGEMM PDL enabled on vllm.third_party.deep_gemm.
+(Worker_TP0_EP0 pid=115191) INFO 08-17 02:03:19 [deep_gemm.py:120] DeepGEMM E8M0 enabled on current platform.
+(Worker_TP0_EP0 pid=115191) INFO 08-17 02:03:19 [attention.py:113] Using DeepSeek's fp8_ds_mla KV cache format.
+(Worker_TP0_EP0 pid=115191) INFO 08-17 02:03:19 [expert_map_manager.py:245] [EP Rank 0/8] Expert parallelism is enabled. Expert placement strategy: linear. Local/global number of experts: 48/384. Experts local to global index map: 0->0, 1->1, 2->2, 3->3, 4->4, 5->5, 6->6, 7->7, 8->8, 9->9, 10->10, 11->11, 12->12, 13->13, 14->14, 15->15, 16->16, 17->17, 18->18, 19->19, 20->20, 21->21, 22->22, 23->23, 24->24, 25->25, 26->26, 27->27, 28->28, 29->29, 30->30, 31->31, 32->32, 33->33, 34->34, 35->35, 36->36, 37->37, 38->38, 39->39, 40->40, 41->41, 42->42, 43->43, 44->44, 45->45, 46->46, 47->47.
+(Worker_TP0_EP0 pid=115191) INFO 08-17 02:03:19 [mxfp4.py:626] Using 'MARLIN' Mxfp4 MoE backend.
+(Worker_TP0_EP0 pid=115191) INFO 08-17 02:03:19 [attention.py:746] Using FP8 indexer cache for Lightning Indexer.
+(Worker_TP0_EP0 pid=115191) Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+(Worker_TP4_EP4 pid=115195) Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+(Worker_TP6_EP6 pid=115197) Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+(Worker_TP1_EP1 pid=115192) Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+(Worker_TP7_EP7 pid=115198) Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+(Worker_TP3_EP3 pid=115194) Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+(Worker_TP0_EP0 pid=115191) INFO 08-17 02:03:21 [weight_utils.py:867] Filesystem type for checkpoints: EXT4. Checkpoint size: 831.43 GiB. Available RAM: 1532.86 GiB.
+(Worker_TP0_EP0 pid=115191) INFO 08-17 02:03:21 [weight_utils.py:890] Auto-prefetch is disabled because the filesystem (EXT4) is not a recognized network FS (NFS/Lustre). If you want to force prefetching, start vLLM with --safetensors-load-strategy=prefetch.
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:   0% Completed | 0/66 [00:00<?, ?it/s]
+(Worker_TP5_EP5 pid=115196) Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:   3% Completed | 2/66 [00:00<00:24,  2.62it/s]
+(Worker_TP2_EP2 pid=115193) Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:   5% Completed | 3/66 [00:01<00:31,  1.99it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:   6% Completed | 4/66 [00:02<00:34,  1.81it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:   8% Completed | 5/66 [00:02<00:37,  1.62it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:   9% Completed | 6/66 [00:03<00:39,  1.51it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  11% Completed | 7/66 [00:04<00:38,  1.52it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  12% Completed | 8/66 [00:04<00:37,  1.53it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  14% Completed | 9/66 [00:05<00:36,  1.54it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  15% Completed | 10/66 [00:06<00:36,  1.52it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  17% Completed | 11/66 [00:06<00:35,  1.54it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  18% Completed | 12/66 [00:07<00:36,  1.49it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  20% Completed | 13/66 [00:08<00:35,  1.51it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  21% Completed | 14/66 [00:08<00:34,  1.53it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  23% Completed | 15/66 [00:09<00:34,  1.47it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  24% Completed | 16/66 [00:10<00:33,  1.47it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  26% Completed | 17/66 [00:10<00:32,  1.50it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  27% Completed | 18/66 [00:11<00:31,  1.51it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  29% Completed | 19/66 [00:12<00:30,  1.53it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  30% Completed | 20/66 [00:12<00:30,  1.49it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  32% Completed | 21/66 [00:13<00:30,  1.49it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  33% Completed | 22/66 [00:14<00:29,  1.49it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  35% Completed | 23/66 [00:14<00:29,  1.45it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  36% Completed | 24/66 [00:15<00:29,  1.44it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  38% Completed | 25/66 [00:16<00:28,  1.46it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  39% Completed | 26/66 [00:16<00:26,  1.49it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  41% Completed | 27/66 [00:17<00:26,  1.50it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  42% Completed | 28/66 [00:18<00:25,  1.50it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  44% Completed | 29/66 [00:18<00:24,  1.53it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  45% Completed | 30/66 [00:19<00:23,  1.51it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  47% Completed | 31/66 [00:20<00:23,  1.52it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  48% Completed | 32/66 [00:20<00:22,  1.54it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  50% Completed | 33/66 [00:21<00:22,  1.49it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  52% Completed | 34/66 [00:22<00:21,  1.46it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  53% Completed | 35/66 [00:23<00:21,  1.43it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  55% Completed | 36/66 [00:23<00:20,  1.44it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  56% Completed | 37/66 [00:24<00:20,  1.42it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  58% Completed | 38/66 [00:25<00:19,  1.45it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  59% Completed | 39/66 [00:25<00:18,  1.48it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  61% Completed | 40/66 [00:26<00:17,  1.50it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  62% Completed | 41/66 [00:27<00:16,  1.52it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  64% Completed | 42/66 [00:27<00:16,  1.48it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  65% Completed | 43/66 [00:28<00:15,  1.51it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  67% Completed | 44/66 [00:28<00:14,  1.53it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  68% Completed | 45/66 [00:29<00:13,  1.53it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  70% Completed | 46/66 [00:30<00:13,  1.51it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  71% Completed | 47/66 [00:31<00:12,  1.48it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  73% Completed | 48/66 [00:31<00:12,  1.45it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  74% Completed | 49/66 [00:32<00:11,  1.48it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  76% Completed | 50/66 [00:33<00:10,  1.47it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  77% Completed | 51/66 [00:33<00:10,  1.47it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  79% Completed | 52/66 [00:34<00:09,  1.50it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  80% Completed | 53/66 [00:35<00:08,  1.48it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  82% Completed | 54/66 [00:35<00:08,  1.48it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  83% Completed | 55/66 [00:36<00:07,  1.46it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  85% Completed | 56/66 [00:37<00:06,  1.48it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  86% Completed | 57/66 [00:37<00:05,  1.51it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  88% Completed | 58/66 [00:38<00:05,  1.48it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  89% Completed | 59/66 [00:39<00:04,  1.49it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  91% Completed | 60/66 [00:39<00:03,  1.50it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  92% Completed | 61/66 [00:40<00:03,  1.48it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  94% Completed | 62/66 [00:41<00:02,  1.45it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  97% Completed | 64/66 [00:41<00:00,  2.47it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards: 100% Completed | 66/66 [00:41<00:00,  3.73it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards: 100% Completed | 66/66 [00:41<00:00,  1.59it/s]
+(Worker_TP0_EP0 pid=115191) 
+(Worker_TP0_EP0 pid=115191) INFO 08-17 02:04:03 [default_loader.py:430] Loading weights took 41.49 seconds
+(Worker_TP0_EP0 pid=115191) INFO 08-17 02:04:03 [mxfp4.py:1730] Using MoEPrepareAndFinalizeNoDPEPModular
+(Worker_TP0_EP0 pid=115191) INFO 08-17 02:04:03 [mxfp4.py:1731] Using MarlinExperts
+(Worker_TP0_EP0 pid=115191) INFO 08-17 02:04:04 [eagle3_utils.py:28] Using Eagle3 auxiliary layers from config: (59, 60, 61)
+(Worker_TP0_EP0 pid=115191) WARNING 08-17 02:04:04 [vllm.py:1237] VLLM_USE_BREAKABLE_CUDAGRAPH is set, disabling vLLM's torch.compile pipeline. Equivalent to -cc.mode=none.
+(Worker_TP0_EP0 pid=115191) WARNING 08-17 02:04:04 [vllm.py:1247] Inductor compilation was disabled by user settings, optimizations settings that are only active during inductor compilation will be ignored.
+(Worker_TP0_EP0 pid=115191) INFO 08-17 02:04:04 [kernel.py:306] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(Worker_TP0_EP0 pid=115191) WARNING 08-17 02:04:04 [vllm.py:1757] max_num_scheduled_tokens is set to 7808 based on the speculative decoding settings. This may lead to suboptimal performance. Consider increasing max_num_batched_tokens to accommodate the additional draft token slots, or decrease num_speculative_tokens or max_num_seqs.
+(Worker_TP0_EP0 pid=115191) WARNING 08-17 02:04:04 [vllm.py:2267] Model Runner V2 does not yet support the thinking_token_budget request parameter. Set VLLM_USE_V2_MODEL_RUNNER=0 if this is required.
+(Worker_TP0_EP0 pid=115191) INFO 08-17 02:04:04 [compilation.py:329] Enabled custom fusions: norm_quant, act_quant, allreduce_rms
+(Worker_TP6_EP6 pid=115197) INFO 08-17 02:04:04 [eagle3_utils.py:28] Using Eagle3 auxiliary layers from config: (59, 60, 61)
+(Worker_TP6_EP6 pid=115197) INFO 08-17 02:04:04 [kernel.py:306] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(Worker_TP0_EP0 pid=115191) INFO 08-17 02:04:05 [weight_utils.py:867] Filesystem type for checkpoints: EXT4. Checkpoint size: 831.43 GiB. Available RAM: 1533.17 GiB.
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:   0% Completed | 0/66 [00:00<?, ?it/s]
+(Worker_TP1_EP1 pid=115192) INFO 08-17 02:04:05 [eagle3_utils.py:28] Using Eagle3 auxiliary layers from config: (59, 60, 61)
+(Worker_TP1_EP1 pid=115192) INFO 08-17 02:04:05 [kernel.py:306] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:   6% Completed | 4/66 [00:00<00:02, 27.07it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  11% Completed | 7/66 [00:00<00:02, 22.75it/s]
+(Worker_TP3_EP3 pid=115194) INFO 08-17 02:04:05 [eagle3_utils.py:28] Using Eagle3 auxiliary layers from config: (59, 60, 61)
+(Worker_TP3_EP3 pid=115194) INFO 08-17 02:04:05 [kernel.py:306] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(Worker_TP2_EP2 pid=115193) INFO 08-17 02:04:05 [eagle3_utils.py:28] Using Eagle3 auxiliary layers from config: (59, 60, 61)
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  15% Completed | 10/66 [00:00<00:02, 21.93it/s]
+(Worker_TP2_EP2 pid=115193) INFO 08-17 02:04:05 [kernel.py:306] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  20% Completed | 13/66 [00:00<00:02, 21.37it/s]
+(Worker_TP4_EP4 pid=115195) INFO 08-17 02:04:05 [eagle3_utils.py:28] Using Eagle3 auxiliary layers from config: (59, 60, 61)
+(Worker_TP4_EP4 pid=115195) INFO 08-17 02:04:05 [kernel.py:306] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(Worker_TP7_EP7 pid=115198) INFO 08-17 02:04:05 [eagle3_utils.py:28] Using Eagle3 auxiliary layers from config: (59, 60, 61)
+(Worker_TP7_EP7 pid=115198) INFO 08-17 02:04:05 [kernel.py:306] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  24% Completed | 16/66 [00:00<00:02, 21.04it/s]
+(Worker_TP5_EP5 pid=115196) INFO 08-17 02:04:05 [eagle3_utils.py:28] Using Eagle3 auxiliary layers from config: (59, 60, 61)
+(Worker_TP5_EP5 pid=115196) INFO 08-17 02:04:06 [kernel.py:306] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  29% Completed | 19/66 [00:00<00:02, 21.11it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  33% Completed | 22/66 [00:01<00:02, 20.80it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  38% Completed | 25/66 [00:01<00:01, 20.54it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  42% Completed | 28/66 [00:01<00:01, 20.66it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  47% Completed | 31/66 [00:01<00:01, 20.72it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  52% Completed | 34/66 [00:01<00:01, 20.66it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  56% Completed | 37/66 [00:01<00:01, 20.50it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  61% Completed | 40/66 [00:01<00:01, 20.70it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  65% Completed | 43/66 [00:02<00:01, 20.61it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  70% Completed | 46/66 [00:02<00:00, 20.45it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  74% Completed | 49/66 [00:02<00:00, 20.09it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  79% Completed | 52/66 [00:02<00:00, 20.19it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  83% Completed | 55/66 [00:02<00:00, 20.10it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  88% Completed | 58/66 [00:02<00:00, 20.27it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  92% Completed | 61/66 [00:02<00:00, 20.40it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards:  97% Completed | 64/66 [00:03<00:00,  9.82it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards: 100% Completed | 66/66 [00:04<00:00,  4.61it/s]
+(Worker_TP0_EP0 pid=115191) Loading safetensors checkpoint shards: 100% Completed | 66/66 [00:04<00:00, 13.60it/s]
+(Worker_TP0_EP0 pid=115191) 
+(Worker_TP0_EP0 pid=115191) INFO 08-17 02:04:10 [dspark.py:491] DSpark draft model loaded: 96 params
+(Worker_TP0_EP0 pid=115191) INFO 08-17 02:04:10 [default_loader.py:430] Loading weights took 4.89 seconds
+(Worker_TP0_EP0 pid=115191) INFO 08-17 02:04:10 [model_runner.py:329] Model loading took 108.9 GiB and 51.827112 seconds
+(Worker_TP0_EP0 pid=115191) INFO 08-17 02:04:11 [topk_topp_sampler.py:62] Using FlashInfer for top-p & top-k sampling.
+(Worker_TP6_EP6 pid=115197) INFO 08-17 02:04:11 [model_runner.py:329] Model loading took 108.9 GiB and 52.334610 seconds
+(Worker_TP1_EP1 pid=115192) INFO 08-17 02:04:11 [model_runner.py:329] Model loading took 108.9 GiB and 52.523403 seconds
+(Worker_TP3_EP3 pid=115194) INFO 08-17 02:04:12 [model_runner.py:329] Model loading took 108.9 GiB and 52.921906 seconds
+(Worker_TP5_EP5 pid=115196) INFO 08-17 02:04:12 [model_runner.py:329] Model loading took 108.9 GiB and 53.575116 seconds
+(Worker_TP7_EP7 pid=115198) INFO 08-17 02:04:12 [model_runner.py:329] Model loading took 108.9 GiB and 53.575205 seconds
+(Worker_TP2_EP2 pid=115193) INFO 08-17 02:04:13 [model_runner.py:329] Model loading took 108.9 GiB and 53.593121 seconds
+(Worker_TP4_EP4 pid=115195) INFO 08-17 02:04:13 [model_runner.py:329] Model loading took 108.9 GiB and 54.198019 seconds
+(Worker_TP0_EP0 pid=115191) 2026-08-17 02:04:19  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`
+(Worker_TP0_EP0 pid=115191) 2026-08-17 02:04:27  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`
+(Worker_TP0_EP0 pid=115191) INFO 08-17 02:04:31 [gpu_worker.py:563] Available KV cache memory: 18.75 GiB
+(EngineCore pid=114806) INFO 08-17 02:04:31 [kv_cache_utils.py:2235] GPU KV cache size: 375,669 tokens
+(EngineCore pid=114806) INFO 08-17 02:04:31 [kv_cache_utils.py:2236] Maximum concurrency for 200,000 tokens per request: 1.88x
+(Worker_TP0_EP0 pid=115191) INFO 08-17 02:04:31 [indexer.py:518] DSA indexer decode path: use_flattening=True (next_n=8, use_fp4_indexer_cache=False)
+(Worker_TP3_EP3 pid=115194) 2026-08-17 02:04:19  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`
+(Worker_TP3_EP3 pid=115194) 2026-08-17 02:04:27  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`
+(Worker_TP3_EP3 pid=115194) INFO 08-17 02:04:31 [kernel.py:306] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(Worker_TP1_EP1 pid=115192) 2026-08-17 02:04:19  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`
+(Worker_TP1_EP1 pid=115192) 2026-08-17 02:04:27  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`
+(Worker_TP1_EP1 pid=115192) INFO 08-17 02:04:31 [kernel.py:306] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(Worker_TP0_EP0 pid=115191) INFO 08-17 02:04:31 [kernel.py:306] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(Worker_TP4_EP4 pid=115195) 2026-08-17 02:04:19  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`
+(Worker_TP4_EP4 pid=115195) 2026-08-17 02:04:27  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`
+(Worker_TP4_EP4 pid=115195) INFO 08-17 02:04:31 [kernel.py:306] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(Worker_TP5_EP5 pid=115196) 2026-08-17 02:04:19  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`
+(Worker_TP5_EP5 pid=115196) 2026-08-17 02:04:27  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`
+(Worker_TP5_EP5 pid=115196) INFO 08-17 02:04:31 [kernel.py:306] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(Worker_TP6_EP6 pid=115197) 2026-08-17 02:04:19  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`
+(Worker_TP6_EP6 pid=115197) 2026-08-17 02:04:27  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`
+(Worker_TP6_EP6 pid=115197) INFO 08-17 02:04:31 [kernel.py:306] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(Worker_TP2_EP2 pid=115193) 2026-08-17 02:04:19  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`
+(Worker_TP2_EP2 pid=115193) 2026-08-17 02:04:27  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`
+(Worker_TP2_EP2 pid=115193) INFO 08-17 02:04:31 [kernel.py:306] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(Worker_TP7_EP7 pid=115198) 2026-08-17 02:04:19  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`
+(Worker_TP7_EP7 pid=115198) 2026-08-17 02:04:27  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`
+(Worker_TP7_EP7 pid=115198) INFO 08-17 02:04:31 [kernel.py:306] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(Worker_TP0_EP0 pid=115191) INFO 08-17 02:04:31 [kernel_warmup.py:92] Warming up ll_bf16 router GEMM kernels for shapes: ((7168, 384),).
+(Worker_TP0_EP0 pid=115191) INFO 08-17 02:04:34 [flashinfer_sparse_mla_warmup.py:233] Warming up DeepSeek V4 sparse MLA attention for mixed tokens=16.
+(Worker_TP2_EP2 pid=115193) INFO 08-17 02:04:34 [flashinfer_sparse_mla_warmup.py:233] Warming up DeepSeek V4 sparse MLA attention for mixed tokens=16.
+(Worker_TP1_EP1 pid=115192) INFO 08-17 02:04:34 [flashinfer_sparse_mla_warmup.py:233] Warming up DeepSeek V4 sparse MLA attention for mixed tokens=16.
+(Worker_TP3_EP3 pid=115194) INFO 08-17 02:04:34 [flashinfer_sparse_mla_warmup.py:233] Warming up DeepSeek V4 sparse MLA attention for mixed tokens=16.
+(Worker_TP4_EP4 pid=115195) INFO 08-17 02:04:34 [flashinfer_sparse_mla_warmup.py:233] Warming up DeepSeek V4 sparse MLA attention for mixed tokens=16.
+(Worker_TP5_EP5 pid=115196) INFO 08-17 02:04:34 [flashinfer_sparse_mla_warmup.py:233] Warming up DeepSeek V4 sparse MLA attention for mixed tokens=16.
+(Worker_TP7_EP7 pid=115198) INFO 08-17 02:04:34 [flashinfer_sparse_mla_warmup.py:233] Warming up DeepSeek V4 sparse MLA attention for mixed tokens=16.
+(Worker_TP6_EP6 pid=115197) INFO 08-17 02:04:34 [flashinfer_sparse_mla_warmup.py:233] Warming up DeepSeek V4 sparse MLA attention for mixed tokens=16.
+(Worker_TP0_EP0 pid=115191) DeepGEMM warmup:   0%|          | 0/1321 [00:00<?, ?it/s]DeepGEMM warmup: 100%|██████████| 1321/1321 [00:00<00:00, 13194.44it/s]
+(Worker_TP0_EP0 pid=115191) INFO 08-17 02:04:38 [kernel_warmup.py:166] Skipping FlashInfer autotune because it is disabled.
+(Worker_TP0_EP0 pid=115191) Capturing CUDA graphs (FULL):   0%|          | 0/48 [00:00<?, ?it/s]                                                                    Capturing CUDA graphs (FULL):   0%|          | 0/48 [00:03<?, ?it/s]                                                                    Capturing CUDA graphs (FULL):   0%|          | 0/48 [00:11<?, ?it/s]                                                                    Capturing CUDA graphs (FULL):   0%|          | 0/48 [00:15<?, ?it/s]                                                                    Capturing CUDA graphs (FULL):   0%|          | 0/48 [00:23<?, ?it/s]Capturing CUDA graphs (FULL):   2%|▏         | 1/48 [00:25<19:38, 25.08s/it]Capturing CUDA graphs (FULL):   4%|▍         | 2/48 [00:25<08:07, 10.59s/it]Capturing CUDA graphs (FULL):   6%|▋         | 3/48 [00:27<04:52,  6.50s/it]Capturing CUDA graphs (FULL):   8%|▊         | 4/48 [00:27<03:00,  4.10s/it]                                                                            Capturing CUDA graphs (FULL):   8%|▊         | 4/48 [00:30<03:00,  4.10s/it]                                                                            Capturing CUDA graphs (FULL):   8%|▊         | 4/48 [00:39<03:00,  4.10s/it]Capturing CUDA graphs (FULL):  10%|█         | 5/48 [00:40<05:06,  7.13s/it]Capturing CUDA graphs (FULL):  12%|█▎        | 6/48 [00:40<03:23,  4.86s/it]Capturing CUDA graphs (FULL):  15%|█▍        | 7/48 [00:42<02:35,  3.80s/it]Capturing CUDA graphs (FULL):  17%|█▋        | 8/48 [00:42<01:49,  2.73s/it]                                                                            Capturing CUDA graphs (FULL):  17%|█▋        | 8/48 [00:45<01:49,  2.73s/it](EngineCore pid=114806) INFO 08-17 02:05:32 [shm_broadcast.py:802] No available shared memory broadcast block found in 60 seconds. This typically happens when some processes are hanging or doing some time-consuming work (e.g. compilation, weight/kv cache quantization).
+                                                                            Capturing CUDA graphs (FULL):  17%|█▋        | 8/48 [00:54<01:49,  2.73s/it]                                                                            Capturing CUDA graphs (FULL):  17%|█▋        | 8/48 [00:59<01:49,  2.73s/it]                                                                            Capturing CUDA graphs (FULL):  17%|█▋        | 8/48 [01:07<01:49,  2.73s/it]Capturing CUDA graphs (FULL):  19%|█▉        | 9/48 [01:08<06:30, 10.00s/it]Capturing CUDA graphs (FULL):  21%|██        | 10/48 [01:09<04:27,  7.05s/it]Capturing CUDA graphs (FULL):  23%|██▎       | 11/48 [01:10<03:19,  5.39s/it]Capturing CUDA graphs (FULL):  25%|██▌       | 12/48 [01:11<02:19,  3.88s/it]                                                                             Capturing CUDA graphs (FULL):  25%|██▌       | 12/48 [01:13<02:19,  3.88s/it]                                                                             Capturing CUDA graphs (FULL):  25%|██▌       | 12/48 [01:22<02:19,  3.88s/it]                                                                             Capturing CUDA graphs (FULL):  25%|██▌       | 12/48 [01:26<02:19,  3.88s/it]                                                                             Capturing CUDA graphs (FULL):  25%|██▌       | 12/48 [01:34<02:19,  3.88s/it]Capturing CUDA graphs (FULL):  27%|██▋       | 13/48 [01:35<05:54, 10.14s/it]Capturing CUDA graphs (FULL):  29%|██▉       | 14/48 [01:36<04:05,  7.21s/it]Capturing CUDA graphs (FULL):  31%|███▏      | 15/48 [01:37<03:02,  5.53s/it]Capturing CUDA graphs (FULL):  33%|███▎      | 16/48 [01:38<02:07,  3.99s/it]                                                                             Capturing CUDA graphs (FULL):  33%|███▎      | 16/48 [01:42<02:07,  3.99s/it]                                                                             Capturing CUDA graphs (FULL):  33%|███▎      | 16/48 [01:51<02:07,  3.99s/it]Capturing CUDA graphs (FULL):  35%|███▌      | 17/48 [01:52<03:39,  7.09s/it]Capturing CUDA graphs (FULL):  38%|███▊      | 18/48 [01:52<02:32,  5.10s/it]Capturing CUDA graphs (FULL):  40%|███▉      | 19/48 [01:53<01:48,  3.72s/it](EngineCore pid=114806) INFO 08-17 02:06:32 [shm_broadcast.py:802] No available shared memory broadcast block found in 60 seconds. This typically happens when some processes are hanging or doing some time-consuming work (e.g. compilation, weight/kv cache quantization).
+Capturing CUDA graphs (FULL):  42%|████▏     | 20/48 [01:53<01:16,  2.74s/it]Capturing CUDA graphs (FULL):  44%|████▍     | 21/48 [01:55<01:05,  2.42s/it]Capturing CUDA graphs (FULL):  46%|████▌     | 22/48 [01:56<00:47,  1.84s/it]Capturing CUDA graphs (FULL):  48%|████▊     | 23/48 [01:56<00:35,  1.44s/it]Capturing CUDA graphs (FULL):  50%|█████     | 24/48 [01:56<00:27,  1.13s/it]Capturing CUDA graphs (FULL):  52%|█████▏    | 25/48 [01:58<00:30,  1.31s/it]Capturing CUDA graphs (FULL):  54%|█████▍    | 26/48 [01:59<00:23,  1.06s/it]Capturing CUDA graphs (FULL):  56%|█████▋    | 27/48 [01:59<00:18,  1.13it/s]Capturing CUDA graphs (FULL):  58%|█████▊    | 28/48 [02:00<00:16,  1.23it/s]Capturing CUDA graphs (FULL):  60%|██████    | 29/48 [02:01<00:20,  1.06s/it]Capturing CUDA graphs (FULL):  62%|██████▎   | 30/48 [02:02<00:15,  1.13it/s]Capturing CUDA graphs (FULL):  65%|██████▍   | 31/48 [02:02<00:12,  1.33it/s]Capturing CUDA graphs (FULL):  67%|██████▋   | 32/48 [02:03<00:10,  1.49it/s]Capturing CUDA graphs (FULL):  69%|██████▉   | 33/48 [02:03<00:09,  1.58it/s]Capturing CUDA graphs (FULL):  71%|███████   | 34/48 [02:04<00:08,  1.73it/s]Capturing CUDA graphs (FULL):  73%|███████▎  | 35/48 [02:04<00:07,  1.85it/s]Capturing CUDA graphs (FULL):  75%|███████▌  | 36/48 [02:05<00:06,  1.93it/s]Capturing CUDA graphs (FULL):  77%|███████▋  | 37/48 [02:05<00:05,  2.02it/s]Capturing CUDA graphs (FULL):  79%|███████▉  | 38/48 [02:06<00:04,  2.07it/s]Capturing CUDA graphs (FULL):  81%|████████▏ | 39/48 [02:06<00:04,  2.11it/s]Capturing CUDA graphs (FULL):  83%|████████▎ | 40/48 [02:07<00:03,  2.03it/s]Capturing CUDA graphs (FULL):  85%|████████▌ | 41/48 [02:07<00:03,  2.02it/s]Capturing CUDA graphs (FULL):  88%|████████▊ | 42/48 [02:08<00:02,  2.08it/s]Capturing CUDA graphs (FULL):  90%|████████▉ | 43/48 [02:08<00:02,  2.14it/s]Capturing CUDA graphs (FULL):  92%|█████████▏| 44/48 [02:08<00:01,  2.17it/s]Capturing CUDA graphs (FULL):  94%|█████████▍| 45/48 [02:09<00:01,  2.14it/s]Capturing CUDA graphs (FULL):  96%|█████████▌| 46/48 [02:09<00:00,  2.18it/s]Capturing CUDA graphs (FULL):  98%|█████████▊| 47/48 [02:10<00:00,  2.30it/s]Capturing CUDA graphs (FULL): 100%|██████████| 48/48 [02:10<00:00,  2.40it/s]Capturing CUDA graphs (FULL): 100%|██████████| 48/48 [02:10<00:00,  2.72s/it]
+(Worker_TP4_EP4 pid=115195) 2026-08-17 02:04:41  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang` with `out_idx=None`
+(Worker_TP4_EP4 pid=115195) 2026-08-17 02:04:49  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang`
+(Worker_TP4_EP4 pid=115195) 2026-08-17 02:04:54  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`
+(Worker_TP4_EP4 pid=115195) 2026-08-17 02:05:02  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`
+(Worker_TP4_EP4 pid=115195) 2026-08-17 02:05:09  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang` with `out_idx=None`
+(Worker_TP4_EP4 pid=115195) 2026-08-17 02:05:17  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang`
+(Worker_TP4_EP4 pid=115195) 2026-08-17 02:05:24  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang` with `out_idx=None`
+(Worker_TP4_EP4 pid=115195) 2026-08-17 02:05:32  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang`
+(Worker_TP4_EP4 pid=115195) 2026-08-17 02:05:37  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`
+(Worker_TP4_EP4 pid=115195) 2026-08-17 02:05:46  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`
+(Worker_TP4_EP4 pid=115195) 2026-08-17 02:05:52  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang` with `out_idx=None`
+(Worker_TP4_EP4 pid=115195) 2026-08-17 02:06:01  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang`
+(Worker_TP4_EP4 pid=115195) 2026-08-17 02:06:05  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`
+(Worker_TP4_EP4 pid=115195) 2026-08-17 02:06:12  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`
+(Worker_TP4_EP4 pid=115195) 2026-08-17 02:06:21  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`
+(Worker_TP4_EP4 pid=115195) 2026-08-17 02:06:30  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`
+(Worker_TP4_EP4 pid=115195) INFO 08-17 02:06:49 [speculator.py:137] Capturing model for DSpark speculator...
+(Worker_TP5_EP5 pid=115196) 2026-08-17 02:04:41  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang` with `out_idx=None`
+(Worker_TP5_EP5 pid=115196) 2026-08-17 02:04:49  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang`
+(Worker_TP5_EP5 pid=115196) 2026-08-17 02:04:54  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`
+(Worker_TP5_EP5 pid=115196) 2026-08-17 02:05:02  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`
+(Worker_TP5_EP5 pid=115196) 2026-08-17 02:05:09  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang` with `out_idx=None`
+(Worker_TP5_EP5 pid=115196) 2026-08-17 02:05:17  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang`
+(Worker_TP5_EP5 pid=115196) 2026-08-17 02:05:24  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang` with `out_idx=None`
+(Worker_TP5_EP5 pid=115196) 2026-08-17 02:05:32  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang`
+(Worker_TP5_EP5 pid=115196) 2026-08-17 02:05:37  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`
+(Worker_TP5_EP5 pid=115196) 2026-08-17 02:05:46  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`
+(Worker_TP5_EP5 pid=115196) 2026-08-17 02:05:52  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang` with `out_idx=None`
+(Worker_TP5_EP5 pid=115196) 2026-08-17 02:06:00  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang`
+(Worker_TP5_EP5 pid=115196) 2026-08-17 02:06:04  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`
+(Worker_TP5_EP5 pid=115196) 2026-08-17 02:06:13  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`
+(Worker_TP5_EP5 pid=115196) 2026-08-17 02:06:21  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`
+(Worker_TP5_EP5 pid=115196) 2026-08-17 02:06:30  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`
+(Worker_TP5_EP5 pid=115196) INFO 08-17 02:06:49 [speculator.py:137] Capturing model for DSpark speculator...
+(Worker_TP0_EP0 pid=115191) 2026-08-17 02:04:41  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang` with `out_idx=None`
+(Worker_TP0_EP0 pid=115191) 2026-08-17 02:04:50  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang`
+(Worker_TP0_EP0 pid=115191) 2026-08-17 02:04:54  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`
+(Worker_TP0_EP0 pid=115191) 2026-08-17 02:05:02  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`
+(Worker_TP0_EP0 pid=115191) 2026-08-17 02:05:09  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang` with `out_idx=None`
+(Worker_TP0_EP0 pid=115191) 2026-08-17 02:05:17  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang`
+(Worker_TP0_EP0 pid=115191) 2026-08-17 02:05:24  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang` with `out_idx=None`
+(Worker_TP0_EP0 pid=115191) 2026-08-17 02:05:32  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang`
+(Worker_TP0_EP0 pid=115191) 2026-08-17 02:05:37  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`
+(Worker_TP0_EP0 pid=115191) 2026-08-17 02:05:45  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`
+(Worker_TP0_EP0 pid=115191) 2026-08-17 02:05:52  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang` with `out_idx=None`
+(Worker_TP0_EP0 pid=115191) 2026-08-17 02:06:00  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang`
+(Worker_TP0_EP0 pid=115191) 2026-08-17 02:06:04  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`
+(Worker_TP0_EP0 pid=115191) 2026-08-17 02:06:12  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`
+(Worker_TP0_EP0 pid=115191) 2026-08-17 02:06:21  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`
+(Worker_TP0_EP0 pid=115191) 2026-08-17 02:06:29  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`
+(Worker_TP0_EP0 pid=115191) INFO 08-17 02:06:49 [speculator.py:137] Capturing model for DSpark speculator...
+(Worker_TP0_EP0 pid=115191) Capturing dspark CUDA graphs (FULL):   0%|          | 0/45 [00:00<?, ?it/s](Worker_TP1_EP1 pid=115192) 2026-08-17 02:04:41  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang` with `out_idx=None`
+(Worker_TP1_EP1 pid=115192) 2026-08-17 02:04:50  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang`
+(Worker_TP1_EP1 pid=115192) 2026-08-17 02:04:54  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`
+(Worker_TP1_EP1 pid=115192) 2026-08-17 02:05:02  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`
+(Worker_TP1_EP1 pid=115192) 2026-08-17 02:05:09  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang` with `out_idx=None`
+(Worker_TP1_EP1 pid=115192) 2026-08-17 02:05:17  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang`
+(Worker_TP1_EP1 pid=115192) 2026-08-17 02:05:24  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang` with `out_idx=None`
+(Worker_TP1_EP1 pid=115192) 2026-08-17 02:05:32  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang`
+(Worker_TP1_EP1 pid=115192) 2026-08-17 02:05:37  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`
+(Worker_TP1_EP1 pid=115192) 2026-08-17 02:05:45  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`
+(Worker_TP1_EP1 pid=115192) 2026-08-17 02:05:52  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang` with `out_idx=None`
+(Worker_TP1_EP1 pid=115192) 2026-08-17 02:06:00  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang`
+(Worker_TP1_EP1 pid=115192) 2026-08-17 02:06:04  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`
+(Worker_TP1_EP1 pid=115192) 2026-08-17 02:06:12  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`
+(Worker_TP1_EP1 pid=115192) 2026-08-17 02:06:21  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`
+(Worker_TP1_EP1 pid=115192) 2026-08-17 02:06:29  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`
+(Worker_TP1_EP1 pid=115192) INFO 08-17 02:06:49 [speculator.py:137] Capturing model for DSpark speculator...
+(Worker_TP3_EP3 pid=115194) 2026-08-17 02:04:41  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang` with `out_idx=None`
+(Worker_TP3_EP3 pid=115194) 2026-08-17 02:04:50  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang`
+(Worker_TP3_EP3 pid=115194) 2026-08-17 02:04:54  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`
+(Worker_TP3_EP3 pid=115194) 2026-08-17 02:05:02  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`
+(Worker_TP3_EP3 pid=115194) 2026-08-17 02:05:09  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang` with `out_idx=None`
+(Worker_TP3_EP3 pid=115194) 2026-08-17 02:05:17  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang`
+(Worker_TP3_EP3 pid=115194) 2026-08-17 02:05:24  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang` with `out_idx=None`
+(Worker_TP3_EP3 pid=115194) 2026-08-17 02:05:32  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang`
+(Worker_TP3_EP3 pid=115194) 2026-08-17 02:05:37  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`
+(Worker_TP3_EP3 pid=115194) 2026-08-17 02:05:45  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`
+(Worker_TP3_EP3 pid=115194) 2026-08-17 02:05:52  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang` with `out_idx=None`
+(Worker_TP3_EP3 pid=115194) 2026-08-17 02:06:00  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang`
+(Worker_TP3_EP3 pid=115194) 2026-08-17 02:06:04  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`
+(Worker_TP3_EP3 pid=115194) 2026-08-17 02:06:12  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`
+(Worker_TP3_EP3 pid=115194) 2026-08-17 02:06:21  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`
+(Worker_TP3_EP3 pid=115194) 2026-08-17 02:06:29  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`
+(Worker_TP3_EP3 pid=115194) INFO 08-17 02:06:49 [speculator.py:137] Capturing model for DSpark speculator...
+(Worker_TP7_EP7 pid=115198) 2026-08-17 02:04:41  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang` with `out_idx=None`
+(Worker_TP7_EP7 pid=115198) 2026-08-17 02:04:49  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang`
+(Worker_TP7_EP7 pid=115198) 2026-08-17 02:04:54  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`
+(Worker_TP7_EP7 pid=115198) 2026-08-17 02:05:02  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`
+(Worker_TP7_EP7 pid=115198) 2026-08-17 02:05:09  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang` with `out_idx=None`
+(Worker_TP7_EP7 pid=115198) 2026-08-17 02:05:17  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang`
+(Worker_TP7_EP7 pid=115198) 2026-08-17 02:05:24  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang` with `out_idx=None`
+(Worker_TP7_EP7 pid=115198) 2026-08-17 02:05:32  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang`
+(Worker_TP7_EP7 pid=115198) 2026-08-17 02:05:38  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`
+(Worker_TP7_EP7 pid=115198) 2026-08-17 02:05:46  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`
+(Worker_TP7_EP7 pid=115198) 2026-08-17 02:05:52  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang` with `out_idx=None`
+(Worker_TP7_EP7 pid=115198) 2026-08-17 02:06:01  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang`
+(Worker_TP7_EP7 pid=115198) 2026-08-17 02:06:05  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`
+(Worker_TP7_EP7 pid=115198) 2026-08-17 02:06:13  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`
+(Worker_TP7_EP7 pid=115198) 2026-08-17 02:06:21  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`
+(Worker_TP7_EP7 pid=115198) 2026-08-17 02:06:30  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`
+(Worker_TP7_EP7 pid=115198) INFO 08-17 02:06:49 [speculator.py:137] Capturing model for DSpark speculator...
+(Worker_TP6_EP6 pid=115197) 2026-08-17 02:04:41  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang` with `out_idx=None`
+(Worker_TP6_EP6 pid=115197) 2026-08-17 02:04:49  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang`
+(Worker_TP6_EP6 pid=115197) 2026-08-17 02:04:54  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`
+(Worker_TP6_EP6 pid=115197) 2026-08-17 02:05:02  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`
+(Worker_TP6_EP6 pid=115197) 2026-08-17 02:05:09  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang` with `out_idx=None`
+(Worker_TP6_EP6 pid=115197) 2026-08-17 02:05:17  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang`
+(Worker_TP6_EP6 pid=115197) 2026-08-17 02:05:24  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang` with `out_idx=None`
+(Worker_TP6_EP6 pid=115197) 2026-08-17 02:05:32  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang`
+(Worker_TP6_EP6 pid=115197) 2026-08-17 02:05:37  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`
+(Worker_TP6_EP6 pid=115197) 2026-08-17 02:05:46  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`
+(Worker_TP6_EP6 pid=115197) 2026-08-17 02:05:52  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang` with `out_idx=None`
+(Worker_TP6_EP6 pid=115197) 2026-08-17 02:06:01  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang`
+(Worker_TP6_EP6 pid=115197) 2026-08-17 02:06:05  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`
+(Worker_TP6_EP6 pid=115197) 2026-08-17 02:06:13  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`
+(Worker_TP6_EP6 pid=115197) 2026-08-17 02:06:21  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`
+(Worker_TP6_EP6 pid=115197) 2026-08-17 02:06:29  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`
+(Worker_TP6_EP6 pid=115197) INFO 08-17 02:06:49 [speculator.py:137] Capturing model for DSpark speculator...
+(Worker_TP2_EP2 pid=115193) 2026-08-17 02:04:41  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang` with `out_idx=None`
+(Worker_TP2_EP2 pid=115193) 2026-08-17 02:04:50  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang`
+(Worker_TP2_EP2 pid=115193) 2026-08-17 02:04:54  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`
+(Worker_TP2_EP2 pid=115193) 2026-08-17 02:05:02  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`
+(Worker_TP2_EP2 pid=115193) 2026-08-17 02:05:09  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang` with `out_idx=None`
+(Worker_TP2_EP2 pid=115193) 2026-08-17 02:05:17  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang`
+(Worker_TP2_EP2 pid=115193) 2026-08-17 02:05:24  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang` with `out_idx=None`
+(Worker_TP2_EP2 pid=115193) 2026-08-17 02:05:32  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang`
+(Worker_TP2_EP2 pid=115193) 2026-08-17 02:05:38  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`
+(Worker_TP2_EP2 pid=115193) 2026-08-17 02:05:45  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`
+(Worker_TP2_EP2 pid=115193) 2026-08-17 02:05:52  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang` with `out_idx=None`
+(Worker_TP2_EP2 pid=115193) 2026-08-17 02:06:00  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang`
+(Worker_TP2_EP2 pid=115193) 2026-08-17 02:06:04  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`
+(Worker_TP2_EP2 pid=115193) 2026-08-17 02:06:12  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`
+(Worker_TP2_EP2 pid=115193) 2026-08-17 02:06:21  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`
+(Worker_TP2_EP2 pid=115193) 2026-08-17 02:06:29  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`
+(Worker_TP2_EP2 pid=115193) INFO 08-17 02:06:49 [speculator.py:137] Capturing model for DSpark speculator...
+Capturing dspark CUDA graphs (FULL):   7%|▋         | 3/45 [00:00<00:01, 24.13it/s]Capturing dspark CUDA graphs (FULL):  13%|█▎        | 6/45 [00:00<00:01, 27.16it/s]Capturing dspark CUDA graphs (FULL):  20%|██        | 9/45 [00:00<00:01, 27.71it/s]Capturing dspark CUDA graphs (FULL):  27%|██▋       | 12/45 [00:00<00:01, 28.32it/s]Capturing dspark CUDA graphs (FULL):  33%|███▎      | 15/45 [00:00<00:01, 28.27it/s]Capturing dspark CUDA graphs (FULL):  40%|████      | 18/45 [00:00<00:00, 28.35it/s]Capturing dspark CUDA graphs (FULL):  47%|████▋     | 21/45 [00:00<00:00, 26.71it/s]Capturing dspark CUDA graphs (FULL):  53%|█████▎    | 24/45 [00:00<00:00, 21.34it/s]Capturing dspark CUDA graphs (FULL):  62%|██████▏   | 28/45 [00:01<00:00, 24.18it/s]Capturing dspark CUDA graphs (FULL):  71%|███████   | 32/45 [00:01<00:00, 26.60it/s]Capturing dspark CUDA graphs (FULL):  80%|████████  | 36/45 [00:01<00:00, 28.30it/s]Capturing dspark CUDA graphs (FULL):  89%|████████▉ | 40/45 [00:01<00:00, 29.87it/s]Capturing dspark CUDA graphs (FULL):  98%|█████████▊| 44/45 [00:01<00:00, 30.89it/s]Capturing dspark CUDA graphs (FULL): 100%|██████████| 45/45 [00:01<00:00, 27.94it/s]
+(Worker_TP7_EP7 pid=115198) INFO 08-17 02:06:50 [model_runner.py:791] Graph capturing finished in 133 secs, took 2.24 GiB
+(Worker_TP5_EP5 pid=115196) INFO 08-17 02:06:50 [model_runner.py:791] Graph capturing finished in 133 secs, took 2.24 GiB
+(Worker_TP1_EP1 pid=115192) INFO 08-17 02:06:50 [model_runner.py:791] Graph capturing finished in 133 secs, took 2.24 GiB
+(Worker_TP3_EP3 pid=115194) INFO 08-17 02:06:50 [model_runner.py:791] Graph capturing finished in 133 secs, took 2.24 GiB
+(Worker_TP4_EP4 pid=115195) INFO 08-17 02:06:50 [model_runner.py:791] Graph capturing finished in 133 secs, took 2.24 GiB
+(Worker_TP2_EP2 pid=115193) INFO 08-17 02:06:50 [model_runner.py:791] Graph capturing finished in 133 secs, took 2.24 GiB
+(Worker_TP6_EP6 pid=115197) INFO 08-17 02:06:50 [model_runner.py:791] Graph capturing finished in 133 secs, took 2.24 GiB
+(Worker_TP0_EP0 pid=115191) INFO 08-17 02:06:50 [model_runner.py:791] Graph capturing finished in 133 secs, took 2.24 GiB
+(Worker_TP5_EP5 pid=115196) INFO 08-17 02:06:50 [gpu_worker.py:789] Free memory on device (137.64/139.8 GiB) on startup. Desired GPU memory utilization is (0.95, 132.81 GiB). Actual usage is 111.04 GiB for consumed memory (weights + non-torch), 3.02 GiB for peak activation, and 2.24 GiB for CUDAGraph memory. Replace gpu_memory_utilization config with `--kv-cache-memory=17569822720` (16.36 GiB) to fit into requested memory, or `--kv-cache-memory=22752786432` (21.19 GiB) to fully utilize gpu memory. Current kv cache memory in use is 18.75 GiB.
+(Worker_TP7_EP7 pid=115198) INFO 08-17 02:06:50 [gpu_worker.py:789] Free memory on device (137.64/139.8 GiB) on startup. Desired GPU memory utilization is (0.95, 132.81 GiB). Actual usage is 111.04 GiB for consumed memory (weights + non-torch), 3.02 GiB for peak activation, and 2.24 GiB for CUDAGraph memory. Replace gpu_memory_utilization config with `--kv-cache-memory=17569822720` (16.36 GiB) to fit into requested memory, or `--kv-cache-memory=22752786432` (21.19 GiB) to fully utilize gpu memory. Current kv cache memory in use is 18.75 GiB.
+(Worker_TP3_EP3 pid=115194) INFO 08-17 02:06:50 [gpu_worker.py:789] Free memory on device (137.64/139.8 GiB) on startup. Desired GPU memory utilization is (0.95, 132.81 GiB). Actual usage is 111.04 GiB for consumed memory (weights + non-torch), 3.02 GiB for peak activation, and 2.24 GiB for CUDAGraph memory. Replace gpu_memory_utilization config with `--kv-cache-memory=17569822720` (16.36 GiB) to fit into requested memory, or `--kv-cache-memory=22752786432` (21.19 GiB) to fully utilize gpu memory. Current kv cache memory in use is 18.75 GiB.
+(Worker_TP1_EP1 pid=115192) INFO 08-17 02:06:50 [gpu_worker.py:789] Free memory on device (137.64/139.8 GiB) on startup. Desired GPU memory utilization is (0.95, 132.81 GiB). Actual usage is 111.04 GiB for consumed memory (weights + non-torch), 3.02 GiB for peak activation, and 2.24 GiB for CUDAGraph memory. Replace gpu_memory_utilization config with `--kv-cache-memory=17569822720` (16.36 GiB) to fit into requested memory, or `--kv-cache-memory=22752786432` (21.19 GiB) to fully utilize gpu memory. Current kv cache memory in use is 18.75 GiB.
+(Worker_TP4_EP4 pid=115195) INFO 08-17 02:06:50 [gpu_worker.py:789] Free memory on device (137.64/139.8 GiB) on startup. Desired GPU memory utilization is (0.95, 132.81 GiB). Actual usage is 111.04 GiB for consumed memory (weights + non-torch), 3.02 GiB for peak activation, and 2.24 GiB for CUDAGraph memory. Replace gpu_memory_utilization config with `--kv-cache-memory=17569822720` (16.36 GiB) to fit into requested memory, or `--kv-cache-memory=22752786432` (21.19 GiB) to fully utilize gpu memory. Current kv cache memory in use is 18.75 GiB.
+(Worker_TP2_EP2 pid=115193) INFO 08-17 02:06:50 [gpu_worker.py:789] Free memory on device (137.64/139.8 GiB) on startup. Desired GPU memory utilization is (0.95, 132.81 GiB). Actual usage is 111.04 GiB for consumed memory (weights + non-torch), 3.02 GiB for peak activation, and 2.24 GiB for CUDAGraph memory. Replace gpu_memory_utilization config with `--kv-cache-memory=17569822720` (16.36 GiB) to fit into requested memory, or `--kv-cache-memory=22752786432` (21.19 GiB) to fully utilize gpu memory. Current kv cache memory in use is 18.75 GiB.
+(Worker_TP6_EP6 pid=115197) INFO 08-17 02:06:50 [gpu_worker.py:789] Free memory on device (137.64/139.8 GiB) on startup. Desired GPU memory utilization is (0.95, 132.81 GiB). Actual usage is 111.04 GiB for consumed memory (weights + non-torch), 3.02 GiB for peak activation, and 2.24 GiB for CUDAGraph memory. Replace gpu_memory_utilization config with `--kv-cache-memory=17569822720` (16.36 GiB) to fit into requested memory, or `--kv-cache-memory=22752786432` (21.19 GiB) to fully utilize gpu memory. Current kv cache memory in use is 18.75 GiB.
+(Worker_TP0_EP0 pid=115191) INFO 08-17 02:06:50 [gpu_worker.py:789] Free memory on device (137.64/139.8 GiB) on startup. Desired GPU memory utilization is (0.95, 132.81 GiB). Actual usage is 111.04 GiB for consumed memory (weights + non-torch), 3.02 GiB for peak activation, and 2.24 GiB for CUDAGraph memory. Replace gpu_memory_utilization config with `--kv-cache-memory=17569822720` (16.36 GiB) to fit into requested memory, or `--kv-cache-memory=22752786432` (21.19 GiB) to fully utilize gpu memory. Current kv cache memory in use is 18.75 GiB.
+(Worker_TP4_EP4 pid=115195) 2026-08-17 02:06:52  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang` with `out_idx=None`
+(Worker_TP4_EP4 pid=115195) 2026-08-17 02:07:01  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang`
+(Worker_TP4_EP4 pid=115195) 2026-08-17 02:07:05  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`
+(Worker_TP4_EP4 pid=115195) 2026-08-17 02:07:13  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`
+(Worker_TP5_EP5 pid=115196) 2026-08-17 02:06:52  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang` with `out_idx=None`
+(Worker_TP5_EP5 pid=115196) 2026-08-17 02:07:01  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang`
+(Worker_TP5_EP5 pid=115196) 2026-08-17 02:07:05  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`
+(Worker_TP5_EP5 pid=115196) 2026-08-17 02:07:13  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`
+(Worker_TP6_EP6 pid=115197) 2026-08-17 02:06:52  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang` with `out_idx=None`
+(Worker_TP6_EP6 pid=115197) 2026-08-17 02:07:01  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang`
+(Worker_TP6_EP6 pid=115197) 2026-08-17 02:07:05  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`
+(Worker_TP6_EP6 pid=115197) 2026-08-17 02:07:13  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`
+(Worker_TP1_EP1 pid=115192) 2026-08-17 02:06:52  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang` with `out_idx=None`
+(Worker_TP1_EP1 pid=115192) 2026-08-17 02:07:01  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang`
+(Worker_TP1_EP1 pid=115192) 2026-08-17 02:07:05  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`
+(Worker_TP1_EP1 pid=115192) 2026-08-17 02:07:13  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`
+(Worker_TP0_EP0 pid=115191) 2026-08-17 02:06:52  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang` with `out_idx=None`
+(Worker_TP0_EP0 pid=115191) 2026-08-17 02:07:01  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang`
+(Worker_TP0_EP0 pid=115191) 2026-08-17 02:07:05  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`
+(Worker_TP0_EP0 pid=115191) 2026-08-17 02:07:13  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`
+(Worker_TP2_EP2 pid=115193) 2026-08-17 02:06:52  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang` with `out_idx=None`
+(Worker_TP2_EP2 pid=115193) 2026-08-17 02:07:01  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang`
+(Worker_TP2_EP2 pid=115193) 2026-08-17 02:07:05  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`
+(Worker_TP2_EP2 pid=115193) 2026-08-17 02:07:13  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`
+(Worker_TP3_EP3 pid=115194) 2026-08-17 02:06:52  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang` with `out_idx=None`
+(Worker_TP3_EP3 pid=115194) 2026-08-17 02:07:00  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang`
+(Worker_TP3_EP3 pid=115194) 2026-08-17 02:07:05  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`
+(Worker_TP3_EP3 pid=115194) 2026-08-17 02:07:12  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`
+(Worker_TP7_EP7 pid=115198) 2026-08-17 02:06:52  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang` with `out_idx=None`
+(Worker_TP7_EP7 pid=115198) 2026-08-17 02:07:01  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang`
+(Worker_TP7_EP7 pid=115198) 2026-08-17 02:07:05  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`
+(Worker_TP7_EP7 pid=115198) 2026-08-17 02:07:13  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`
+(Worker_TP6_EP6 pid=115197) INFO 08-17 02:07:19 [jit_monitor.py:79] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.
+(Worker_TP4_EP4 pid=115195) INFO 08-17 02:07:19 [jit_monitor.py:79] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.
+(Worker_TP1_EP1 pid=115192) INFO 08-17 02:07:19 [jit_monitor.py:79] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.
+(Worker_TP2_EP2 pid=115193) INFO 08-17 02:07:19 [jit_monitor.py:79] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.
+(Worker_TP0_EP0 pid=115191) INFO 08-17 02:07:19 [jit_monitor.py:79] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.
+(Worker_TP3_EP3 pid=115194) INFO 08-17 02:07:19 [jit_monitor.py:79] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.
+(Worker_TP7_EP7 pid=115198) INFO 08-17 02:07:19 [jit_monitor.py:79] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.
+(Worker_TP5_EP5 pid=115196) INFO 08-17 02:07:19 [jit_monitor.py:79] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.
+(EngineCore pid=114806) INFO 08-17 02:07:20 [core.py:355] init engine (profile, create kv cache, warmup model) took 187.11 s
+(EngineCore pid=114806) Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+(EngineCore pid=114806) WARNING 08-17 02:07:22 [vllm.py:1237] VLLM_USE_BREAKABLE_CUDAGRAPH is set, disabling vLLM's torch.compile pipeline. Equivalent to -cc.mode=none.
+(EngineCore pid=114806) WARNING 08-17 02:07:22 [vllm.py:1247] Inductor compilation was disabled by user settings, optimizations settings that are only active during inductor compilation will be ignored.
+(EngineCore pid=114806) INFO 08-17 02:07:22 [kernel.py:306] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(EngineCore pid=114806) WARNING 08-17 02:07:22 [vllm.py:1757] max_num_scheduled_tokens is set to 7808 based on the speculative decoding settings. This may lead to suboptimal performance. Consider increasing max_num_batched_tokens to accommodate the additional draft token slots, or decrease num_speculative_tokens or max_num_seqs.
+(EngineCore pid=114806) WARNING 08-17 02:07:22 [vllm.py:2267] Model Runner V2 does not yet support the thinking_token_budget request parameter. Set VLLM_USE_V2_MODEL_RUNNER=0 if this is required.
+(EngineCore pid=114806) INFO 08-17 02:07:23 [compilation.py:329] Enabled custom fusions: norm_quant, act_quant, allreduce_rms
+(APIServer pid=114171) INFO 08-17 02:07:23 [api_server.py:678] Supported tasks: ['generate']
+(APIServer pid=114171) INFO 08-17 02:07:23 [parser_manager.py:37] "auto" tool choice has been enabled.
+(APIServer pid=114171) WARNING 08-17 02:07:23 [model.py:1637] Default vLLM sampling parameters have been overridden by the model's `generation_config.json`: `{'temperature': 1.0, 'top_p': 1.0}`. If this is not intended, please relaunch vLLM instance with `--generation-config vllm`.
+(APIServer pid=114171) INFO 08-17 02:07:24 [api_server.py:682] Starting vLLM server on http://0.0.0.0:8000
+(APIServer pid=114171) INFO 08-17 02:07:24 [launcher.py:37] Available routes are:
+(APIServer pid=114171) INFO 08-17 02:07:24 [launcher.py:46] Route: /openapi.json, Methods: HEAD, GET
+(APIServer pid=114171) INFO 08-17 02:07:24 [launcher.py:46] Route: /docs, Methods: HEAD, GET
+(APIServer pid=114171) INFO 08-17 02:07:24 [launcher.py:46] Route: /docs/oauth2-redirect, Methods: HEAD, GET
+(APIServer pid=114171) INFO 08-17 02:07:24 [launcher.py:46] Route: /redoc, Methods: HEAD, GET
+(APIServer pid=114171) INFO 08-17 02:07:24 [launcher.py:46] Route: /load, Methods: GET
+(APIServer pid=114171) INFO 08-17 02:07:24 [launcher.py:46] Route: /version, Methods: GET
+(APIServer pid=114171) INFO 08-17 02:07:24 [launcher.py:46] Route: /health, Methods: GET
+(APIServer pid=114171) INFO 08-17 02:07:24 [launcher.py:46] Route: /metrics, Methods: GET
+(APIServer pid=114171) INFO 08-17 02:07:24 [launcher.py:46] Route: /tokenize, Methods: POST
+(APIServer pid=114171) INFO 08-17 02:07:24 [launcher.py:46] Route: /detokenize, Methods: POST
+(APIServer pid=114171) INFO 08-17 02:07:24 [launcher.py:46] Route: /v1/models, Methods: GET
+(APIServer pid=114171) INFO 08-17 02:07:24 [launcher.py:46] Route: /ping, Methods: GET
+(APIServer pid=114171) INFO 08-17 02:07:24 [launcher.py:46] Route: /ping, Methods: POST
+(APIServer pid=114171) INFO 08-17 02:07:24 [launcher.py:46] Route: /invocations, Methods: POST
+(APIServer pid=114171) INFO 08-17 02:07:24 [launcher.py:46] Route: /v1/chat/completions, Methods: POST
+(APIServer pid=114171) INFO 08-17 02:07:24 [launcher.py:46] Route: /v1/chat/completions/batch, Methods: POST
+(APIServer pid=114171) INFO 08-17 02:07:24 [launcher.py:46] Route: /v1/responses, Methods: POST
+(APIServer pid=114171) INFO 08-17 02:07:24 [launcher.py:46] Route: /v1/responses/{response_id}, Methods: GET
+(APIServer pid=114171) INFO 08-17 02:07:24 [launcher.py:46] Route: /v1/responses/{response_id}/cancel, Methods: POST
+(APIServer pid=114171) INFO 08-17 02:07:24 [launcher.py:46] Route: /v1/completions, Methods: POST
+(APIServer pid=114171) INFO 08-17 02:07:24 [launcher.py:46] Route: /v1/messages, Methods: POST
+(APIServer pid=114171) INFO 08-17 02:07:24 [launcher.py:46] Route: /v1/messages/count_tokens, Methods: POST
+(APIServer pid=114171) INFO 08-17 02:07:24 [launcher.py:46] Route: /generative_scoring, Methods: POST
+(APIServer pid=114171) INFO 08-17 02:07:24 [launcher.py:46] Route: /scale_elastic_ep, Methods: POST
+(APIServer pid=114171) INFO 08-17 02:07:24 [launcher.py:46] Route: /is_scaling_elastic_ep, Methods: POST
+(APIServer pid=114171) INFO 08-17 02:07:24 [launcher.py:46] Route: /v1/chat/completions/render, Methods: POST
+(APIServer pid=114171) INFO 08-17 02:07:24 [launcher.py:46] Route: /v1/completions/render, Methods: POST
+(APIServer pid=114171) INFO 08-17 02:07:24 [launcher.py:46] Route: /v1/chat/completions/derender, Methods: POST
+(APIServer pid=114171) INFO 08-17 02:07:24 [launcher.py:46] Route: /v1/completions/derender, Methods: POST
+(APIServer pid=114171) INFO 08-17 02:07:24 [launcher.py:46] Route: /inference/v1/generate, Methods: POST
+(APIServer pid=114171) INFO 08-17 02:07:24 [launcher.py:99] API server: waiting for HTTP server to start
+(APIServer pid=114171) INFO:     Started server process [114171]
+(APIServer pid=114171) INFO:     Waiting for application startup.
+(APIServer pid=114171) INFO:     Application startup complete.
+(APIServer pid=114171) INFO 08-17 02:07:25 [launcher.py:105] API server: HTTP server started
+(APIServer pid=114171) INFO:     127.0.0.1:57828 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:57844 - "GET /health HTTP/1.1" 200 OK
+
+Ready after 291s: deepseek-ai/DeepSeek-V4-Pro-0813 on http://localhost:8000
+Verify it from another shell: ../benchmark.sh --smoke-only
+Ctrl-C here stops the server.
+
+(APIServer pid=114171) INFO:     127.0.0.1:57846 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42556 - "POST /tokenize HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42564 - "GET /metrics HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42564 - "GET /metrics HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42564 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42570 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42574 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42584 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42588 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42602 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(Worker_TP0_EP0 pid=115191) WARNING 08-17 02:07:45 [jit_monitor.py:135] TileLang JIT compilation during inference: mhc_pre_big_fuse_broadcast_with_norm_tilelang. This causes a latency spike; consider extending warmup to cover this shape/config.
+(APIServer pid=114171) INFO:     127.0.0.1:42612 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42614 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42616 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42618 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42630 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42636 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42638 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42640 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42646 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42650 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42656 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42660 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42668 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42676 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42692 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(Worker_TP0_EP0 pid=115191) WARNING 08-17 02:07:45 [jit_monitor.py:135] CuTeDSL JIT compilation during inference: DequantGatherKCacheKernel. This causes a latency spike; consider extending warmup to cover this shape/config.
+(APIServer pid=114171) INFO:     127.0.0.1:42708 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42710 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42716 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42730 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42732 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42748 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42758 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42766 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42772 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42776 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42782 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42790 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42798 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42814 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42826 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42836 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42838 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42854 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42860 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42876 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42892 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42900 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42914 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42930 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42944 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42956 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42972 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42974 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42990 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43004 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43008 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43020 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43026 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43028 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43042 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43054 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43070 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43074 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43086 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43102 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43112 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43128 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43144 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(Worker_TP0_EP0 pid=115191) WARNING 08-17 02:07:46 [jit_monitor.py:135] Triton kernel JIT compilation during inference: CombineTopkSwaIndicesKernel.kernel. This causes a latency spike; consider extending warmup to cover this shape/config.
+(Worker_TP0_EP0 pid=115191) WARNING 08-17 02:07:46 [jit_monitor.py:135] Triton kernel JIT compilation during inference: _prepare_dflash_inputs_kernel. This causes a latency spike; consider extending warmup to cover this shape/config.
+(Worker_TP0_EP0 pid=115191) WARNING 08-17 02:07:46 [jit_monitor.py:135] Triton kernel JIT compilation during inference: _compute_local_logits_stats_kernel. This causes a latency spike; consider extending warmup to cover this shape/config.
+(Worker_TP0_EP0 pid=115191) WARNING 08-17 02:07:46 [jit_monitor.py:135] Triton kernel JIT compilation during inference: _rejection_kernel. This causes a latency spike; consider extending warmup to cover this shape/config.
+(Worker_TP0_EP0 pid=115191) WARNING 08-17 02:07:46 [jit_monitor.py:135] Triton kernel JIT compilation during inference: _resample_kernel. This causes a latency spike; consider extending warmup to cover this shape/config.
+(APIServer pid=114171) INFO 08-17 02:07:55 [loggers.py:310] Engine 000: Avg prompt throughput: 8618.2 tokens/s, Avg generation throughput: 52.0 tokens/s, Running: 46 reqs, Waiting: 18 reqs, GPU KV cache usage: 56.0%, Prefix cache hit rate: 0.0%
+(APIServer pid=114171) INFO 08-17 02:07:55 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 2.23, Accepted throughput: 8.12 tokens/s, Drafted throughput: 46.05 tokens/s, Accepted: 264 tokens, Drafted: 1498 tokens, Per-position acceptance rate: 0.570, 0.355, 0.168, 0.075, 0.037, 0.023, 0.005, Avg Draft acceptance rate: 17.6%
+(APIServer pid=114171) INFO 08-17 02:08:05 [loggers.py:310] Engine 000: Avg prompt throughput: 4308.9 tokens/s, Avg generation throughput: 69.5 tokens/s, Running: 64 reqs, Waiting: 0 reqs, GPU KV cache usage: 42.2%, Prefix cache hit rate: 0.0%
+(APIServer pid=114171) INFO 08-17 02:08:05 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 2.22, Accepted throughput: 37.00 tokens/s, Drafted throughput: 212.79 tokens/s, Accepted: 370 tokens, Drafted: 2128 tokens, Per-position acceptance rate: 0.562, 0.332, 0.171, 0.072, 0.043, 0.033, 0.003, Avg Draft acceptance rate: 17.4%
+(APIServer pid=114171) INFO 08-17 02:08:15 [loggers.py:310] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 64 reqs, Waiting: 0 reqs, GPU KV cache usage: 42.2%, Prefix cache hit rate: 0.0%
+(Worker_TP0_EP0 pid=115191) 2026-08-17 02:08:01  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang` with `out_idx=None`
+(Worker_TP0_EP0 pid=115191) 2026-08-17 02:08:09  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang`
+(Worker_TP0_EP0 pid=115191) WARNING 08-17 02:08:15 [jit_monitor.py:135] TileLang JIT compilation during inference: mhc_pre_big_fuse_with_norm_tilelang. This causes a latency spike; consider extending warmup to cover this shape/config.
+(APIServer pid=114171) INFO 08-17 02:08:35 [loggers.py:310] Engine 000: Avg prompt throughput: 205.2 tokens/s, Avg generation throughput: 1013.6 tokens/s, Running: 64 reqs, Waiting: 0 reqs, GPU KV cache usage: 19.8%, Prefix cache hit rate: 0.0%
+(APIServer pid=114171) INFO 08-17 02:08:35 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 2.36, Accepted throughput: 194.93 tokens/s, Drafted throughput: 1000.27 tokens/s, Accepted: 5848 tokens, Drafted: 30009 tokens, Per-position acceptance rate: 0.533, 0.321, 0.196, 0.126, 0.089, 0.063, 0.036, Avg Draft acceptance rate: 19.5%
+(APIServer pid=114171) INFO:     127.0.0.1:42614 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO 08-17 02:08:45 [loggers.py:310] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 401.8 tokens/s, Running: 64 reqs, Waiting: 0 reqs, GPU KV cache usage: 25.8%, Prefix cache hit rate: 0.0%
+(APIServer pid=114171) INFO 08-17 02:08:45 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 3.00, Accepted throughput: 268.18 tokens/s, Drafted throughput: 939.33 tokens/s, Accepted: 2682 tokens, Drafted: 9394 tokens, Per-position acceptance rate: 0.620, 0.408, 0.290, 0.230, 0.194, 0.147, 0.110, Avg Draft acceptance rate: 28.6%
+(APIServer pid=114171) INFO 08-17 02:08:55 [loggers.py:310] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 64 reqs, Waiting: 0 reqs, GPU KV cache usage: 25.8%, Prefix cache hit rate: 0.0%
+(APIServer pid=114171) INFO:     127.0.0.1:43028 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43054 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42584 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42790 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42668 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO 08-17 02:09:05 [loggers.py:310] Engine 000: Avg prompt throughput: 615.6 tokens/s, Avg generation throughput: 328.0 tokens/s, Running: 63 reqs, Waiting: 0 reqs, GPU KV cache usage: 31.2%, Prefix cache hit rate: 0.0%
+(APIServer pid=114171) INFO 08-17 02:09:05 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 3.06, Accepted throughput: 111.00 tokens/s, Drafted throughput: 376.94 tokens/s, Accepted: 2220 tokens, Drafted: 7539 tokens, Per-position acceptance rate: 0.644, 0.429, 0.303, 0.231, 0.193, 0.149, 0.111, Avg Draft acceptance rate: 29.4%
+(APIServer pid=114171) INFO:     127.0.0.1:42860 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42656 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42640 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42776 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43070 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42798 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42900 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42692 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42914 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43112 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO 08-17 02:09:15 [loggers.py:310] Engine 000: Avg prompt throughput: 2666.5 tokens/s, Avg generation throughput: 615.0 tokens/s, Running: 64 reqs, Waiting: 0 reqs, GPU KV cache usage: 20.1%, Prefix cache hit rate: 0.0%
+(APIServer pid=114171) INFO 08-17 02:09:15 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 2.51, Accepted throughput: 370.86 tokens/s, Drafted throughput: 1722.03 tokens/s, Accepted: 3710 tokens, Drafted: 17227 tokens, Per-position acceptance rate: 0.576, 0.352, 0.215, 0.142, 0.104, 0.074, 0.045, Avg Draft acceptance rate: 21.5%
+(APIServer pid=114171) INFO:     127.0.0.1:42564 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42930 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42708 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43102 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42814 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42574 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42630 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42660 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42650 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42618 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42748 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42602 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43054 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42710 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43128 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43026 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42826 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43086 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43004 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO 08-17 02:09:25 [loggers.py:310] Engine 000: Avg prompt throughput: 3693.5 tokens/s, Avg generation throughput: 974.9 tokens/s, Running: 64 reqs, Waiting: 0 reqs, GPU KV cache usage: 37.4%, Prefix cache hit rate: 0.0%
+(APIServer pid=114171) INFO 08-17 02:09:25 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 2.24, Accepted throughput: 539.89 tokens/s, Drafted throughput: 3051.94 tokens/s, Accepted: 5399 tokens, Drafted: 30520 tokens, Per-position acceptance rate: 0.550, 0.299, 0.175, 0.103, 0.063, 0.034, 0.015, Avg Draft acceptance rate: 17.7%
+(APIServer pid=114171) INFO:     127.0.0.1:42972 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42588 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43144 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42638 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42730 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42772 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42836 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43008 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42990 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42892 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42838 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42876 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42612 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42570 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43020 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43074 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42636 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43042 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42732 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42616 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42758 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42646 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42676 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO 08-17 02:09:35 [loggers.py:310] Engine 000: Avg prompt throughput: 4719.3 tokens/s, Avg generation throughput: 744.2 tokens/s, Running: 64 reqs, Waiting: 0 reqs, GPU KV cache usage: 25.6%, Prefix cache hit rate: 0.0%
+(APIServer pid=114171) INFO 08-17 02:09:35 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 2.05, Accepted throughput: 381.18 tokens/s, Drafted throughput: 2549.97 tokens/s, Accepted: 3812 tokens, Drafted: 25501 tokens, Per-position acceptance rate: 0.482, 0.261, 0.142, 0.082, 0.044, 0.026, 0.009, Avg Draft acceptance rate: 14.9%
+(APIServer pid=114171) INFO:     127.0.0.1:42944 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42790 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42766 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42614 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42640 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43070 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42584 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42782 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42854 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42668 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43004 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42730 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42956 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42974 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO 08-17 02:09:45 [loggers.py:310] Engine 000: Avg prompt throughput: 2667.4 tokens/s, Avg generation throughput: 1027.5 tokens/s, Running: 64 reqs, Waiting: 0 reqs, GPU KV cache usage: 31.6%, Prefix cache hit rate: 0.0%
+(APIServer pid=114171) INFO 08-17 02:09:45 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 2.02, Accepted throughput: 520.47 tokens/s, Drafted throughput: 3555.07 tokens/s, Accepted: 5205 tokens, Drafted: 35553 tokens, Per-position acceptance rate: 0.473, 0.245, 0.137, 0.079, 0.049, 0.031, 0.011, Avg Draft acceptance rate: 14.6%
+(APIServer pid=114171) INFO:     127.0.0.1:42716 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42776 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42900 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43086 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42838 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42588 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43028 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42914 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42630 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42814 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42692 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42564 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42710 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42732 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO 08-17 02:09:55 [loggers.py:310] Engine 000: Avg prompt throughput: 3281.8 tokens/s, Avg generation throughput: 991.8 tokens/s, Running: 64 reqs, Waiting: 0 reqs, GPU KV cache usage: 20.1%, Prefix cache hit rate: 0.0%
+(APIServer pid=114171) INFO 08-17 02:09:55 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 2.09, Accepted throughput: 516.59 tokens/s, Drafted throughput: 3327.88 tokens/s, Accepted: 5168 tokens, Drafted: 33292 tokens, Per-position acceptance rate: 0.491, 0.253, 0.144, 0.091, 0.058, 0.033, 0.017, Avg Draft acceptance rate: 15.5%
+(APIServer pid=114171) INFO:     127.0.0.1:43128 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43112 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42602 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42826 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42972 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42570 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42930 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42676 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42974 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42772 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42574 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42860 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42798 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43026 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42990 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42748 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42854 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42876 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42892 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42656 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42836 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42944 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO 08-17 02:10:05 [loggers.py:310] Engine 000: Avg prompt throughput: 4308.8 tokens/s, Avg generation throughput: 827.5 tokens/s, Running: 63 reqs, Waiting: 0 reqs, GPU KV cache usage: 20.0%, Prefix cache hit rate: 0.0%
+(APIServer pid=114171) INFO 08-17 02:10:05 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 2.09, Accepted throughput: 430.86 tokens/s, Drafted throughput: 2778.07 tokens/s, Accepted: 4309 tokens, Drafted: 27783 tokens, Per-position acceptance rate: 0.507, 0.253, 0.144, 0.087, 0.055, 0.025, 0.015, Avg Draft acceptance rate: 15.5%
+(APIServer pid=114171) INFO:     127.0.0.1:42758 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43074 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42618 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43008 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43144 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43102 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42614 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42640 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42636 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43054 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43070 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42638 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43042 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42650 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42790 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42584 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42616 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42660 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42708 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO 08-17 02:10:15 [loggers.py:310] Engine 000: Avg prompt throughput: 3898.4 tokens/s, Avg generation throughput: 869.5 tokens/s, Running: 63 reqs, Waiting: 0 reqs, GPU KV cache usage: 19.8%, Prefix cache hit rate: 0.0%
+(APIServer pid=114171) INFO 08-17 02:10:15 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 2.06, Accepted throughput: 446.76 tokens/s, Drafted throughput: 2960.75 tokens/s, Accepted: 4468 tokens, Drafted: 29610 tokens, Per-position acceptance rate: 0.496, 0.255, 0.137, 0.080, 0.050, 0.024, 0.014, Avg Draft acceptance rate: 15.1%
+(APIServer pid=114171) INFO:     127.0.0.1:43028 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42900 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42914 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42730 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42570 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42766 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42956 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42646 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42692 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42564 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42612 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42602 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42876 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42838 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO 08-17 02:10:25 [loggers.py:310] Engine 000: Avg prompt throughput: 2666.3 tokens/s, Avg generation throughput: 1092.0 tokens/s, Running: 63 reqs, Waiting: 0 reqs, GPU KV cache usage: 31.5%, Prefix cache hit rate: 0.0%
+(APIServer pid=114171) INFO 08-17 02:10:25 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 2.15, Accepted throughput: 584.92 tokens/s, Drafted throughput: 3554.31 tokens/s, Accepted: 5852 tokens, Drafted: 35560 tokens, Per-position acceptance rate: 0.503, 0.269, 0.158, 0.101, 0.065, 0.035, 0.021, Avg Draft acceptance rate: 16.5%
+(APIServer pid=114171) INFO:     127.0.0.1:42758 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42892 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43020 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43008 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43004 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42814 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42716 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43102 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42782 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42990 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42588 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42798 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42614 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42972 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43112 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43026 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42668 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42826 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42630 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42836 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42656 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO 08-17 02:10:35 [loggers.py:310] Engine 000: Avg prompt throughput: 4514.0 tokens/s, Avg generation throughput: 795.4 tokens/s, Running: 64 reqs, Waiting: 0 reqs, GPU KV cache usage: 25.9%, Prefix cache hit rate: 0.0%
+(APIServer pid=114171) INFO 08-17 02:10:35 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 2.11, Accepted throughput: 419.07 tokens/s, Drafted throughput: 2641.58 tokens/s, Accepted: 4191 tokens, Drafted: 26418 tokens, Per-position acceptance rate: 0.511, 0.280, 0.154, 0.084, 0.047, 0.023, 0.011, Avg Draft acceptance rate: 15.9%
+(APIServer pid=114171) INFO:     127.0.0.1:42676 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43086 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43128 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42772 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42776 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42618 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42974 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42930 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42860 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42640 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42570 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42574 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43042 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42944 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43074 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42646 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO 08-17 02:10:45 [loggers.py:310] Engine 000: Avg prompt throughput: 3488.1 tokens/s, Avg generation throughput: 993.8 tokens/s, Running: 64 reqs, Waiting: 0 reqs, GPU KV cache usage: 20.0%, Prefix cache hit rate: 0.0%
+(APIServer pid=114171) INFO 08-17 02:10:45 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 2.18, Accepted throughput: 538.66 tokens/s, Drafted throughput: 3191.05 tokens/s, Accepted: 5387 tokens, Drafted: 31913 tokens, Per-position acceptance rate: 0.503, 0.287, 0.169, 0.103, 0.063, 0.039, 0.019, Avg Draft acceptance rate: 16.9%
+(APIServer pid=114171) INFO:     127.0.0.1:42650 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42732 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42588 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42748 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42584 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42636 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43004 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42956 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42710 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42900 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42914 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42790 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42660 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43144 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42876 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42854 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42766 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43054 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42692 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42730 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO 08-17 02:10:55 [loggers.py:310] Engine 000: Avg prompt throughput: 3898.6 tokens/s, Avg generation throughput: 866.0 tokens/s, Running: 64 reqs, Waiting: 0 reqs, GPU KV cache usage: 26.0%, Prefix cache hit rate: 0.0%
+(APIServer pid=114171) INFO 08-17 02:10:55 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 2.11, Accepted throughput: 455.68 tokens/s, Drafted throughput: 2870.58 tokens/s, Accepted: 4557 tokens, Drafted: 28707 tokens, Per-position acceptance rate: 0.496, 0.279, 0.159, 0.086, 0.051, 0.028, 0.012, Avg Draft acceptance rate: 15.9%
+(APIServer pid=114171) INFO:     127.0.0.1:42838 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43028 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42638 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42716 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43086 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42616 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43020 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42826 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42836 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42630 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42640 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42708 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43070 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42782 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42564 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42602 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42814 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43026 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43112 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO 08-17 02:11:05 [loggers.py:310] Engine 000: Avg prompt throughput: 3488.2 tokens/s, Avg generation throughput: 1005.1 tokens/s, Running: 62 reqs, Waiting: 0 reqs, GPU KV cache usage: 31.0%, Prefix cache hit rate: 0.0%
+(APIServer pid=114171) INFO 08-17 02:11:05 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 2.15, Accepted throughput: 537.48 tokens/s, Drafted throughput: 3278.69 tokens/s, Accepted: 5375 tokens, Drafted: 32788 tokens, Per-position acceptance rate: 0.520, 0.284, 0.158, 0.085, 0.053, 0.032, 0.016, Avg Draft acceptance rate: 16.4%
+(APIServer pid=114171) INFO:     127.0.0.1:43042 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42914 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42618 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42974 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42668 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42612 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42758 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42646 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42614 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43008 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42676 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42944 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42972 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42570 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42892 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42776 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO 08-17 02:11:15 [loggers.py:310] Engine 000: Avg prompt throughput: 3693.1 tokens/s, Avg generation throughput: 895.4 tokens/s, Running: 63 reqs, Waiting: 0 reqs, GPU KV cache usage: 19.7%, Prefix cache hit rate: 0.0%
+(APIServer pid=114171) INFO 08-17 02:11:15 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 2.05, Accepted throughput: 459.75 tokens/s, Drafted throughput: 3054.47 tokens/s, Accepted: 4598 tokens, Drafted: 30548 tokens, Per-position acceptance rate: 0.482, 0.255, 0.146, 0.082, 0.046, 0.026, 0.016, Avg Draft acceptance rate: 15.1%
+(APIServer pid=114171) INFO:     127.0.0.1:42860 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42748 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42990 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42636 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43128 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42650 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42876 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42710 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42956 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42772 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43102 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42838 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43054 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42574 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42716 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42656 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42730 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42798 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42588 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO 08-17 02:11:25 [loggers.py:310] Engine 000: Avg prompt throughput: 4103.9 tokens/s, Avg generation throughput: 886.9 tokens/s, Running: 64 reqs, Waiting: 0 reqs, GPU KV cache usage: 20.2%, Prefix cache hit rate: 0.0%
+(APIServer pid=114171) INFO 08-17 02:11:25 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 2.16, Accepted throughput: 476.59 tokens/s, Drafted throughput: 2870.65 tokens/s, Accepted: 4766 tokens, Drafted: 28707 tokens, Per-position acceptance rate: 0.503, 0.278, 0.168, 0.101, 0.064, 0.035, 0.013, Avg Draft acceptance rate: 16.6%
+(APIServer pid=114171) INFO:     127.0.0.1:42900 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43144 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42616 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42732 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42836 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43004 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42692 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42638 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43028 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42708 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42584 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42630 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43086 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43020 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42826 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42782 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43128 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42892 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42646 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO 08-17 02:11:35 [loggers.py:310] Engine 000: Avg prompt throughput: 3282.0 tokens/s, Avg generation throughput: 1019.9 tokens/s, Running: 62 reqs, Waiting: 0 reqs, GPU KV cache usage: 25.4%, Prefix cache hit rate: 0.0%
+(APIServer pid=114171) INFO 08-17 02:11:35 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 2.18, Accepted throughput: 553.11 tokens/s, Drafted throughput: 3277.68 tokens/s, Accepted: 5533 tokens, Drafted: 32788 tokens, Per-position acceptance rate: 0.482, 0.279, 0.171, 0.111, 0.077, 0.040, 0.021, Avg Draft acceptance rate: 16.9%
+(APIServer pid=114171) INFO:     127.0.0.1:42758 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43074 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42668 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42930 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42660 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42656 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42612 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42838 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42790 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42860 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43070 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42854 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42602 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43054 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42766 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42732 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO 08-17 02:11:45 [loggers.py:310] Engine 000: Avg prompt throughput: 3692.3 tokens/s, Avg generation throughput: 964.0 tokens/s, Running: 64 reqs, Waiting: 0 reqs, GPU KV cache usage: 26.0%, Prefix cache hit rate: 0.0%
+(APIServer pid=114171) INFO 08-17 02:11:45 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 2.21, Accepted throughput: 528.22 tokens/s, Drafted throughput: 3053.78 tokens/s, Accepted: 5284 tokens, Drafted: 30548 tokens, Per-position acceptance rate: 0.511, 0.282, 0.165, 0.107, 0.072, 0.048, 0.026, Avg Draft acceptance rate: 17.3%
+(APIServer pid=114171) INFO:     127.0.0.1:42776 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42716 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43008 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42618 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42772 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42676 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42876 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42974 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42956 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42710 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43004 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43144 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42814 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43102 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42944 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43042 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42650 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42614 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42640 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42588 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO 08-17 02:11:55 [loggers.py:310] Engine 000: Avg prompt throughput: 4308.9 tokens/s, Avg generation throughput: 872.1 tokens/s, Running: 64 reqs, Waiting: 0 reqs, GPU KV cache usage: 20.2%, Prefix cache hit rate: 0.0%
+(APIServer pid=114171) INFO 08-17 02:11:55 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 2.20, Accepted throughput: 475.27 tokens/s, Drafted throughput: 2779.53 tokens/s, Accepted: 4753 tokens, Drafted: 27797 tokens, Per-position acceptance rate: 0.523, 0.289, 0.168, 0.101, 0.068, 0.031, 0.017, Avg Draft acceptance rate: 17.1%
+(APIServer pid=114171) INFO:     127.0.0.1:43112 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43026 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43020 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42638 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42574 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42616 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42748 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43054 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42900 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42914 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42570 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42972 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42708 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42564 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42854 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42892 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42836 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42766 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43086 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO 08-17 02:12:05 [loggers.py:310] Engine 000: Avg prompt throughput: 3897.2 tokens/s, Avg generation throughput: 995.2 tokens/s, Running: 64 reqs, Waiting: 0 reqs, GPU KV cache usage: 20.1%, Prefix cache hit rate: 0.0%
+(APIServer pid=114171) INFO 08-17 02:12:05 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 2.32, Accepted throughput: 567.28 tokens/s, Drafted throughput: 3005.32 tokens/s, Accepted: 5675 tokens, Drafted: 30065 tokens, Per-position acceptance rate: 0.536, 0.312, 0.190, 0.127, 0.086, 0.052, 0.019, Avg Draft acceptance rate: 18.9%
+(APIServer pid=114171) INFO:     127.0.0.1:42826 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42636 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42668 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42930 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42646 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42782 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42656 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42990 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43004 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42630 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42730 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42790 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43128 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42602 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42798 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42640 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42772 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43028 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42660 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO 08-17 02:12:15 [loggers.py:310] Engine 000: Avg prompt throughput: 3897.2 tokens/s, Avg generation throughput: 962.6 tokens/s, Running: 64 reqs, Waiting: 0 reqs, GPU KV cache usage: 25.9%, Prefix cache hit rate: 0.0%
+(APIServer pid=114171) INFO 08-17 02:12:15 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 2.25, Accepted throughput: 534.59 tokens/s, Drafted throughput: 3005.29 tokens/s, Accepted: 5348 tokens, Drafted: 30065 tokens, Per-position acceptance rate: 0.526, 0.296, 0.175, 0.117, 0.069, 0.040, 0.023, Avg Draft acceptance rate: 17.8%
+(APIServer pid=114171) INFO:     127.0.0.1:42860 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43074 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42838 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42732 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43070 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42692 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42564 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42676 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42614 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42618 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43144 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42584 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42944 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42758 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42766 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42814 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42914 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43008 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42974 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42650 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO 08-17 02:12:25 [loggers.py:310] Engine 000: Avg prompt throughput: 3693.4 tokens/s, Avg generation throughput: 909.2 tokens/s, Running: 63 reqs, Waiting: 0 reqs, GPU KV cache usage: 25.6%, Prefix cache hit rate: 0.0%
+(APIServer pid=114171) INFO 08-17 02:12:25 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 2.15, Accepted throughput: 486.79 tokens/s, Drafted throughput: 2962.31 tokens/s, Accepted: 4868 tokens, Drafted: 29624 tokens, Per-position acceptance rate: 0.508, 0.282, 0.163, 0.096, 0.052, 0.031, 0.018, Avg Draft acceptance rate: 16.4%
+(APIServer pid=114171) INFO:     127.0.0.1:43026 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42612 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42708 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42956 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42574 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43128 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43042 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42588 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43112 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43020 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43086 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42710 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42638 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43054 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42876 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42854 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42716 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO 08-17 02:12:35 [loggers.py:310] Engine 000: Avg prompt throughput: 3898.5 tokens/s, Avg generation throughput: 931.2 tokens/s, Running: 64 reqs, Waiting: 0 reqs, GPU KV cache usage: 26.0%, Prefix cache hit rate: 0.0%
+(APIServer pid=114171) INFO 08-17 02:12:35 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 2.10, Accepted throughput: 488.47 tokens/s, Drafted throughput: 3097.28 tokens/s, Accepted: 4885 tokens, Drafted: 30975 tokens, Per-position acceptance rate: 0.506, 0.261, 0.146, 0.089, 0.052, 0.033, 0.016, Avg Draft acceptance rate: 15.8%
+(APIServer pid=114171) INFO:     127.0.0.1:42776 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42892 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42826 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42782 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42730 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42930 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42692 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42836 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42972 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43102 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42944 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42668 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43020 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42790 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42990 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO 08-17 02:12:45 [loggers.py:310] Engine 000: Avg prompt throughput: 3076.9 tokens/s, Avg generation throughput: 1012.0 tokens/s, Running: 64 reqs, Waiting: 0 reqs, GPU KV cache usage: 26.0%, Prefix cache hit rate: 0.0%
+(APIServer pid=114171) INFO 08-17 02:12:45 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 2.13, Accepted throughput: 536.51 tokens/s, Drafted throughput: 3327.32 tokens/s, Accepted: 5367 tokens, Drafted: 33285 tokens, Per-position acceptance rate: 0.505, 0.262, 0.149, 0.089, 0.058, 0.040, 0.026, Avg Draft acceptance rate: 16.1%
+(APIServer pid=114171) INFO:     127.0.0.1:42838 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42860 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42748 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42570 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42646 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42616 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42900 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42602 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42814 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42772 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43144 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42676 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43070 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42776 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42914 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42798 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42974 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43004 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42640 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42660 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42656 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42638 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO 08-17 02:12:55 [loggers.py:310] Engine 000: Avg prompt throughput: 4512.4 tokens/s, Avg generation throughput: 836.9 tokens/s, Running: 64 reqs, Waiting: 0 reqs, GPU KV cache usage: 25.9%, Prefix cache hit rate: 0.0%
+(APIServer pid=114171) INFO 08-17 02:12:55 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 2.15, Accepted throughput: 449.81 tokens/s, Drafted throughput: 2730.23 tokens/s, Accepted: 4500 tokens, Drafted: 27314 tokens, Per-position acceptance rate: 0.510, 0.272, 0.154, 0.093, 0.060, 0.040, 0.025, Avg Draft acceptance rate: 16.5%
+(APIServer pid=114171) INFO:     127.0.0.1:42614 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42584 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42732 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43074 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42630 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42758 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43128 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42588 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42618 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42636 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42574 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42766 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42564 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43054 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42708 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43042 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42772 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42612 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO 08-17 02:13:05 [loggers.py:310] Engine 000: Avg prompt throughput: 3283.0 tokens/s, Avg generation throughput: 1020.0 tokens/s, Running: 64 reqs, Waiting: 0 reqs, GPU KV cache usage: 31.6%, Prefix cache hit rate: 0.0%
+(APIServer pid=114171) INFO 08-17 02:13:05 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 2.21, Accepted throughput: 559.27 tokens/s, Drafted throughput: 3233.82 tokens/s, Accepted: 5593 tokens, Drafted: 32340 tokens, Per-position acceptance rate: 0.522, 0.280, 0.164, 0.101, 0.070, 0.046, 0.027, Avg Draft acceptance rate: 17.3%
+(APIServer pid=114171) INFO:     127.0.0.1:42716 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42646 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42602 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:43028 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42782 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42930 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42972 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42854 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42570 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42956 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42892 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO 08-17 02:13:15 [loggers.py:310] Engine 000: Avg prompt throughput: 2667.4 tokens/s, Avg generation throughput: 1093.8 tokens/s, Running: 51 reqs, Waiting: 0 reqs, GPU KV cache usage: 16.0%, Prefix cache hit rate: 0.0%
+(APIServer pid=114171) INFO 08-17 02:13:15 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 2.29, Accepted throughput: 616.47 tokens/s, Drafted throughput: 3354.92 tokens/s, Accepted: 6165 tokens, Drafted: 33551 tokens, Per-position acceptance rate: 0.531, 0.299, 0.187, 0.117, 0.080, 0.048, 0.024, Avg Draft acceptance rate: 18.4%
+(APIServer pid=114171) INFO 08-17 02:13:25 [loggers.py:310] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 411.0 tokens/s, Running: 39 reqs, Waiting: 0 reqs, GPU KV cache usage: 12.3%, Prefix cache hit rate: 0.0%
+(APIServer pid=114171) INFO 08-17 02:13:25 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 2.24, Accepted throughput: 228.09 tokens/s, Drafted throughput: 1292.12 tokens/s, Accepted: 2281 tokens, Drafted: 12922 tokens, Per-position acceptance rate: 0.498, 0.276, 0.174, 0.118, 0.086, 0.061, 0.023, Avg Draft acceptance rate: 17.7%
+(APIServer pid=114171) INFO 08-17 02:13:35 [loggers.py:310] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 623.1 tokens/s, Running: 12 reqs, Waiting: 0 reqs, GPU KV cache usage: 3.8%, Prefix cache hit rate: 0.0%
+(APIServer pid=114171) INFO 08-17 02:13:35 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 1.91, Accepted throughput: 299.21 tokens/s, Drafted throughput: 2294.65 tokens/s, Accepted: 2992 tokens, Drafted: 22946 tokens, Per-position acceptance rate: 0.455, 0.207, 0.113, 0.064, 0.040, 0.026, 0.008, Avg Draft acceptance rate: 13.0%
+(APIServer pid=114171) INFO:     127.0.0.1:42602 - "GET /metrics HTTP/1.1" 200 OK
+(APIServer pid=114171) INFO:     127.0.0.1:42636 - "GET /metrics HTTP/1.1" 200 OK
+
+Signal received -- stopping the server (up to 30s).
+(EngineCore pid=114806) INFO 08-17 02:13:39 [core.py:1332] [shutdown] EngineCore: trigger received signal=SIGTERM
+(APIServer pid=114171) INFO 08-17 02:13:39 [launcher.py:112] [shutdown] API server: shutdown triggered
+(APIServer pid=114171) INFO 08-17 02:13:39 [launcher.py:128] [shutdown] API server: stopping engine client mode=abort timeout=0s
+(EngineCore pid=114806) INFO 08-17 02:13:39 [core.py:1468] [shutdown] EngineCore: start mode=abort timeout=0s
+(EngineCore pid=114806) INFO 08-17 02:13:39 [core.py:1499] [shutdown] EngineCore: request processing complete; starting resource teardown
+(EngineCore pid=114806) INFO 08-17 02:13:39 [core.py:1345] [shutdown] EngineCore: exiting busy loop
+(APIServer pid=114171) INFO 08-17 02:13:39 [core_client.py:686] [shutdown] MPClient: start timeout=0s
+(Worker_TP0_EP0 pid=115191) 2026-08-17 02:08:15  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`
+(Worker_TP0_EP0 pid=115191) 2026-08-17 02:08:23  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`
+(Worker_TP0_EP0 pid=115191) 2026-08-17 02:08:39  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang` with `out_idx=None`
+(Worker_TP0_EP0 pid=115191) 2026-08-17 02:08:47  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_broadcast_with_norm_tilelang`
+(Worker_TP0_EP0 pid=115191) 2026-08-17 02:08:49  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:129): TileLang begins to compile kernel `mhc_pre_big_fuse_with_norm_tilelang` with `out_idx=None`
+(Worker_TP0_EP0 pid=115191) 2026-08-17 02:08:57  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang completes to compile kernel `mhc_pre_big_fuse_with_norm_tilelang`
+(Worker_TP0_EP0 pid=115191) INFO 08-17 02:13:39 [multiproc_executor.py:804] Parent process exited, terminating worker queues
+(APIServer pid=114171) INFO 08-17 02:13:39 [core_client.py:688] [shutdown] MPClient: stopping engine manager
+(APIServer pid=114171) INFO 08-17 02:13:39 [utils.py:612] [shutdown] Process manager: send sigterm to process EngineCore
+(APIServer pid=114171) WARNING 08-17 02:13:39 [utils.py:632] [shutdown] Process manager: force killing remaining processes count=1
+(APIServer pid=114171) WARNING 08-17 02:13:39 [utils.py:637] [shutdown] Process manager: force killing remaining process EngineCore pid 114806
+(APIServer pid=114171) INFO 08-17 02:13:39 [core_client.py:690] [shutdown] MPClient: engine manager stopped
+(APIServer pid=114171) INFO 08-17 02:13:39 [core_client.py:691] [shutdown] MPClient: cleaning up background resources
+(APIServer pid=114171) INFO 08-17 02:13:39 [core_client.py:693] [shutdown] MPClient: complete
+(APIServer pid=114171) INFO 08-17 02:13:39 [launcher.py:137] [shutdown] API server: engine client stopped
+(APIServer pid=114171) INFO 08-17 02:13:39 [launcher.py:140] [shutdown] API server: signalling HTTP server shutdown
+(APIServer pid=114171) INFO 08-17 02:13:39 [launcher.py:161] [shutdown] API server: shutting down FastAPI HTTP server
+(APIServer pid=114171) INFO:     Shutting down
+(APIServer pid=114171) INFO:     Waiting for application shutdown.
+(APIServer pid=114171) INFO:     Application shutdown complete.
+/usr/lib/python3.12/multiprocessing/resource_tracker.py:254: UserWarning: resource_tracker: There appear to be 8 leaked semaphore objects to clean up at shutdown
+  warnings.warn('resource_tracker: There appear to be %d '
+/usr/lib/python3.12/multiprocessing/resource_tracker.py:254: UserWarning: resource_tracker: There appear to be 10 leaked shared_memory objects to clean up at shutdown
+  warnings.warn('resource_tracker: There appear to be %d '
