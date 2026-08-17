@@ -46,8 +46,13 @@ check_gpus() {
   mapfile -t mems < <(nvidia-smi --query-gpu=memory.total --format=csv,noheader,nounits)
   count=${#mems[@]}
 
-  if [ "$count" -ne "$GPU_COUNT" ]; then
-    fail "found $count GPU(s), the recipe is built for $GPU_COUNT"
+  # Fewer GPUs than the profile shards across is fatal; more is not. A node with
+  # eight cards can serve a profile that asks for one, and refusing to is how
+  # the small profile would become unusable on the machine it exists to test.
+  if [ "$count" -lt "$GPU_COUNT" ]; then
+    fail "found $count GPU(s), profile $PROFILE needs $GPU_COUNT"
+  elif [ "$count" -gt "$GPU_COUNT" ]; then
+    pass "$count GPUs visible, profile $PROFILE uses $GPU_COUNT"
   else
     pass "$count GPUs visible"
   fi
@@ -142,15 +147,18 @@ check_vllm() {
 check_context() {
   # Think Max truncates below 384K, but 384K of KV does not fit next to ~960 GB
   # of weights on this node. Surface the tradeoff rather than letting it surprise.
-  if [ "$MAX_MODEL_LEN" -lt 393216 ]; then
+  # It is a V4 chat-template mode, so it says nothing about any other model.
+  if [ "$PROFILE" != "deepseek_v4" ]; then
+    pass "MAX_MODEL_LEN=$MAX_MODEL_LEN"
+  elif [ "$MAX_MODEL_LEN" -lt 393216 ]; then
     pass "MAX_MODEL_LEN=$MAX_MODEL_LEN (Think Max needs >= 393216 and will truncate)"
   else
     warn "MAX_MODEL_LEN=$MAX_MODEL_LEN enables Think Max but likely OOMs without KV offload"
   fi
 }
 
-printf 'Preflight: DeepSeek-V4-Pro on %sx H200 (strategy=%s, runtime=%s)\n' \
-  "$GPU_COUNT" "$STRATEGY" "$RUNTIME"
+printf 'Preflight: %s on %sx GPU (profile=%s, strategy=%s, runtime=%s)\n' \
+  "$MODEL_ID" "$GPU_COUNT" "$PROFILE" "$STRATEGY" "$RUNTIME"
 check_gpus
 check_shm
 check_disk

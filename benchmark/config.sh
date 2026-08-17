@@ -7,7 +7,8 @@
 #   1. KEY=value arguments      ./benchmark.sh NUM_PROMPTS=128
 #   2. exported environment     NUM_PROMPTS=128 ./benchmark.sh
 #   3. benchmark/.env           local, gitignored
-#   4. benchmark/defaults.env   committed defaults
+#   4. benchmark/profiles/$PROFILE.env   everything model-specific
+#   5. benchmark/defaults.env   committed defaults, the same for any model
 #
 # Each layer only fills in keys no higher layer has set, so the order the
 # layers are applied in *is* the precedence. Values that depend on where the
@@ -24,6 +25,18 @@ REPO_ROOT="$(cd "$CONFIG_DIR/.." && pwd)"
 CONFIG_ARGV=()
 
 _config_is_assignment() { [[ "$1" =~ ^[A-Za-z_][A-Za-z0-9_]*= ]]; }
+
+# One key out of a settings file, without applying the rest of it. PROFILE has
+# to be resolved before the profile layer can be read, and reading defaults.env
+# early would let it outrank the profile it is supposed to sit below.
+_config_value_from() {
+  local file="$1" key="$2" line
+  [ -f "$file" ] || return 0
+  while IFS= read -r line || [ -n "$line" ]; do
+    line="${line#"${line%%[![:space:]]*}"}"
+    case "$line" in "$key="*) printf '%s' "${line#*=}"; return 0 ;; esac
+  done <"$file"
+}
 
 # Plain KEY=VALUE only -- no quoting, no shell expansion, no inline comments.
 # A key that already has a value came from a higher layer, so it is skipped.
@@ -55,6 +68,23 @@ load_config() {
   # Layer 2 is the environment we already inherited, so there is nothing to do
   # between the arguments above and the files below.
   _config_read_file "$CONFIG_DIR/.env"
+
+  # The client's half of the profile: which checkpoint to name in requests, and
+  # what the chat template understands. The sweep exports PROFILE when it drives
+  # this script, so the two halves stay in step without being wired together.
+  [ -n "${PROFILE:-}" ] || PROFILE="$(_config_value_from "$CONFIG_DIR/defaults.env" PROFILE)"
+  : "${PROFILE:=deepseek_v4}"
+  export PROFILE
+  PROFILE_FILE="$CONFIG_DIR/profiles/$PROFILE.env"
+  export PROFILE_FILE
+  if [ ! -f "$PROFILE_FILE" ]; then
+    printf 'error: no profile "%s" -- %s does not exist.\n' "$PROFILE" "$PROFILE_FILE" >&2
+    printf 'Available: %s\n' \
+      "$(ls "$CONFIG_DIR/profiles" 2>/dev/null | sed 's/\.env$//' | tr '\n' ' ')" >&2
+    exit 1
+  fi
+  _config_read_file "$PROFILE_FILE"
+
   _config_read_file "$CONFIG_DIR/defaults.env"
 
   # --- derived defaults -------------------------------------------------------

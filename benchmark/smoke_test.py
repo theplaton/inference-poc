@@ -1,12 +1,15 @@
-"""Hit a running DeepSeek-V4-Pro server across its reasoning modes.
+"""Hit a running server with one round trip per reasoning mode.
 
-The V4 chat template exposes reasoning effort through chat_template_kwargs rather
-than a top-level parameter, so each mode is a different extra_body.
+Which modes exist is a property of the chat template, so the active profile
+names them: SMOKE_MODES for a plain run, SMOKE_MODES_ALL for --all. V4 exposes
+reasoning effort through chat_template_kwargs rather than a top-level parameter,
+so each of its modes is a different extra_body; a model without that switch runs
+the one mode every model has.
 
-    python smoke_test.py                              # non-think + high
-    python smoke_test.py --all                        # also Think Max
+    python smoke_test.py                              # SMOKE_MODES
+    python smoke_test.py --all                        # SMOKE_MODES_ALL
+    python smoke_test.py PROFILE=granite              # the small model
     python smoke_test.py BASE_URL=http://gpu-01:8000/v1
-    python smoke_test.py MODEL_ID=Qwen/Qwen3-8B
 
 Think Max truncates unless the server was started with --max-model-len >= 393216,
 which does not fit on 8x H200 without KV offload, so it is opt-in.
@@ -24,6 +27,8 @@ from envfile import base_url, load_config, require
 PROMPT = "What is 17*19? Return only the final integer."
 
 MODES = {
+    # Every model has this one: a chat request with nothing added to it.
+    "plain": None,
     "non-think": None,
     "high": {"chat_template_kwargs": {"thinking": True, "reasoning_effort": "high"}},
     "max": {"chat_template_kwargs": {"thinking": True, "reasoning_effort": "max"}},
@@ -76,10 +81,17 @@ def main() -> int:
     url = base_url()
 
     client = OpenAI(base_url=url, api_key=os.environ.get("API_KEY") or "EMPTY")
-    print(f"Server: {url}\nModel:  {model}\n")
+    print(f"Server: {url}\nModel:  {model}  (profile {os.environ.get('PROFILE', '?')})\n")
 
-    modes = MODES if args.all else {k: v for k, v in MODES.items() if k != "max"}
-    results = [run_mode(client, model, name, body) for name, body in modes.items()]
+    setting = "SMOKE_MODES_ALL" if args.all else "SMOKE_MODES"
+    wanted = [name.strip() for name in os.environ.get(setting, "plain").split(",") if name.strip()]
+    unknown = [name for name in wanted if name not in MODES]
+    if unknown:
+        print(f"error: {setting} names unknown mode(s): {', '.join(unknown)}", file=sys.stderr)
+        print(f"Known modes: {', '.join(MODES)}", file=sys.stderr)
+        return 2
+
+    results = [run_mode(client, model, name, MODES[name]) for name in wanted]
 
     failed = results.count(False)
     print(f"{len(results) - failed}/{len(results)} modes OK")

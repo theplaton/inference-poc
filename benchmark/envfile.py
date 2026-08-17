@@ -1,11 +1,12 @@
-"""Configuration for the benchmark python tools -- the same four layers config.sh applies.
+"""Configuration for the benchmark python tools -- the same layers config.sh applies.
 
 Precedence, highest wins:
 
     1. KEY=value arguments      python smoke_test.py MODEL_ID=...
     2. exported environment     MODEL_ID=... python smoke_test.py
     3. benchmark/.env           local, gitignored
-    4. benchmark/defaults.env   committed defaults
+    4. benchmark/profiles/$PROFILE.env   everything model-specific
+    5. benchmark/defaults.env   committed defaults, the same for any model
 
 Each layer only fills in keys no higher layer has set, so the order the layers are
 applied in *is* the precedence: arguments go straight into os.environ, which is
@@ -26,6 +27,7 @@ REPO_ROOT = CONFIG_DIR.parent
 
 ENV_FILE = CONFIG_DIR / ".env"
 DEFAULTS_FILE = CONFIG_DIR / "defaults.env"
+PROFILES_DIR = CONFIG_DIR / "profiles"
 
 KEY = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
@@ -61,9 +63,29 @@ def load_config(argv: Iterable[str] | None = None) -> list[str]:
         else:
             rest.append(arg)
 
-    for path in (ENV_FILE, DEFAULTS_FILE):
+    for key, value in _pairs(ENV_FILE):
+        os.environ.setdefault(key, value)  # setdefault is what gives higher layers priority
+
+    # The profile decides which model these tools talk to and what its chat
+    # template understands, so it is resolved from the layers already applied,
+    # then from defaults.env -- which must not be merged in before it, or it
+    # would outrank the layer it sits below.
+    profile = os.environ.get("PROFILE") or dict(_pairs(DEFAULTS_FILE)).get(
+        "PROFILE", "deepseek_v4"
+    )
+    os.environ["PROFILE"] = profile
+    profile_file = PROFILES_DIR / f"{profile}.env"
+    if not profile_file.is_file():
+        available = sorted(p.stem for p in PROFILES_DIR.glob("*.env"))
+        print(
+            f'error: no profile "{profile}" -- {profile_file} does not exist.\n'
+            f"Available: {' '.join(available)}",
+            file=sys.stderr,
+        )
+        raise SystemExit(1)
+
+    for path in (profile_file, DEFAULTS_FILE):
         for key, value in _pairs(path):
-            # setdefault is what gives every higher layer priority.
             os.environ.setdefault(key, value)
 
     return rest

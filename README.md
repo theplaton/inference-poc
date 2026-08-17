@@ -21,8 +21,8 @@ HTTP to an OpenAI-compatible endpoint and runs anywhere.
 
 ```bash
 dev/install_system.sh                     # apt packages + uv (Ubuntu/Debian)
-cp model_serving/.env.example model_serving/.env   # set MODEL_ID
-cp benchmark/.env.example benchmark/.env           # the same MODEL_ID
+cp model_serving/.env.example model_serving/.env   # HF token, cache location
+cp benchmark/.env.example benchmark/.env           # endpoint, if not localhost
 
 model_serving/install.sh                  # build venv/ from requirements.txt
 model_serving/preflight.sh                # fail fast on a node that cannot hold it
@@ -32,6 +32,10 @@ venv/bin/python model_serving/download_model.py    # ~893 GB for V4-Pro
 # in another shell:
 ./benchmark.sh
 ```
+
+The model comes from `PROFILE`, not from `.env` — the default is the V4-Pro
+recipe, and every command above takes `PROFILE=granite` to do the same thing
+with a 2.5 GB model in about a minute. See [Profiles](#profiles).
 
 `./serve_model.sh --dry-run` prints the exact vLLM command and exits, which is
 the fastest way to diff the flags against the recipe page.
@@ -118,21 +122,53 @@ whole group without showing up anywhere else. `benchmark.sh` writes it, not the
 sweep: the server is up far longer than any one measurement, so only the client
 knows the window worth sampling.
 
+## Profiles
+
+`PROFILE` decides which model everything runs against. Two exist:
+
+| Profile | Model | Shape | A whole sweep takes |
+| --- | --- | --- | --- |
+| `deepseek_v4` (default) | DeepSeek-V4-Pro-0813 | 8 GPUs, TP+EP, 200k context | hours |
+| `granite` | Granite 3.1 1B A400M | 1 GPU, no sharding, 32k context | minutes |
+
+```bash
+./serve_model.sh PROFILE=granite         # in one shell
+./benchmark_sweep.sh PROFILE=granite     # in another — the same tools, ~30s per load
+```
+
+`granite` exists to exercise the tooling: same MoE shape as the big checkpoint at
+1/900th the weight, so a bug in the sweep costs a 30-second load instead of a
+15-minute one. The sweep exports `PROFILE` to the client, so both halves agree
+without being wired together.
+
+A profile is a file per side — [model_serving/profiles/](model_serving/profiles/)
+for the checkpoint, parallelism, memory envelope and preflight footprint;
+[benchmark/profiles/](benchmark/profiles/) for the model name requests carry and
+which smoke-test modes the chat template understands. Engine flags that are not
+`KEY=VALUE` — fp8 MLA KV, the `deepseek_v4` parsers, dspark speculative decoding
+— live in a `case` in [serve_model.sh](model_serving/serve_model.sh), one branch
+per profile.
+
 ## Configuration
 
-Each folder is self-contained: its own `.env`, `.env.example`, `defaults.env` and
-loader (`config.sh` for bash, `envfile.py` for python). No file outside a folder
-configures the tools inside it, so either folder can be copied to another machine
-on its own.
+Each folder is self-contained: its own `.env`, `.env.example`, `defaults.env`,
+`profiles/` and loader (`config.sh` for bash, `envfile.py` for python). No file
+outside a folder configures the tools inside it, so either folder can be copied
+to another machine on its own.
 
-Four layers, highest precedence first:
+Five layers, highest precedence first:
 
 | | Layer | Example |
 | --- | --- | --- |
 | 1 | `KEY=value` argument | `./serve_model.sh PORT=8001` |
 | 2 | exported environment | `PORT=8001 ./serve_model.sh` |
 | 3 | folder `.env` | `model_serving/.env`, gitignored, holds tokens |
-| 4 | folder `defaults.env` | committed, every pinned recipe value |
+| 4 | folder `profiles/$PROFILE.env` | everything that changes with the model |
+| 5 | folder `defaults.env` | committed, the same for any model |
+
+Because `.env` outranks the profile, a `MODEL_ID` pinned there would survive a
+profile switch and serve the wrong checkpoint — so the shipped `.env` leaves it
+commented out and `serve_model.sh` says so when the two disagree.
 
 Every setting is reachable from every layer — there are no flags for things that
 are also settings. A tool aborts rather than guessing when a required value such
@@ -147,9 +183,11 @@ comments. `defaults.env` in each folder is the reference list of what exists.
 serve_model.sh          root entrypoint -> model_serving/serve_model.sh
 benchmark.sh            root entrypoint -> benchmark/benchmark.sh
 benchmark_sweep.sh      the concurrency sweep, driving both of the above
-benchmark_sweep_config.json   which concurrency levels the sweep measures
+benchmark_sweep_config.json   which shapes and levels the sweep measures
 model_serving/          the server, the node and the checkpoint
+model_serving/profiles/ one file per model: parallelism, memory, footprint
 benchmark/              client-side evaluation over HTTP
+benchmark/profiles/     one file per model: name, smoke-test modes
 dev/                    host bootstrap: system packages, the dev pod spec
 venv/                   created by model_serving/install.sh, gitignored
 .hf-cache/hub/          model weights, gitignored, many GB

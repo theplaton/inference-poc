@@ -30,17 +30,19 @@ serving node, your laptop, a CI box — against any endpoint you point it at.
 | --- | --- |
 | `benchmark.sh` | The entrypoint: health check, smoke test, throughput run. |
 | `smoke_test.py` | Non-think / Think High / Think Max round trips. |
-| `config.sh` | Settings for the bash tools: the four layers, and `require_config`. |
-| `envfile.py` | The same four layers for the python tools. |
+| `config.sh` | Settings for the bash tools: the five layers, and `require_config`. |
+| `profiles/` | One file per model: which checkpoint to name, which smoke-test modes exist. |
+| `envfile.py` | The same layers for the python tools. |
 | `defaults.env` | Committed defaults. The reference list of settings. |
 | `.env.example` | Template for the local, gitignored `.env`. |
 | `requirements.txt` | `openai`. See below for the throughput half. |
 
 ## Settings
 
-Four layers, highest precedence first: a `KEY=value` argument, then the exported
-environment, then `.env`, then `defaults.env`. See `defaults.env` for the full
-list; anything in it can be set from any layer.
+Five layers, highest precedence first: a `KEY=value` argument, then the exported
+environment, then `.env`, then `profiles/$PROFILE.env`, then `defaults.env`. See
+`defaults.env` for the full list and `profiles/` for what changes with the model;
+anything in either can be set from any layer.
 
 ```bash
 ./benchmark.sh NUM_PROMPTS=128 CONCURRENCY=32
@@ -62,9 +64,10 @@ lengths around ISL/OSL rather than fixing them — 0.3 for traffic that looks mo
 real, 0.0 for a scaling curve you want clean. Both are recorded in the result
 JSON as metadata, so a saved run says which were in force.
 
-`MODEL_ID` has no default on purpose — the server decides which checkpoint is
-loaded and rejects a request naming any other, so guessing is worse than
-aborting. Set it to whatever `model_serving/` was started with.
+`MODEL_ID` comes from the profile, because the server decides which checkpoint is
+loaded and rejects a request naming any other: run `PROFILE=granite` here when
+the server was started with `PROFILE=granite`, and the names match by
+construction. `../benchmark_sweep.sh` exports `PROFILE` for exactly that reason.
 
 The endpoint is spelled two ways because the tools want different shapes:
 `HOST` and `PORT` for `vllm bench serve`, `BASE_URL` for the OpenAI client.
@@ -90,8 +93,13 @@ the throughput run reports what is missing.
 
 ## Reasoning modes
 
-The V4 chat template exposes reasoning effort through `chat_template_kwargs`
-rather than a top-level parameter, so each mode is a different `extra_body`.
+Which modes exist is a property of the chat template, so the profile names them:
+`SMOKE_MODES` for a plain run, `SMOKE_MODES_ALL` for `--all`. The V4 template
+exposes reasoning effort through `chat_template_kwargs` rather than a top-level
+parameter, so each of its modes is a different `extra_body`; `plain` is the one
+mode every model has, and is all the `granite` profile runs — sending V4's
+kwargs to a template without them is rejected, not ignored.
+
 `TEMPERATURE` and `TOP_P` default to DeepSeek's recommendation for the 0813
 release: temperature 1.0 always, top_p 0.95 for agentic work and 1.0 otherwise.
 

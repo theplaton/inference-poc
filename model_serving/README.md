@@ -63,29 +63,46 @@ the fastest way to diff against the recipe page.
 | `download_model.py` | Wraps `prepare_model()`, plus `*.py` for `--trust-remote-code`. |
 | `cleanup_vllm.sh` | Gracefully stops all vLLM processes, then force-stops stragglers. |
 | `prepare_model.py` | `snapshot_download` into the repo-local hub cache. |
-| `config.sh` | Settings for the bash tools: the four layers, and `require_config`. |
-| `envfile.py` | The same four layers for the python tools. |
-| `defaults.env` | Every pinned value, committed. The reference list of settings. |
+| `config.sh` | Settings for the bash tools: the five layers, and `require_config`. |
+| `profiles/` | One file per model: checkpoint, parallelism, memory envelope, footprint. |
+| `envfile.py` | The same layers for the python tools. |
+| `defaults.env` | Committed values that do not change with the model. |
 | `.env.example` | Template for the local, gitignored `.env`. |
 | `requirements.txt` | The serving stack. `MIN_VLLM_VERSION` is parsed from it. |
 
 ## Settings
 
-Four layers, highest precedence first: a `KEY=value` argument, then the exported
-environment, then `.env`, then `defaults.env`. See `defaults.env` for the full
-list; anything in it can be set from any layer.
+Five layers, highest precedence first: a `KEY=value` argument, then the exported
+environment, then `.env`, then `profiles/$PROFILE.env`, then `defaults.env`. See
+`defaults.env` for what is the same for every model and `profiles/` for what is
+not; anything in either can be set from any layer.
 
 ```bash
+./serve_model.sh PROFILE=granite           # the small model, one GPU
 ./serve_model.sh STRATEGY=dep              # data + expert parallel
 ./serve_model.sh PORT=8001 MAX_MODEL_LEN=131072
 ./serve_model.sh HEALTH_TIMEOUT=3600       # allow a slower cold start
 ./preflight.sh RUNTIME=docker              # check for docker, not a local vllm
 ./cleanup_vllm.sh VLLM_CLEANUP_TIMEOUT=60
-python download_model.py MODEL_ID=Qwen/Qwen3-8B
+python download_model.py PROFILE=granite   # ~2.5 GB instead of ~893 GB
 ```
 
-`MODEL_ID` has no default on purpose — there is no sane checkpoint to guess, so
-every tool that needs one aborts with the three places you can set it.
+## Profiles
+
+`PROFILE` names the model. `deepseek_v4` is this recipe; `granite`
+(Granite 3.1 1B A400M) is a small MoE that exercises the same tools on one GPU
+in about a minute, which is how you shake out the sweep, the CSVs and the signal
+handling without spending 15 minutes per checkpoint load.
+
+A profile is `profiles/$PROFILE.env` — checkpoint, parallelism, memory envelope,
+preflight footprint, health timeout — plus a branch in `serve_model.sh` for the
+engine flags that are not `KEY=VALUE`: fp8 MLA KV and the `deepseek_v4` parsers
+for one, nothing at all for the other. `STRATEGY=solo` is the third parallelism
+mode, one GPU with no sharding.
+
+`MODEL_ID` comes from the profile. Setting it in `.env` outranks that, which is
+the intended precedence but a good way to serve the wrong checkpoint after a
+profile switch — `serve_model.sh` prints a note when the two disagree.
 
 ## Choices worth knowing
 

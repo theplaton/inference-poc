@@ -52,7 +52,7 @@ Each entry may set prompts_per_level; without it PROMPTS_PER_LEVEL applies. The
 older {"concurrency_levels": [...]} form, and a bare [1, 8, 64] array, are read
 as a single sweep at RANDOM_INPUT_LEN/RANDOM_OUTPUT_LEN.
 
-Settings follow the same four layers as the tools it drives -- an argument
+Settings follow the same layers as the tools it drives -- an argument
 outranks the environment, which outranks model_serving/.env, which outranks
 model_serving/defaults.env. The sweep's own:
 
@@ -432,12 +432,13 @@ append_csv() {
 # --- plan ---------------------------------------------------------------------
 
 printf '\033[1mConcurrency sweep\033[0m\n'
+printf '  profile     %s\n' "$PROFILE"
 printf '  model       %s\n' "$MODEL_ID"
 printf '  from        %s\n' "$SWEEP_CONFIG"
 printf '  runs        %s across %s checkpoint loads (levels %s)\n' \
   "${#RUN_LEVELS[@]}" "${#DISTINCT_LEVELS[@]}" "${DISTINCT_LEVELS[*]}"
 printf '  results     %s\n' "$RESULTS_DIR"
-printf '  a load is ~10-20 min; shapes at the same level share one\n\n'
+printf '  one load per level, shapes at the same level share it\n\n'
 
 for i in "${!RUN_LEVELS[@]}"; do
   printf '  c=%-4s %6s/%-5s %5s requests\n' \

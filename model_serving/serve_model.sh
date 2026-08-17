@@ -25,12 +25,16 @@ Launches vLLM in the foreground and stays up until it exits or you interrupt it.
   -h, --help    this message
 
 Any setting can be overridden as an argument, which outranks the environment,
-.env and defaults.env:
+.env, the profile and defaults.env:
 
+  ./serve_model.sh PROFILE=granite         the small model, one GPU, ~1 min
   ./serve_model.sh STRATEGY=dep            data + expert parallel
   ./serve_model.sh PORT=8001 MODEL_ID=...  different endpoint and checkpoint
   ./serve_model.sh MAX_MODEL_LEN=131072    shorter context, more KV headroom
   ./serve_model.sh HEALTH_TIMEOUT=3600     allow a slower cold start
+
+PROFILE picks the model: which checkpoint, how it is sharded, how much VRAM it
+needs and which engine flags it takes. See profiles/ for what exists.
 
 Run ./preflight.sh first; it fails in seconds on a node that cannot hold the
 checkpoint, where the engine takes minutes to reach the same conclusion.
@@ -51,41 +55,73 @@ done
 
 require_config MODEL_ID
 
-# TP splits dense layers across all 8 GPUs; DP replicates them per rank. Both
-# add --enable-expert-parallel so the 1.6T of experts are sharded, not copied.
+# TP splits dense layers across the GPUs; DP replicates them per rank. Both add
+# --enable-expert-parallel so a MoE's experts are sharded, not copied. solo is
+# one GPU and no sharding at all, which is what a model small enough to fit on
+# one card wants.
 case "$STRATEGY" in
 tep) PARALLEL_ARGS=(--enable-expert-parallel --tensor-parallel-size "$GPU_COUNT") ;;
 dep) PARALLEL_ARGS=(--enable-expert-parallel --data-parallel-size "$GPU_COUNT") ;;
-*) echo "STRATEGY must be tep or dep, got '$STRATEGY'" >&2; exit 2 ;;
+solo) PARALLEL_ARGS=(--tensor-parallel-size "$GPU_COUNT") ;;
+*) echo "STRATEGY must be tep, dep or solo, got '$STRATEGY'" >&2; exit 2 ;;
 esac
 
-# Flags below are verbatim from the recipe's h200.json. The four after
-# --max-model-len are the Hopper overrides: FP4/FP8 kernels on Hopper need the
-# conservative compile mode, and flashinfer autotune is off because it does not
-# pay for itself here.
+# The flags a model needs that another model would reject. Everything a profile
+# expresses as a number lives in profiles/$PROFILE.env; these cannot, so they
+# live here, one branch per profile.
+case "$PROFILE" in
+deepseek_v4)
+  # Verbatim from the recipe's h200.json. The Hopper overrides are the compile
+  # mode (FP4/FP8 kernels there need the conservative one) and flashinfer
+  # autotune off, which does not pay for itself on this hardware.
+  PROFILE_ARGS=(
+    --trust-remote-code
+    --kv-cache-dtype fp8
+    --block-size 256
+    --no-enable-flashinfer-autotune
+    --compilation-config '{"mode": 0, "cudagraph_mode": "FULL_DECODE_ONLY"}'
+    --tokenizer-mode deepseek_v4
+    --tool-call-parser deepseek_v4
+    --enable-auto-tool-choice
+    --reasoning-parser deepseek_v4
+    --speculative-config '{"method":"dspark","num_speculative_tokens":7,"draft_sample_method":"probabilistic"}'
+  )
+  ;;
+granite)
+  # Stock vLLM. Granite needs no custom tokenizer, parser or kernel override,
+  # and adding any of the above would either be rejected or measure something
+  # this profile is not here to measure.
+  PROFILE_ARGS=()
+  ;;
+*)
+  echo "no engine flags defined for PROFILE=$PROFILE in $(basename "${BASH_SOURCE[0]}")" >&2
+  exit 2
+  ;;
+esac
+
 SERVE_ARGS=(
   "$MODEL_ID"
-  --trust-remote-code
-  --kv-cache-dtype fp8
-  --block-size 256
+  "${PROFILE_ARGS[@]+"${PROFILE_ARGS[@]}"}"
   "${PARALLEL_ARGS[@]}"
   --max-model-len "$MAX_MODEL_LEN"
   --gpu-memory-utilization "$GPU_MEMORY_UTILIZATION"
   --max-num-seqs "$DEFAULT_NUM_SEQS"
-  --no-enable-flashinfer-autotune
-  --compilation-config '{"mode": 0, "cudagraph_mode": "FULL_DECODE_ONLY"}'
-  --tokenizer-mode deepseek_v4
-  --tool-call-parser deepseek_v4
-  --enable-auto-tool-choice
-  --reasoning-parser deepseek_v4
-  --speculative-config '{"method":"dspark","num_speculative_tokens":7,"draft_sample_method":"probabilistic"}'
   --host "$HOST"
   --port "$PORT"
 )
 
 CMD=("$VLLM_BIN" serve "${SERVE_ARGS[@]}")
 
-printf 'Launching (%s):\n\n' "$STRATEGY"
+# A .env that pins MODEL_ID outranks the profile, which is the intended
+# precedence but a surprising way to serve the wrong checkpoint. Say so rather
+# than let twenty minutes of loading answer the question.
+profile_model="$(_config_value_from "$PROFILE_FILE" MODEL_ID)"
+if [ -n "$profile_model" ] && [ "$profile_model" != "$MODEL_ID" ]; then
+  printf 'note: PROFILE=%s names %s, but MODEL_ID is set to %s\n\n' \
+    "$PROFILE" "$profile_model" "$MODEL_ID"
+fi
+
+printf 'Launching %s (%s):\n\n' "$PROFILE" "$STRATEGY"
 printf '%q ' "${CMD[@]}"
 printf '\n\n'
 
