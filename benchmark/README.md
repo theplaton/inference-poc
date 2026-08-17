@@ -107,18 +107,19 @@ Think Max is opt-in (`--all`) because it truncates unless the server was started
 with `--max-model-len >= 393216`, which does not fit on 8x H200 without a KV
 offload tier.
 
-## GPU thermals
+## GPU telemetry
 
-`GPU_THERMALS_CSV` appends one row per throughput run — the average temperature
-and power draw of each GPU while that run was in flight:
+`GPU_TELEMETRY_CSV` appends one row per throughput run — the average
+temperature, power draw, SM utilization and memory utilization of each GPU while
+that run was in flight:
 
 ```bash
-./benchmark.sh --bench-only GPU_THERMALS_CSV=runs/gpu_thermals.csv RUN_LABEL=c8
+./benchmark.sh --bench-only GPU_TELEMETRY_CSV=runs/gpu_telemetry.csv RUN_LABEL=c8
 ```
 
 ```
-run,concurrency,isl,osl,num_prompts,sampled_s,samples,GPU_0_avg_temp,GPU_0_avg_power,...
-c8,8,2048,512,64,84,42,63.4,611.2,...
+run,concurrency,isl,osl,num_prompts,sampled_s,samples,GPU_0_avg_temp,GPU_0_avg_power,GPU_0_avg_util,GPU_0_avg_mem_util,...
+c8,8,2048,512,64,84,42,63.4,611.2,98.7,41.3,...
 ```
 
 The window is the benchmark and nothing else. Polling from the serving side
@@ -129,8 +130,14 @@ measurement starts and stops.
 `sampled_s` is that window in seconds, and `samples` the number of readings
 behind the thinnest average in the row — a figure from three samples deserves
 less confidence than one from three hundred. `GPU_POLL_INTERVAL` (default 2s)
-sets the spacing. Temperatures are °C, power W, columns ordered by `nvidia-smi`
-index.
+sets the spacing. Temperatures are °C, power W, both utilizations percent,
+columns ordered by `nvidia-smi` index.
+
+The two utilizations are `nvidia-smi`'s own: `avg_util` is the share of sampled
+time a kernel was resident, which saturates near 100 % on any run wide enough to
+keep the GPUs fed and so is most useful for spotting the runs that did *not*;
+`avg_mem_util` is the share of time memory was being read or written, which
+tracks the decode phase and separates long-output shapes from long-input ones.
 
 Unset — the default — nothing is polled. It needs `nvidia-smi` on the machine
 running the benchmark, so it measures the local node or nothing: pointed at a

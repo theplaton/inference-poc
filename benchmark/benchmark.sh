@@ -45,11 +45,11 @@ IGNORE_EOS (default 1) makes every request generate the full output length;
 RANDOM_RANGE_RATIO (default 0.0) samples lengths around ISL/OSL instead of
 fixing them.
 
-GPU_THERMALS_CSV appends one row of per-GPU average temperature and power,
-sampled every GPU_POLL_INTERVAL seconds while the throughput run is in flight
-and at no other time:
+GPU_TELEMETRY_CSV appends one row of per-GPU average temperature, power, SM
+utilization and memory utilization, sampled every GPU_POLL_INTERVAL seconds
+while the throughput run is in flight and at no other time:
 
-  ./benchmark.sh --bench-only GPU_THERMALS_CSV=runs/gpu_thermals.csv
+  ./benchmark.sh --bench-only GPU_TELEMETRY_CSV=runs/gpu_telemetry.csv
 EOF
 }
 
@@ -129,7 +129,7 @@ case "$(printf '%s' "${IGNORE_EOS:-}" | tr '[:upper:]' '[:lower:]')" in
 1 | true | yes | on) EOS_ARGS+=(--ignore-eos) ;;
 esac
 
-# --- GPU thermals ---------------------------------------------------------------
+# --- GPU telemetry --------------------------------------------------------------
 # What the hardware was doing while the numbers above were being produced. The
 # window is this benchmark and nothing else: the server outlives any one
 # measurement, so a poller that ran with it would fold the idle gaps between
@@ -155,24 +155,27 @@ import sys
 samples_path, csv_path = sys.argv[1:3]
 run, concurrency, isl, osl, num_prompts, sampled_s = sys.argv[3:9]
 
-# index -> [samples, temperature sum, power sum]
+# index -> [samples, temperature sum, power sum, SM util sum, memory util sum]
 totals = {}
 with open(samples_path) as f:
     for line in f:
         parts = [p.strip() for p in line.split(",")]
-        if len(parts) != 3:
+        if len(parts) != 5:
             continue
         try:
-            index, temp, power = int(parts[0]), float(parts[1]), float(parts[2])
+            index = int(parts[0])
+            temp, power, util, mem_util = (float(p) for p in parts[1:])
         except ValueError:
             continue  # "[N/A]" from a GPU that did not answer that round
-        seen = totals.setdefault(index, [0, 0.0, 0.0])
+        seen = totals.setdefault(index, [0, 0.0, 0.0, 0.0, 0.0])
         seen[0] += 1
         seen[1] += temp
         seen[2] += power
+        seen[3] += util
+        seen[4] += mem_util
 
 if not totals:
-    sys.exit("warning: no usable GPU samples, so no thermals row was written")
+    sys.exit("warning: no usable GPU samples, so no telemetry row was written")
 
 row = {
     "run": run,
@@ -186,9 +189,11 @@ row = {
     "samples": min(seen[0] for seen in totals.values()),
 }
 for index in sorted(totals):
-    count, temp_sum, power_sum = totals[index]
+    count, temp_sum, power_sum, util_sum, mem_util_sum = totals[index]
     row[f"GPU_{index}_avg_temp"] = round(temp_sum / count, 1)
     row[f"GPU_{index}_avg_power"] = round(power_sum / count, 1)
+    row[f"GPU_{index}_avg_util"] = round(util_sum / count, 1)
+    row[f"GPU_{index}_avg_mem_util"] = round(mem_util_sum / count, 1)
 
 is_new = not (os.path.exists(csv_path) and os.path.getsize(csv_path) > 0)
 if not is_new:
@@ -199,9 +204,9 @@ if not is_new:
         # failing a benchmark that has already produced good numbers.
         sys.exit(
             f"warning: {csv_path} has the columns of a different node, so this "
-            f"run's thermals were not appended.\n  in the file: {','.join(have)}"
+            f"run's telemetry was not appended.\n  in the file: {','.join(have)}"
             f"\n  this run writes: {','.join(row)}\nMove or delete it, or point "
-            f"GPU_THERMALS_CSV somewhere else."
+            f"GPU_TELEMETRY_CSV somewhere else."
         )
 
 with open(csv_path, "a", newline="") as f:
@@ -213,11 +218,11 @@ PY
 )"
 
 start_gpu_poll() {
-  [ -n "${GPU_THERMALS_CSV:-}" ] || return 0
+  [ -n "${GPU_TELEMETRY_CSV:-}" ] || return 0
 
   if ! command -v nvidia-smi >/dev/null 2>&1; then
-    echo "note: no nvidia-smi here, so no GPU thermals -- the benchmark is unaffected"
-    GPU_THERMALS_CSV=""
+    echo "note: no nvidia-smi here, so no GPU telemetry -- the benchmark is unaffected"
+    GPU_TELEMETRY_CSV=""
     return 0
   fi
 
@@ -230,7 +235,7 @@ start_gpu_poll() {
     ;;
   esac
 
-  mkdir -p "$(dirname "$GPU_THERMALS_CSV")"
+  mkdir -p "$(dirname "$GPU_TELEMETRY_CSV")"
   GPU_SAMPLES="$(mktemp)"
 
   # One nvidia-smi per sample rather than `nvidia-smi -l`: each invocation
@@ -240,7 +245,8 @@ start_gpu_poll() {
   (
     trap 'exit 0' TERM
     while :; do
-      nvidia-smi --query-gpu=index,temperature.gpu,power.draw \
+      nvidia-smi \
+        --query-gpu=index,temperature.gpu,power.draw,utilization.gpu,utilization.memory \
         --format=csv,noheader,nounits >>"$GPU_SAMPLES" 2>/dev/null || exit 0
       sleep "$GPU_POLL_INTERVAL" &
       wait $!
@@ -248,7 +254,7 @@ start_gpu_poll() {
   ) &
   GPU_POLL_PID=$!
   GPU_POLL_BEGAN=$SECONDS
-  echo "note: sampling GPU temperature and power every ${GPU_POLL_INTERVAL}s -> $GPU_THERMALS_CSV"
+  echo "note: sampling GPU temperature, power and utilization every ${GPU_POLL_INTERVAL}s -> $GPU_TELEMETRY_CSV"
 }
 
 stop_gpu_poll() {
@@ -306,8 +312,8 @@ stop_gpu_poll
 
 # Only a run that finished gets a row: a failed one's partial averages would sit
 # in the CSV looking like a measurement of something.
-if [ "$BENCH_STATUS" -eq 0 ] && [ -n "${GPU_THERMALS_CSV:-}" ] && [ -n "$GPU_SAMPLES" ]; then
-  "$PYTHON_BIN" -c "$GPU_CSV_PY" "$GPU_SAMPLES" "$GPU_THERMALS_CSV" \
+if [ "$BENCH_STATUS" -eq 0 ] && [ -n "${GPU_TELEMETRY_CSV:-}" ] && [ -n "$GPU_SAMPLES" ]; then
+  "$PYTHON_BIN" -c "$GPU_CSV_PY" "$GPU_SAMPLES" "$GPU_TELEMETRY_CSV" \
     "${RUN_LABEL:-}" "$CONCURRENCY" "$RANDOM_INPUT_LEN" "$RANDOM_OUTPUT_LEN" \
     "$NUM_PROMPTS" "$GPU_SAMPLED_S" ||
     true # its own message says what went wrong; the numbers above still stand

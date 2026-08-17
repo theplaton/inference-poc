@@ -100,7 +100,7 @@ everything one invocation measures lands inside its own folder, one row per
 | --- | --- |
 | `benchmark_sweep.csv` | concurrency, ISL, OSL, mean request latency (s), total throughput (tok/s) |
 | `benchmark_sweep_detailed.csv` | the same rows with p99s, TTFT/TPOT/ITL, actual output tokens, KV fit, spec-decode acceptance |
-| `gpu_thermals.csv` | average temperature and power per GPU, sampled only while each measurement was running |
+| `gpu_telemetry.csv` | average temperature, power, SM utilization and memory utilization per GPU, sampled only while each measurement was running |
 | `result-c<N>-i<ISL>o<OSL>.json` | the raw `vllm bench serve` result for one measurement |
 | `serve-c<N>.log` | that level's server output — one per level, shared by its shapes |
 | `bench-c<N>-i<ISL>o<OSL>.log` | that measurement's client output |
@@ -115,12 +115,15 @@ in place and older rows keep empty cells rather than being refused.
 Every CSV is appended per measurement, so an interrupted sweep still leaves what
 it finished. Read one at the terminal with `column -s, -t < FILE`.
 
-`gpu_thermals.csv` answers what the hardware was doing while those numbers were
+`gpu_telemetry.csv` answers what the hardware was doing while those numbers were
 produced — two runs at the same throughput are not the same result if one held
 620 W at 62 °C and the other throttled at 84 °C, and one hot GPU can pace the
-whole group without showing up anywhere else. `benchmark.sh` writes it, not the
-sweep: the server is up far longer than any one measurement, so only the client
-knows the window worth sampling.
+whole group without showing up anywhere else. The utilization columns say
+whether the node was actually busy: SM utilization near 100 % across the sweep
+mostly marks the runs that were *not* saturated, while memory utilization is the
+more telling figure for long-output shapes, where decode is bandwidth-bound.
+`benchmark.sh` writes it, not the sweep: the server is up far longer than any one
+measurement, so only the client knows the window worth sampling.
 
 ## Profiles
 
