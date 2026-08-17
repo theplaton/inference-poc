@@ -89,7 +89,7 @@ python download_model.py PROFILE=granite   # ~2.5 GB instead of ~893 GB
 
 ## Profiles
 
-`PROFILE` names the model. `deepseek_v4_speculative` is this recipe; `granite`
+`PROFILE` names the model. `deepseek_v4_tp8dp1_speculative` is this recipe; `granite`
 (Granite 3.1 1B A400M) is a small MoE that exercises the same tools on one GPU
 in about a minute, which is how you shake out the sweep, the CSVs and the signal
 handling without spending 15 minutes per checkpoint load.
@@ -120,10 +120,10 @@ is what `granite` runs.
 `PROFILE_BASE` makes one profile inherit another: the base fills in every key the
 derived file leaves unset, which is how every layer here already works. Argument
 lines merge the same way, by flag — a derived profile restating a flag overrides
-it, and the value `off` drops it. That is the whole of `deepseek_v4_baseline`:
+it, and the value `off` drops it. That is the whole of `deepseek_v4_tp8dp1`:
 
 ```bash
-PROFILE_BASE=deepseek_v4_speculative
+PROFILE_BASE=deepseek_v4_tp8dp1_speculative
 
 --speculative-config off
 ```
@@ -143,12 +143,12 @@ profile switch — `serve_model.sh` prints a note when the two disagree.
 default, superseding the preview (87.9 vs 72.1 on Terminal Bench 2.1). It carries
 a fused DSpark speculative-decoding module, which is why `requirements.txt`
 requires vLLM **0.25.0** rather than the model's 0.20.0 baseline, and why
-`deepseek_v4_speculative` carries `--speculative-config {"method":"dspark",...}`.
-`deepseek_v4_baseline` is the same profile without it.
+`deepseek_v4_tp8dp1_speculative` carries `--speculative-config {"method":"dspark",...}`.
+`deepseek_v4_tp8dp1` is the same profile without it.
 
 **Parallelism.** `TP_SIZE x DP_SIZE` must equal `GPU_COUNT`; `EXPERT_PARALLEL=1`
 shards a MoE's experts across that whole world. The recipe's layout is TP8/DP1,
-which is what `deepseek_v4_speculative` sets.
+which is what `deepseek_v4_tp8dp1_speculative` sets.
 
 The experts are 96.6% of this checkpoint — 803 of 831 GiB, summed from the
 shards — and expert parallel shards them across all 8 GPUs whatever TP and DP
@@ -161,8 +161,8 @@ times over.
 | Layout | dense/GPU | weights/GPU | est. node KV |
 | --- | --- | --- | --- |
 | TP8/DP1 (default) | 3.5 GiB | 103.9 GiB | ~18.9 GiB |
-| TP4/DP2 (`deepseek_v4_tp4dp2`) | 7.0 GiB | 107.5 GiB | ~30.8 GiB |
-| TP2/DP4 (`deepseek_v4_tp2dp4`) | 14.1 GiB | 114.5 GiB | ~33.4 GiB |
+| TP4/DP2 (`deepseek_v4_tp4dp2_speculative`) | 7.0 GiB | 107.5 GiB | ~30.8 GiB |
+| TP2/DP4 (`deepseek_v4_tp2dp4_speculative`) | 14.1 GiB | 114.5 GiB | ~33.4 GiB |
 | TP1/DP8 | 28.2 GiB | 128.6 GiB | does not fit |
 
 Estimates, against 124.8 GiB usable per H200. DP also pays all-to-all traffic

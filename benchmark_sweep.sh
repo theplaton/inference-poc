@@ -43,9 +43,9 @@ the checkpoint once per distinct concurrency level.
 The sweep is described by benchmark_sweep_config.json:
 
   {"sweeps": [
-     {"profile": "deepseek_v4_speculative", "tp": 8, "dp": 1,
+     {"profile": "deepseek_v4_tp8dp1_speculative", "tp": 8, "dp": 1,
       "isl": 2048, "osl": 512, "concurrency_levels": [1, 8, 64, 128]},
-     {"profile": "deepseek_v4_speculative", "tp": 4, "dp": 2,
+     {"profile": "deepseek_v4_tp8dp1_speculative", "tp": 4, "dp": 2,
       "isl": 2048, "osl": 512, "concurrency_levels": [1, 8, 64, 128]}
   ]}
 

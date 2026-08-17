@@ -71,7 +71,7 @@ def load_config(argv: Iterable[str] | None = None) -> list[str]:
     # defaults.env -- which must not be merged in before it, or it would outrank
     # the layer it sits below.
     profile = os.environ.get("PROFILE") or dict(_pairs(DEFAULTS_FILE)).get(
-        "PROFILE", "deepseek_v4_speculative"
+        "PROFILE", "deepseek_v4_tp8dp1_speculative"
     )
     os.environ["PROFILE"] = profile
     profile_file = PROFILES_DIR / f"{profile}.env"

@@ -56,9 +56,9 @@ per sweep level. Pre-download anything large.
 you make here:
 
 ```bash
-./serve_model.sh                                   # deepseek_v4_speculative, the default
-./serve_model.sh PROFILE=deepseek_v4_baseline      # same checkpoint, speculation off
-./serve_model.sh PROFILE=granite                   # a 2.5 GB model, ~30s to load
+./serve_model.sh                              # deepseek_v4_tp8dp1_speculative, the default
+./serve_model.sh PROFILE=deepseek_v4_tp8dp1   # same checkpoint and layout, speculation off
+./serve_model.sh PROFILE=granite              # a 2.5 GB model, ~30s to load
 ```
 
 It stays in the foreground once healthy; Ctrl-C stops it and its workers. A
@@ -87,7 +87,7 @@ it, and tears it down.
 ```bash
 ./benchmark_sweep.sh --plan                        # what it would do, then exit
 ./benchmark_sweep.sh                               # the sweep itself; leave it running
-./benchmark_sweep.sh PROFILE=deepseek_v4_baseline
+./benchmark_sweep.sh PROFILE=deepseek_v4_tp8dp1
 ```
 
 Each run names a server — a profile and a `tp`/`dp` layout — and a concurrency
@@ -131,9 +131,9 @@ parallel layout against another:
 
 ```json
 {"sweeps": [
-  {"profile": "deepseek_v4_speculative", "concurrency_levels": [8, 64]},
-  {"profile": "deepseek_v4_baseline",    "concurrency_levels": [8, 64]},
-  {"profile": "deepseek_v4_tp4dp2", "tp": 4, "dp": 2, "concurrency_levels": [64]}
+  {"profile": "deepseek_v4_tp8dp1_speculative", "concurrency_levels": [8, 64]},
+  {"profile": "deepseek_v4_tp8dp1",             "concurrency_levels": [8, 64]},
+  {"profile": "deepseek_v4_tp4dp2_speculative", "tp": 4, "dp": 2, "concurrency_levels": [64]}
 ]}
 ```
 
@@ -195,12 +195,17 @@ get the same row from a standalone run.
 
 ## Profiles
 
+A DeepSeek profile is named `deepseek_v4_tp<N>dp<M>` for its parallel layout, plus
+`_speculative` when dspark speculative decoding is on. The name is the whole
+configuration, so a `--plan` line, a filename and a CSV row all say what produced
+them without a lookup.
+
 | Profile | Is | A whole sweep takes |
 | --- | --- | --- |
-| `deepseek_v4_speculative` (default) | DeepSeek-V4-Pro-0813, dspark speculative decoding, TP8/DP1 | hours |
-| `deepseek_v4_baseline` | the same, speculation off | hours |
-| `deepseek_v4_tp4dp2` | the same, 2 data-parallel replicas of 4-way TP | hours |
-| `deepseek_v4_tp2dp4` | the same, 4 replicas of 2-way TP | hours |
+| `deepseek_v4_tp8dp1_speculative` (default) | DeepSeek-V4-Pro-0813, the recipe as published | hours |
+| `deepseek_v4_tp8dp1` | the same layout, speculation off | hours |
+| `deepseek_v4_tp4dp2_speculative` | 2 data-parallel replicas of 4-way TP | hours |
+| `deepseek_v4_tp2dp4_speculative` | 4 replicas of 2-way TP | hours |
 | `granite` | Granite 3.1 1B A400M, one GPU | minutes |
 
 `granite` exists to exercise the tooling: same MoE shape as the big checkpoint at
@@ -216,8 +221,8 @@ profile, one config file measures the lot:
 
 ```json
 {"sweeps": [
-  {"profile": "deepseek_v4_speculative", "concurrency_levels": [8, 64]},
-  {"profile": "deepseek_v4_baseline",    "concurrency_levels": [8, 64]}
+  {"profile": "deepseek_v4_tp8dp1_speculative", "concurrency_levels": [8, 64]},
+  {"profile": "deepseek_v4_tp8dp1",             "concurrency_levels": [8, 64]}
 ]}
 ```
 
@@ -234,7 +239,7 @@ A profile is one file per side — [model_serving/profiles/](model_serving/profi
 for the checkpoint, memory envelope and engine flags,
 [benchmark/profiles/](benchmark/profiles/) for what requests carry. Adding a model
 is adding those files, not editing a script; the format and the `PROFILE_BASE`
-inheritance that makes `deepseek_v4_baseline` two lines long are in
+inheritance that makes `deepseek_v4_tp8dp1` two lines long are in
 [model_serving/README.md](model_serving/README.md#profiles).
 
 ## Configuration

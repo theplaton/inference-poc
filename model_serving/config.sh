@@ -128,7 +128,7 @@ load_config() {
   # per model, and none of them belong in a defaults file shared by all of them.
   # It is resolved from the layers already applied, then from defaults.env.
   [ -n "${PROFILE:-}" ] || PROFILE="$(_config_value_from "$CONFIG_DIR/defaults.env" PROFILE)"
-  : "${PROFILE:=deepseek_v4_speculative}"
+  : "${PROFILE:=deepseek_v4_tp8dp1_speculative}"
   export PROFILE
   PROFILE_FILE="$CONFIG_DIR/profiles/$PROFILE.env"
   export PROFILE_FILE

@@ -73,7 +73,7 @@ load_config() {
   # what the chat template understands. The sweep exports PROFILE when it drives
   # this script, so the two halves stay in step without being wired together.
   [ -n "${PROFILE:-}" ] || PROFILE="$(_config_value_from "$CONFIG_DIR/defaults.env" PROFILE)"
-  : "${PROFILE:=deepseek_v4_speculative}"
+  : "${PROFILE:=deepseek_v4_tp8dp1_speculative}"
   export PROFILE
   PROFILE_FILE="$CONFIG_DIR/profiles/$PROFILE.env"
   export PROFILE_FILE
