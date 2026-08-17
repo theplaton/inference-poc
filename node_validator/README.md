@@ -64,24 +64,47 @@ make build          # docker build -t gpu-validator .
 ```
 
 Multi-stage: the builder compiles `gemm_bench` and `all_reduce_perf`; the final
-image carries only those two binaries, `validate.sh`, and the CUDA/cuBLAS/NCCL
-runtimes. No nvcc, no gcc, no Python, no PyTorch, no MPI, no DCGM.
+image carries only those two binaries, `validate.sh`, and the three libraries they
+link (cudart, cuBLAS/cuBLASLt, NCCL). No nvcc, no gcc, no Python, no PyTorch,
+no MPI, no DCGM. Result: **2.57 GB on disk / 993 MB to pull.**
 
-For non-Hopper/Ampere hardware, set the arch list:
+It starts from the `-base` image and adds `libcublas` + `libnccl2` explicitly,
+rather than starting from `-runtime` and inheriting the `cuda-libraries`
+metapackage — that would drag in cuFFT, cuSPARSE, cuSOLVER, cuRAND, NPP and nvRTC
+for a 5.59 GB / 2.16 GB image, none of which this validator calls.
+
+Build args:
+
+| Arg | Default | Notes |
+| --- | --- | --- |
+| `CUDA_ARCHS` | `80 90` | Ampere + Hopper. Blackwell: `"90 100"` |
+| `CUDA_VERSION` | `12.8.1` | Selects both base images; `libcublas-12-8` is derived from it |
+| `NCCL_PKG_VERSION` | `2.25.1-1+cuda12.8` | Runtime NCCL. **Bump together with `CUDA_VERSION`** — it is pinned to match the NCCL the builder linked against |
+| `NCCL_TESTS_TAG` | `v2.19.7` | `nccl-tests` source pin |
 
 ```bash
 docker build --build-arg CUDA_ARCHS="90 100" -t gpu-validator .
 ```
 
+If a future CUDA bump makes the pinned pair inconsistent, the fallback is a
+one-liner: change the final stage's `FROM` to `-runtime-` and drop the `apt-get`
+line — bigger image, no version bookkeeping.
+
 ## Run
+
+**The GPUs must be idle.** Any other workload holding them (a served model, a
+training job) time-slices against the benchmarks: compute roughly halves and NCCL
+fails with `unhandled cuda error`, because the other process already owns the
+NVLink communicators. Check with `nvidia-smi --query-compute-apps=pid,process_name
+--format=csv` before running — this is a preflight tool for an *unloaded* node.
 
 ```bash
 docker run --rm \
-    --gpus all \
+    --device nvidia.com/gpu=all \
     --ipc=host \
     -e EXPECTED_GPU_COUNT=8 \
     -e EXPECTED_GPU_NAME="H200" \
-    -e MIN_GEMM_TFLOPS=800 \
+    -e MIN_GEMM_TFLOPS=750 \
     -e MIN_NCCL_BUSBW_GBPS=300 \
     -v "$PWD/results:/results" \
     gpu-validator
@@ -91,13 +114,16 @@ docker run --rm \
 needed. `--ipc=host` is required — NCCL uses host shared memory for intra-node
 transport. Exit code: `0` = PASS, `1` = FAIL.
 
-If `--gpus all` fails with `AMD CDI spec not found` or `no known GPU vendor
-found`, the `--gpus` shorthand is misdetecting the vendor (seen on Docker 29 with
-CDI). Address the GPUs explicitly instead:
+`--device nvidia.com/gpu=all` is the CDI form and works everywhere the NVIDIA
+Container Toolkit is installed. The shorter `--gpus all` is equivalent on most
+hosts, but on Docker 29 + CDI its vendor auto-detection can fail with
+`AMD CDI spec not found` or `no known GPU vendor found` — hence the explicit form
+above. With make:
 
 ```bash
-docker run --rm --device nvidia.com/gpu=all --ipc=host ... gpu-validator
-make run GPU_FLAG="--device nvidia.com/gpu=all"
+make run GPU_FLAG="--device nvidia.com/gpu=all" \
+  EXPECTED_GPU_COUNT=8 EXPECTED_GPU_NAME=H200 \
+  MIN_GEMM_TFLOPS=750 MIN_NCCL_BUSBW_GBPS=300
 ```
 
 ### Environment variables
@@ -138,22 +164,22 @@ System
   GPU model:           NVIDIA H200                PASS
 
 Per-GPU Compute
-  GPU0:                806.0 TFLOPS (99% median)  PASS
-  GPU1:                811.7 TFLOPS (100% median) PASS
-  GPU2:                802.1 TFLOPS (99% median)  PASS
-  GPU3:                817.0 TFLOPS (101% median) PASS
-  GPU4:                801.6 TFLOPS (99% median)  PASS
-  GPU5:                813.4 TFLOPS (100% median) PASS
-  GPU6:                817.5 TFLOPS (101% median) PASS
-  GPU7:                821.1 TFLOPS (101% median) PASS
+  GPU0:                813.1 TFLOPS (100% median) PASS
+  GPU1:                812.6 TFLOPS (100% median) PASS
+  GPU2:                799.1 TFLOPS (98% median)  PASS
+  GPU3:                803.8 TFLOPS (99% median)  PASS
+  GPU4:                817.1 TFLOPS (101% median) PASS
+  GPU5:                811.7 TFLOPS (100% median) PASS
+  GPU6:                809.6 TFLOPS (100% median) PASS
+  GPU7:                811.5 TFLOPS (100% median) PASS
 
-  Median:              812.5 TFLOPS
+  Median:              811.6 TFLOPS
   Relative floor:      90%
   Absolute floor:      700 TFLOPS
 
 Multi-GPU
   NCCL AllReduce
-  busbw:               468.69 GB/s                PASS
+  busbw:               468.68 GB/s                PASS
 
 ----------------------------------------------------
  OVERALL: PASS

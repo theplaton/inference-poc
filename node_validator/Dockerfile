@@ -33,8 +33,18 @@ RUN git clone --depth 1 --branch ${NCCL_TESTS_TAG} \
     cp nccl-tests/build/all_reduce_perf /out/
 
 # ---------- runtime ----------
-# Provides the cuBLAS and NCCL runtimes; no extra packages needed.
-FROM nvidia/cuda:${CUDA_VERSION}-runtime-${UBUNTU}
+# The base image (cudart only, ~411MB) plus just cuBLAS and NCCL, instead of the
+# runtime image's full cuda-libraries metapackage (cuFFT/cuSPARSE/cuSOLVER/
+# cuRAND/NPP/nvRTC — ~4GB we never call). Keep NCCL_PKG_VERSION matched to the
+# NCCL the builder linked against; bump both it and CUDA_VERSION together.
+FROM nvidia/cuda:${CUDA_VERSION}-base-${UBUNTU}
+ARG CUDA_VERSION
+ARG NCCL_PKG_VERSION=2.25.1-1+cuda12.8
+
+RUN CUDA_PKG=$(echo "${CUDA_VERSION}" | cut -d. -f1,2 | tr . -) && \
+    apt-get update && apt-get install -y --no-install-recommends \
+        "libcublas-${CUDA_PKG}" "libnccl2=${NCCL_PKG_VERSION}" \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /out/gemm_bench /usr/local/bin/gemm_bench
 COPY --from=builder /out/all_reduce_perf /usr/local/bin/all_reduce_perf
