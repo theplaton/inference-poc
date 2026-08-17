@@ -161,8 +161,8 @@ times over.
 | Layout | dense/GPU | weights/GPU | est. node KV |
 | --- | --- | --- | --- |
 | TP8/DP1 (default) | 3.5 GiB | 103.9 GiB | ~18.9 GiB |
-| TP4/DP2 (`deepseek_v4_tp4dp2_speculative`) | 7.0 GiB | 107.5 GiB | ~30.8 GiB |
-| TP2/DP4 (`deepseek_v4_tp2dp4_speculative`) | 14.1 GiB | 114.5 GiB | ~33.4 GiB |
+| TP4/DP2 (`NOT_WORKING_...tp4dp2`) | 7.0 GiB | 107.5 GiB | ~30.8 GiB |
+| TP2/DP4 (`NOT_WORKING_...tp2dp4`) | 14.1 GiB | 114.5 GiB | ~33.4 GiB |
 | TP1/DP8 | 28.2 GiB | 128.6 GiB | does not fit |
 
 Estimates, against 124.8 GiB usable per H200. DP also pays all-to-all traffic
