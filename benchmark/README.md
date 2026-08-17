@@ -52,8 +52,15 @@ python smoke_test.py MODEL_ID=Qwen/Qwen3-8B
 
 `RESULT_FILE` saves the throughput run's numbers as JSON alongside the table on
 stdout, which is how a caller reads them back: `../benchmark_sweep.sh` sets it
-per sweep level and builds its CSVs from the files. Unset, the default, the run
+per measurement and builds its CSVs from the files. Unset, the default, the run
 leaves nothing behind.
+
+`IGNORE_EOS` (default 1) makes every request generate the full
+`RANDOM_OUTPUT_LEN` instead of stopping at the model's EOS, so a run that asks
+for 8192 tokens measures 8192 tokens. `RANDOM_RANGE_RATIO` (default 0.0) samples
+lengths around ISL/OSL rather than fixing them — 0.3 for traffic that looks more
+real, 0.0 for a scaling curve you want clean. Both are recorded in the result
+JSON as metadata, so a saved run says which were in force.
 
 `MODEL_ID` has no default on purpose — the server decides which checkpoint is
 loaded and rejects a request naming any other, so guessing is worse than
@@ -94,10 +101,11 @@ offload tier.
 
 ## Concurrency
 
-`CONCURRENCY` above the server's `--max-num-seqs` does not increase parallelism,
-it just queues. `benchmark.sh` warns when you cross the value in `defaults.env`
-(16, matching the recipe); keep the two in step if you retune the server.
+`CONCURRENCY` above the batch width the server was started with does not
+increase parallelism, it just queues. `benchmark.sh` warns when you cross
+`DEFAULT_NUM_SEQS` from `defaults.env` (16, matching the recipe); keep it in
+step with `model_serving/defaults.env` if you retune the server.
 
-Sweeping both together — a server at `MAX_NUM_SEQS=N` measured at
-`CONCURRENCY=N`, for each N in `../benchmark_sweep_config.json` — is what
-`../benchmark_sweep.sh` does.
+Sweeping both together — a server at `DEFAULT_NUM_SEQS=N` measured at
+`CONCURRENCY=N`, for each N and each request shape in
+`../benchmark_sweep_config.json` — is what `../benchmark_sweep.sh` does.

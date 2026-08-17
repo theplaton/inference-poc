@@ -45,46 +45,70 @@ the fastest way to diff the flags against the recipe page.
 
 `./benchmark_sweep.sh` answers one question — what does this node do as
 concurrency rises — by measuring each level on its own server. For every level
-it starts `./serve_model.sh` with `MAX_NUM_SEQS` set to that level, waits for
-`/health`, runs `./benchmark.sh --bench-only` at the same `CONCURRENCY`, and
-tears the server down before the next one. Reloading the checkpoint per level is
-what makes it a multi-hour run, and the reason each number describes a server
-actually configured for that batch size rather than one wide server being
-under-driven.
+it starts `./serve_model.sh` with `DEFAULT_NUM_SEQS` set to that level, waits
+for `/health`, runs `./benchmark.sh --bench-only` at the same `CONCURRENCY` for
+each request shape, and tears the server down before the next level. Reloading
+the checkpoint per level is what makes it a multi-hour run, and the reason each
+number describes a server actually configured for that batch size rather than
+one wide server being under-driven.
 
-The levels live in [benchmark_sweep_config.json](benchmark_sweep_config.json),
-because which concurrencies are worth an hour of this node is a judgement about
-the model and the GPUs, not something to derive from a rule:
+What to measure lives in
+[benchmark_sweep_config.json](benchmark_sweep_config.json), because which shapes
+and concurrencies are worth an hour of this node is a judgement about the model
+and the GPUs, not something to derive from a rule:
 
 ```json
-{"concurrency_levels": [1, 8, 64, 128, 164]}
+{"sweeps": [
+  {"isl": 2048,  "osl": 512,  "concurrency_levels": [1, 8, 64, 128, 164]},
+  {"isl": 2048,  "osl": 8192, "concurrency_levels": [1, 8, 40], "prompts_per_level": 4},
+  {"isl": 32768, "osl": 1024, "concurrency_levels": [1, 8, 12]}
+]}
 ```
 
-164 is the KV ceiling for this checkpoint at 2048/512 — 18.95 GiB of KV cache
-per GPU at 39.1 KiB per token is ~508k tokens, and V4's sparse-attention index
-cache eats into that. Above it requests queue rather than run, which the numbers
-will show as latency climbing with throughput flat.
+The shape is a client-side parameter, so every shape at a given concurrency is
+measured against the *same* server: the checkpoint loads once per distinct
+level, not once per (level, shape). Aligning the level lists on 1 and 8 is what
+turns 11 measurements into 7 loads.
 
-Requests scale with the level (`PROMPTS_PER_LEVEL=8`, so 8 at level 1 and 1312
-at level 164) so every level runs the same number of batch rounds; ISL/OSL is
-2048/512. A level that fails is reported at the end and does not stop the sweep.
+Each shape asks a different question, and each has its own ceiling — the KV pool
+is ~508k tokens (18.95 GiB per GPU at 39.1 KiB per token), so a level is capped
+by tokens per request:
 
-Each run writes to `results/sweep-<timestamp>/`, one row per level per file:
+| Shape | tok/req | KV ceiling | What it exercises |
+| --- | --- | --- | --- |
+| 2048/512 | 2,560 | ~198 | the comparable baseline; prefill-heavy |
+| 2048/8192 | 10,240 | ~49 | a full reasoning trace, decode-dominated |
+| 32768/1024 | 33,792 | ~15 | long context and the sparse-attention path |
+
+Top levels sit near 80% of each ceiling; past it requests queue rather than run,
+which shows up as latency climbing while throughput stays flat. Every row records
+`kv_fit_pct` so a queue-limited measurement is visible rather than inferred.
+
+Requests scale with the level (`prompts_per_level`, default 8) so every run does
+the same number of batch rounds. A run that fails is reported at the end and does
+not stop the sweep.
+
+Runs are numbered: the first sweep writes `results/1`, the next `results/2`, and
+everything one invocation measures lands inside its own folder, one row per
+(level, shape):
 
 | File | Holds |
 | --- | --- |
-| `benchmark_sweep.csv` | concurrency, mean request latency (s), total throughput (tok/s) |
-| `benchmark_sweep_detailed.csv` | the same rows with p99s, TTFT/TPOT/ITL, duration, spec-decode acceptance |
-| `result-c<N>.json` | the raw `vllm bench serve` result for one level |
-| `serve-c<N>.log`, `bench-c<N>.log` | that level's server and client output |
+| `benchmark_sweep.csv` | concurrency, ISL, OSL, mean request latency (s), total throughput (tok/s) |
+| `benchmark_sweep_detailed.csv` | the same rows with p99s, TTFT/TPOT/ITL, actual output tokens, KV fit, spec-decode acceptance |
+| `result-c<N>-i<ISL>o<OSL>.json` | the raw `vllm bench serve` result for one measurement |
+| `serve-c<N>.log` | that level's server output — one per level, shared by its shapes |
+| `bench-c<N>-i<ISL>o<OSL>.log` | that measurement's client output |
 
 One file sits outside the run folders: `results/benchmark_sweep_all.csv`, which
-every sweep appends to. It carries the run id and the settings that make two
-sweeps different — strategy, max model length, ISL/OSL, checkpoint — so
-comparing today's run against last week's is one file, not two folders.
+every sweep appends to. It carries the run number and the settings that make two
+sweeps different — strategy, max model length, ISL/OSL, `ignore_eos`,
+checkpoint — so comparing today's run against last week's is one file, not two
+folders. When a newer version of the sweep adds columns, the rollup is widened
+in place and older rows keep empty cells rather than being refused.
 
-All three CSVs are appended per level, so an interrupted sweep still leaves
-every level that finished. Read one at the terminal with `column -s, -t < FILE`.
+All three CSVs are appended per measurement, so an interrupted sweep still
+leaves what it finished. Read one at the terminal with `column -s, -t < FILE`.
 
 ## Configuration
 

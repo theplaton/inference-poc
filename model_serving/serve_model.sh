@@ -71,7 +71,7 @@ SERVE_ARGS=(
   "${PARALLEL_ARGS[@]}"
   --max-model-len "$MAX_MODEL_LEN"
   --gpu-memory-utilization "$GPU_MEMORY_UTILIZATION"
-  --max-num-seqs "$MAX_NUM_SEQS"
+  --max-num-seqs "$DEFAULT_NUM_SEQS"
   --no-enable-flashinfer-autotune
   --compilation-config '{"mode": 0, "cudagraph_mode": "FULL_DECODE_ONLY"}'
   --tokenizer-mode deepseek_v4

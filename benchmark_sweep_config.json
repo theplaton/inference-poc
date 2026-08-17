@@ -1,3 +1,7 @@
 {
-  "concurrency_levels": [1, 8, 64, 128, 164]
+  "sweeps": [
+    {"isl": 2048, "osl": 512, "concurrency_levels": [1, 8, 64, 128, 164]},
+    {"isl": 2048, "osl": 8192, "concurrency_levels": [1, 8, 40], "prompts_per_level": 4},
+    {"isl": 32768, "osl": 1024, "concurrency_levels": [1, 8, 12]}
+  ]
 }

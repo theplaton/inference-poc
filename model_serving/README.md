@@ -102,7 +102,9 @@ guide names as the H200 recommendation; it trades KV capacity (dense params are
 replicated per rank) for better throughput at high concurrency. Try `tep` first.
 
 **Context is 200K, not 1M.** The recipe's H200 config sets `--max-model-len
-200000` with `--max-num-seqs 16`. The model supports 1M, and the guide's prose
+200000` with `--max-num-seqs 16` (`DEFAULT_NUM_SEQS`, which
+`../benchmark_sweep.sh` overrides per level). The model supports 1M, and the
+guide's prose
 mentions capping at 800K — but the generated H200 recipe says 200K, and 200K is
 what fits alongside ~960 GB of weights. Trust the generated config.
 

@@ -37,9 +37,13 @@ Any setting can be overridden as an argument, which outranks the environment,
   ./benchmark.sh BASE_URL=http://gpu-01:8000/v1
   ./benchmark.sh RANDOM_INPUT_LEN=8192 RANDOM_OUTPUT_LEN=1024
   ./benchmark.sh RESULT_FILE=run.json
+  ./benchmark.sh IGNORE_EOS=0 RANDOM_RANGE_RATIO=0.3
 
 RESULT_FILE writes the run's numbers to that path as JSON in addition to the
 table on stdout, which is what ../benchmark_sweep.sh reads to build its CSVs.
+IGNORE_EOS (default 1) makes every request generate the full output length;
+RANDOM_RANGE_RATIO (default 0.0) samples lengths around ISL/OSL instead of
+fixing them.
 EOF
 }
 
@@ -97,10 +101,10 @@ if [ ! -x "$VLLM_BIN" ]; then
   exit 1
 fi
 
-# Concurrency is capped by the server's --max-num-seqs (16 in the recipe);
-# asking for more just queues.
-if [ "$CONCURRENCY" -gt "$MAX_NUM_SEQS" ]; then
-  echo "note: concurrency $CONCURRENCY exceeds --max-num-seqs $MAX_NUM_SEQS, requests will queue"
+# Concurrency above the width the server was started with does not add
+# parallelism, it just queues.
+if [ "$CONCURRENCY" -gt "$DEFAULT_NUM_SEQS" ]; then
+  echo "note: concurrency $CONCURRENCY exceeds the server's $DEFAULT_NUM_SEQS sequences, requests will queue"
 fi
 
 # Stdout is for reading; RESULT_FILE is for a program to read afterwards. Unset
@@ -112,8 +116,19 @@ if [ -n "${RESULT_FILE:-}" ]; then
   echo "note: saving the result JSON to $RESULT_FILE"
 fi
 
+# A model that stops early turns a 8192-token run into something shorter without
+# saying so, and the number that comes out is then not the number you asked for.
+EOS_ARGS=()
+case "$(printf '%s' "${IGNORE_EOS:-}" | tr '[:upper:]' '[:lower:]')" in
+1 | true | yes | on) EOS_ARGS+=(--ignore-eos) ;;
+esac
+
+# --metadata rides along into the result JSON, so a saved run says which of
+# these two knobs were set rather than leaving a reader to guess. It goes last:
+# the flag takes a list, and anything after it would be eaten as another pair.
 exec "$VLLM_BIN" bench serve \
   ${SAVE_ARGS[@]+"${SAVE_ARGS[@]}"} \
+  ${EOS_ARGS[@]+"${EOS_ARGS[@]}"} \
   --backend "$BACKEND" \
   --endpoint "$BENCH_ENDPOINT" \
   --host "$HOST" \
@@ -122,6 +137,8 @@ exec "$VLLM_BIN" bench serve \
   --dataset-name random \
   --random-input-len "$RANDOM_INPUT_LEN" \
   --random-output-len "$RANDOM_OUTPUT_LEN" \
+  --random-range-ratio "$RANDOM_RANGE_RATIO" \
   --num-prompts "$NUM_PROMPTS" \
   --max-concurrency "$CONCURRENCY" \
-  --percentile-metrics "$PERCENTILE_METRICS"
+  --percentile-metrics "$PERCENTILE_METRICS" \
+  --metadata "ignore_eos=${IGNORE_EOS:-0}" "random_range_ratio=$RANDOM_RANGE_RATIO"
