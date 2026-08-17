@@ -15,7 +15,9 @@ logger = logging.getLogger(__name__)
 
 # Keep weights next to the repo instead of ~/.cache, so the PoC is self-contained.
 # Resolved from __file__, not cwd, so it holds wherever the script is launched from.
-# This module lives in source/, hence the second .parent to reach the repo root.
+# This module lives in model_serving/, hence the second .parent for the repo root.
+# config.sh exports HF_HUB_CACHE to this same path, so the shards vLLM reads and
+# the shards downloaded here are one copy, not two.
 REPO_HUB_CACHE = Path(__file__).resolve().parent.parent / ".hf-cache" / "hub"
 
 # Weight shards, config and tokenizer only -- skip duplicate formats and extras.
@@ -92,9 +94,9 @@ def prepare_model(
 
 
 if __name__ == "__main__":
-    from envfile import load_env
+    from envfile import load_config
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
     logging.getLogger("httpx").setLevel(logging.WARNING)
-    load_env()
+    load_config()
     print(prepare_model())

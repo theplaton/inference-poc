@@ -2,14 +2,24 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "run_inference",
+      "name": "download_model",
       "type": "debugpy",
       "request": "launch",
-      "program": "${workspaceFolder}/main.py",
+      "program": "${workspaceFolder}/model_serving/download_model.py",
       "console": "integratedTerminal",
-      "cwd": "${workspaceFolder}",
+      "cwd": "${workspaceFolder}/model_serving",
       "justMyCode": false,
-      "envFile": "${workspaceFolder}/.env"
+      "envFile": "${workspaceFolder}/model_serving/.env"
+    },
+    {
+      "name": "smoke_test",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/benchmark/smoke_test.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}/benchmark",
+      "justMyCode": false,
+      "envFile": "${workspaceFolder}/benchmark/.env"
     }
   ]
 }

@@ -1,19 +1,26 @@
 #!/usr/bin/env bash
-# Install the whole python environment into venv/ at the repo root, from
-# source/requirements.txt -- vllm, the openai client, and huggingface_hub.
+# Install the serving runtime into venv/ at the repo root, from
+# model_serving/requirements.txt -- vllm, the openai client and huggingface_hub.
+#
+#   ./install.sh                     # create or reuse the repo-level venv/
+#   ./install.sh VENV=/opt/vllm-env  # somewhere else
 #
 # The recipe's own install block is:
 #   uv venv && source .venv/bin/activate && uv pip install -U vllm --torch-backend auto
 set -euo pipefail
 
-RECIPE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=recipe.env
-source "$RECIPE_DIR/recipe.env"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=config.sh
+source "$SCRIPT_DIR/config.sh"
+load_config "$@"
 
-VENV="$REPO_ROOT/venv"
+if [ "${#CONFIG_ARGV[@]}" -gt 0 ]; then
+  echo "unknown argument: ${CONFIG_ARGV[0]} (settings are passed as KEY=value)" >&2
+  exit 2
+fi
 
 if ! command -v uv >/dev/null 2>&1; then
-  echo "uv not found." >&2
+  echo "uv not found -- install it with dev/install_system.sh" >&2
   exit 1
 fi
 
@@ -25,9 +32,9 @@ else
 fi
 
 # One install from requirements.txt: vllm (>= $MIN_VLLM_VERSION, the floor
-# declared there), the openai client, and -r ../requirements.txt for the Hub.
-echo "Installing from $RECIPE_DIR/requirements.txt (vllm >= $MIN_VLLM_VERSION)"
-VIRTUAL_ENV="$VENV" uv pip install -U -r "$RECIPE_DIR/requirements.txt"
+# declared there), the openai client, and huggingface_hub for the download.
+echo "Installing from $SCRIPT_DIR/requirements.txt (vllm >= $MIN_VLLM_VERSION)"
+VIRTUAL_ENV="$VENV" uv pip install -U -r "$SCRIPT_DIR/requirements.txt"
 
 echo
 echo "Done. Project scripts use $VENV automatically; activation is not required."

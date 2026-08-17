@@ -1,12 +1,27 @@
 #!/usr/bin/env bash
 # Stop every vLLM process on this host. Send TERM first so engines can release
 # resources cleanly, then force-stop anything that remains after the timeout.
+#
+#   ./cleanup_vllm.sh                            # 15s grace period
+#   ./cleanup_vllm.sh VLLM_CLEANUP_TIMEOUT=60    # longer
+#
+# serve_model.sh runs this itself when it shuts down. Run it standalone to clear
+# workers that outlived an earlier run and are still holding VRAM.
 set -euo pipefail
 
-TIMEOUT="${VLLM_CLEANUP_TIMEOUT:-15}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=config.sh
+source "$SCRIPT_DIR/config.sh"
+load_config "$@"
 
+if [ "${#CONFIG_ARGV[@]}" -gt 0 ]; then
+  echo "unknown argument: ${CONFIG_ARGV[0]} (settings are passed as KEY=value)" >&2
+  exit 2
+fi
+
+TIMEOUT="$VLLM_CLEANUP_TIMEOUT"
 case "$TIMEOUT" in
-  ''|*[!0-9]*) echo "VLLM_CLEANUP_TIMEOUT must be a non-negative integer" >&2; exit 2 ;;
+'' | *[!0-9]*) echo "VLLM_CLEANUP_TIMEOUT must be a non-negative integer" >&2; exit 2 ;;
 esac
 
 find_vllm_pids() {

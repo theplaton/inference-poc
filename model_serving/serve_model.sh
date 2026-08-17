@@ -1,0 +1,211 @@
+#!/usr/bin/env bash
+# Launch the vLLM server for DeepSeek-V4-Pro on an 8x H200 node, per the
+# official recipe: https://recipes.vllm.ai/deepseek-ai/DeepSeek-V4-Pro/hw/h200.json
+#
+# This script does four things and nothing else: launch vLLM, wait until it
+# answers /health, shut it down cleanly on a signal, and report failures with
+# the end of the server log. Installing the runtime, downloading the checkpoint,
+# validating the host and clearing stragglers are separate tools next to this
+# one -- see README.md.
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=config.sh
+source "$SCRIPT_DIR/config.sh"
+
+usage() {
+  cat <<'EOF'
+Usage: serve_model.sh [--dry-run] [KEY=value ...]
+
+Launches vLLM in the foreground and stays up until it exits or you interrupt it.
+
+  --dry-run     print the exact launch command and exit
+  -h, --help    this message
+
+Any setting can be overridden as an argument, which outranks the environment,
+.env and defaults.env:
+
+  ./serve_model.sh STRATEGY=dep            data + expert parallel
+  ./serve_model.sh PORT=8001 MODEL_ID=...  different endpoint and checkpoint
+  ./serve_model.sh MAX_MODEL_LEN=131072    shorter context, more KV headroom
+  ./serve_model.sh HEALTH_TIMEOUT=3600     allow a slower cold start
+
+Run ./preflight.sh first; it fails in seconds on a node that cannot hold the
+checkpoint, where the engine takes minutes to reach the same conclusion.
+EOF
+}
+
+load_config "$@"
+
+DRY_RUN=0
+set -- ${CONFIG_ARGV[@]+"${CONFIG_ARGV[@]}"}
+while [ $# -gt 0 ]; do
+  case "$1" in
+  --dry-run) DRY_RUN=1; shift ;;
+  -h | --help) usage; exit 0 ;;
+  *) echo "unknown argument: $1 (settings are passed as KEY=value)" >&2; exit 2 ;;
+  esac
+done
+
+require_config MODEL_ID
+
+# TP splits dense layers across all 8 GPUs; DP replicates them per rank. Both
+# add --enable-expert-parallel so the 1.6T of experts are sharded, not copied.
+case "$STRATEGY" in
+tep) PARALLEL_ARGS=(--enable-expert-parallel --tensor-parallel-size "$GPU_COUNT") ;;
+dep) PARALLEL_ARGS=(--enable-expert-parallel --data-parallel-size "$GPU_COUNT") ;;
+*) echo "STRATEGY must be tep or dep, got '$STRATEGY'" >&2; exit 2 ;;
+esac
+
+# Flags below are verbatim from the recipe's h200.json. The four after
+# --max-model-len are the Hopper overrides: FP4/FP8 kernels on Hopper need the
+# conservative compile mode, and flashinfer autotune is off because it does not
+# pay for itself here.
+SERVE_ARGS=(
+  "$MODEL_ID"
+  --trust-remote-code
+  --kv-cache-dtype fp8
+  --block-size 256
+  "${PARALLEL_ARGS[@]}"
+  --max-model-len "$MAX_MODEL_LEN"
+  --gpu-memory-utilization "$GPU_MEMORY_UTILIZATION"
+  --max-num-seqs "$MAX_NUM_SEQS"
+  --no-enable-flashinfer-autotune
+  --compilation-config '{"mode": 0, "cudagraph_mode": "FULL_DECODE_ONLY"}'
+  --tokenizer-mode deepseek_v4
+  --tool-call-parser deepseek_v4
+  --enable-auto-tool-choice
+  --reasoning-parser deepseek_v4
+  --speculative-config '{"method":"dspark","num_speculative_tokens":7,"draft_sample_method":"probabilistic"}'
+  --host "$HOST"
+  --port "$PORT"
+)
+
+CMD=("$VLLM_BIN" serve "${SERVE_ARGS[@]}")
+
+printf 'Launching (%s):\n\n' "$STRATEGY"
+printf '%q ' "${CMD[@]}"
+printf '\n\n'
+
+if [ "$DRY_RUN" -eq 1 ]; then
+  exit 0
+fi
+
+if [ ! -x "$VLLM_BIN" ]; then
+  echo "vllm not installed at $VLLM_BIN -- run $SCRIPT_DIR/install.sh" >&2
+  exit 1
+fi
+
+# --- failure reporting --------------------------------------------------------
+
+log_tail() {
+  [ -s "$SERVE_LOG" ] || return 0
+  printf '\nLast %s lines of %s:\n' "${LOG_TAIL_LINES:-30}" "$SERVE_LOG" >&2
+  tail -n "${LOG_TAIL_LINES:-30}" "$SERVE_LOG" >&2
+}
+
+# --- signals ------------------------------------------------------------------
+
+SERVE_PID=""
+
+stop_server() {
+  [ -n "$SERVE_PID" ] || return 0
+  local pid="$SERVE_PID" deadline
+  SERVE_PID=""
+
+  # Signal the whole process group, not just the process we launched: vLLM forks
+  # EngineCore workers that hold VRAM and keep the log pipe open, and they
+  # outlive a TERM aimed at the parent alone. `set -m` at launch is what put
+  # them in a group of their own; fall back to the bare pid if that failed.
+  kill -TERM -"$pid" 2>/dev/null || kill -TERM "$pid" 2>/dev/null || true
+
+  # Give the engine time to release GPU memory before escalating; a half torn
+  # down engine leaves the GPUs unusable for the next run.
+  deadline=$((SECONDS + SHUTDOWN_TIMEOUT))
+  while kill -0 "$pid" 2>/dev/null && [ "$SECONDS" -lt "$deadline" ]; do
+    sleep 1
+  done
+  kill -KILL -"$pid" 2>/dev/null || true
+  wait "$pid" 2>/dev/null || true
+
+  # Anything that escaped that group -- a re-parented worker, a stale run --
+  # is what cleanup_vllm.sh is for.
+  "$SCRIPT_DIR/cleanup_vllm.sh" >/dev/null 2>&1 || true
+}
+
+on_signal() {
+  printf '\nSignal received -- stopping the server (up to %ss).\n' "$SHUTDOWN_TIMEOUT"
+  stop_server
+  exit 130
+}
+
+trap on_signal INT TERM
+trap stop_server EXIT
+
+# --- launch -------------------------------------------------------------------
+
+: >"$SERVE_LOG" || { echo "cannot write $SERVE_LOG" >&2; exit 1; }
+echo "Server log: $SERVE_LOG"
+
+# Process substitution rather than a pipeline, so $! is vLLM itself and not tee.
+# `set -m` gives the job its own process group, which is what makes stop_server
+# able to reach the workers vLLM forks; the group outlives the option itself.
+set -m
+"${CMD[@]}" > >(tee "$SERVE_LOG") 2>&1 &
+SERVE_PID=$!
+set +m
+
+# --- readiness ----------------------------------------------------------------
+
+# HOST is a bind address; 0.0.0.0 is not something you can connect to.
+health_host="$HOST"
+case "$health_host" in
+0.0.0.0 | :: | '') health_host=localhost ;;
+esac
+HEALTH_URL="http://$health_host:$PORT/health"
+
+if ! command -v curl >/dev/null 2>&1; then
+  echo "curl not found -- skipping the readiness check, watch $SERVE_LOG instead"
+else
+  # Loading ~893 GB of shards and compiling takes many minutes; the first health
+  # check will fail long before the server is actually up.
+  printf 'Waiting up to %ss for %s (weights load + compile is ~10-20 min)\n' \
+    "$HEALTH_TIMEOUT" "$HEALTH_URL"
+  wait_start=$SECONDS
+  deadline=$((wait_start + HEALTH_TIMEOUT))
+
+  until curl -sf "$HEALTH_URL" >/dev/null 2>&1; do
+    if ! kill -0 "$SERVE_PID" 2>/dev/null; then
+      status=0
+      wait "$SERVE_PID" 2>/dev/null || status=$?
+      SERVE_PID=""
+      echo "Server exited (status $status) before becoming healthy." >&2
+      log_tail
+      exit "$((status == 0 ? 1 : status))"
+    fi
+    if [ "$SECONDS" -ge "$deadline" ]; then
+      echo "Timed out after ${HEALTH_TIMEOUT}s waiting for $HEALTH_URL." >&2
+      echo "Still loading? Raise the budget: serve_model.sh HEALTH_TIMEOUT=3600" >&2
+      log_tail
+      exit 1
+    fi
+    sleep 5
+  done
+
+  printf '\nReady after %ss: %s on http://%s:%s\n' \
+    "$((SECONDS - wait_start))" "$MODEL_ID" "$health_host" "$PORT"
+  printf 'Verify it from another shell: ../benchmark.sh --smoke-only\n'
+  printf 'Ctrl-C here stops the server.\n\n'
+fi
+
+# --- run ----------------------------------------------------------------------
+
+status=0
+wait "$SERVE_PID" || status=$?
+SERVE_PID=""
+
+if [ "$status" -ne 0 ]; then
+  echo "Server exited with status $status." >&2
+  log_tail
+fi
+exit "$status"

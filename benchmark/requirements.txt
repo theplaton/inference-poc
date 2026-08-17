@@ -1,0 +1,14 @@
+# Client-side dependencies. benchmark/ talks to an OpenAI-compatible endpoint
+# over HTTP, so it needs nothing from the serving stack to run the smoke test:
+#
+#   uv pip install -r benchmark/requirements.txt
+#
+# model_serving/install.sh already installs this into the repo-level venv/, which
+# the scripts pick up automatically. Install this file separately when you are
+# benchmarking from a machine that is not the serving node.
+openai>=1.40.0
+
+# The throughput half of benchmark.sh shells out to `vllm bench serve`, which is
+# not declared here on purpose: pinning vllm twice would let the client and the
+# server drift. It comes from model_serving/requirements.txt. Without it,
+# `benchmark.sh --smoke-only` still works.

@@ -2,13 +2,29 @@
 # Check that this box can actually hold DeepSeek-V4-Pro before you wait out a
 # ~900 GB download or a multi-minute engine start that ends in OOM.
 #
-# Run it directly, or let serve.sh source it (RECIPE_SOURCED=1 suppresses the
-# summary and returns instead of exiting).
+#   ./preflight.sh                  # native runtime (the default)
+#   ./preflight.sh RUNTIME=docker   # check for docker instead of a local vllm
+#   ./preflight.sh GPU_COUNT=4      # size the checks for a different node
+#
+# serve_model.sh does not call this -- run it yourself before a first serve, or
+# after changing hardware. Exit status is 0 when nothing failed, 1 otherwise.
+# Another script can `PREFLIGHT_SOURCED=1 source preflight.sh` to get FAILURES
+# and WARNINGS without the summary or the exit.
 set -uo pipefail
 
-RECIPE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=recipe.env
-source "$RECIPE_DIR/recipe.env"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=config.sh
+source "$SCRIPT_DIR/config.sh"
+
+if [ "${PREFLIGHT_SOURCED:-0}" = "1" ]; then
+  load_config
+else
+  load_config "$@"
+  if [ "${#CONFIG_ARGV[@]}" -gt 0 ]; then
+    echo "unknown argument: ${CONFIG_ARGV[0]} (settings are passed as KEY=value)" >&2
+    exit 2
+  fi
+fi
 
 FAILURES=0
 WARNINGS=0
@@ -89,28 +105,28 @@ check_disk() {
 }
 
 check_vllm() {
-  if [ "${RECIPE_RUNTIME:-native}" = "docker" ]; then
+  if [ "$RUNTIME" = "docker" ]; then
     if command -v docker >/dev/null 2>&1; then
-      pass "docker present (image $VLLM_DOCKER_IMAGE pinned in recipe.env)"
+      pass "docker present (image $VLLM_DOCKER_IMAGE pinned in defaults.env)"
     else
-      fail "docker not found but RECIPE_RUNTIME=docker"
+      fail "docker not found but RUNTIME=docker"
     fi
     return
   fi
 
   if [ ! -x "$VLLM_BIN" ]; then
-    fail "vllm not installed at $VLLM_BIN -- run source/install.sh"
+    fail "vllm not installed at $VLLM_BIN -- run model_serving/install.sh"
     return
   fi
 
   if ! command -v ninja >/dev/null 2>&1; then
-    fail "ninja not found -- run source/install.sh (FlashInfer needs it for JIT warmup)"
+    fail "ninja not found -- run model_serving/install.sh (FlashInfer needs it for JIT warmup)"
     return
   fi
 
   local version
-  # This file is sourced by serve.sh under `set -e`. Keep a transient failure
-  # here inside the explicit warning path instead of aborting the caller in the
+  # This file can be sourced under `set -e`. Keep a transient failure here
+  # inside the explicit warning path instead of aborting the caller in the
   # middle of preflight with no diagnostic.
   version="$("$VLLM_BIN" --version 2>/dev/null | tr -d '[:space:]' || true)"
   if [ -z "$version" ]; then
@@ -133,14 +149,15 @@ check_context() {
   fi
 }
 
-printf 'Preflight: DeepSeek-V4-Pro on %sx H200 (strategy=%s)\n' "$GPU_COUNT" "$STRATEGY"
+printf 'Preflight: DeepSeek-V4-Pro on %sx H200 (strategy=%s, runtime=%s)\n' \
+  "$GPU_COUNT" "$STRATEGY" "$RUNTIME"
 check_gpus
 check_shm
 check_disk
 check_vllm
 check_context
 
-if [ "${RECIPE_SOURCED:-0}" = "1" ]; then
+if [ "${PREFLIGHT_SOURCED:-0}" = "1" ]; then
   return "$FAILURES"
 fi
 

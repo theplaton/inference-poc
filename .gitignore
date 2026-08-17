@@ -2,10 +2,13 @@ __pycache__/
 *.pyc
 .venv/
 venv/
+
+# Local settings, one per tool folder. Tokens stay out of the repo; the
+# committed pair is .env.example (template) and defaults.env (defaults).
 .env
 
 # Model weights: repo-local HF hub cache (many GB).
 .hf-cache/
 
-# Background server log from demo.sh.
+# Server log from serve_model.sh.
 serve.log
