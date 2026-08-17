@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
-# Concurrency sweep. For each level -- 1, 2, 4, ... up to MAX_CONCURR -- serve
-# the model with that batch limit, benchmark it at that client concurrency, tear
-# it down, and append the numbers to two CSVs.
+# Concurrency sweep. For each level in benchmark_sweep_config.json, serve the
+# model with that batch limit, benchmark it at that client concurrency, tear it
+# down, and append the numbers to two CSVs.
 #
-#   ./benchmark_sweep.sh                  # the full sweep, ~2h: a reload per level
+#   ./benchmark_sweep.sh                  # every level in the config file
 #   ./benchmark_sweep.sh --plan           # the plan and the per-level commands
-#   ./benchmark_sweep.sh MAX_CONCURR=4    # a shorter sweep: 1, 2, 4
+#   ./benchmark_sweep.sh SWEEP_CONFIG=quick.json
 #   ./benchmark_sweep.sh RESULTS_DIR=out/run7
+#
+# Which concurrencies are worth measuring is a judgement about this model on
+# these GPUs, so it lives in the config file rather than in a rule here. Editing
+# that file is how you change the sweep.
 #
 # Both halves of every level are the repo's own entrypoints, unchanged:
 # ./serve_model.sh with MAX_NUM_SEQS set to the level, then ./benchmark.sh
@@ -26,31 +30,37 @@ usage() {
   cat <<'EOF'
 Usage: benchmark_sweep.sh [--plan] [KEY=value ...]
 
-Sweeps concurrency by powers of two, reloading the model at each level.
+Measures one concurrency level per checkpoint load, in the order the config
+file lists them.
 
   --plan        print the plan and the exact per-level commands, then exit
   -h, --help    this message
 
-Settings follow the same four layers as the tools it drives -- an argument
-outranks the environment, which outranks model_serving/.env, which outranks
-model_serving/defaults.env. The sweep's own settings:
+The levels come from benchmark_sweep_config.json:
 
-  MAX_CONCURR=16          highest level; the sweep doubles 1, 2, 4 ... up to it
+  {"concurrency_levels": [1, 8, 64, 128, 164]}
+
+A bare [1, 8, 64] array is accepted too. Settings follow the same four layers as
+the tools it drives -- an argument outranks the environment, which outranks
+model_serving/.env, which outranks model_serving/defaults.env. The sweep's own:
+
+  SWEEP_CONFIG=...        the level list; defaults to benchmark_sweep_config.json
   PROMPTS_PER_LEVEL=8     requests per level = this x the level
   RANDOM_INPUT_LEN=2048   ISL
   RANDOM_OUTPUT_LEN=512   OSL
   RESULTS_DIR=...         defaults to results/sweep-<timestamp>
+  ROLLUP_CSV=...          every sweep's rows; defaults to the parent of RESULTS_DIR
   SETTLE_SECONDS=15       pause after teardown for the GPUs to come back
 
 Everything the server understands is also settable, so a sweep can be retuned
 without touching a file:
 
   ./benchmark_sweep.sh MAX_MODEL_LEN=131072 STRATEGY=dep
-  ./benchmark_sweep.sh MAX_CONCURR=8 PROMPTS_PER_LEVEL=16 RANDOM_OUTPUT_LEN=1024
+  ./benchmark_sweep.sh PROMPTS_PER_LEVEL=16 RANDOM_OUTPUT_LEN=1024
 
 Requests scale with the level so every level runs the same number of batch
-rounds (PROMPTS_PER_LEVEL of them) -- level 1 sends 8 requests, level 16 sends
-128. Comparing levels that ran two rounds against levels that ran fifty would
+rounds (PROMPTS_PER_LEVEL of them) -- level 1 sends 8 requests, level 164 sends
+1312. Comparing levels that ran two rounds against levels that ran fifty would
 compare warm-up against steady state.
 EOF
 }
@@ -71,7 +81,7 @@ require_config MODEL_ID
 
 # The sweep's own defaults, below every layer above -- same rule as the derived
 # defaults at the end of config.sh.
-: "${MAX_CONCURR:=16}"
+: "${SWEEP_CONFIG:=$REPO_ROOT/benchmark_sweep_config.json}"
 : "${PROMPTS_PER_LEVEL:=8}"
 : "${RANDOM_INPUT_LEN:=2048}"
 : "${RANDOM_OUTPUT_LEN:=512}"
@@ -88,21 +98,6 @@ require_config MODEL_ID
 # release its GPUs, and this much again before it is killed outright.
 : "${STOP_TIMEOUT:=$((SHUTDOWN_TIMEOUT + 30))}"
 
-case "$MAX_CONCURR" in
-'' | *[!0-9]*) echo "MAX_CONCURR must be a positive integer, got '$MAX_CONCURR'" >&2; exit 2 ;;
-esac
-[ "$MAX_CONCURR" -ge 1 ] || { echo "MAX_CONCURR must be at least 1" >&2; exit 2; }
-
-# Double until the cap, then include the cap itself -- so a MAX_CONCURR that is
-# not a power of two (12) still gets measured: 1, 2, 4, 8, 12.
-LEVELS=()
-level=1
-while [ "$level" -lt "$MAX_CONCURR" ]; do
-  LEVELS+=("$level")
-  level=$((level * 2))
-done
-LEVELS+=("$MAX_CONCURR")
-
 # HOST is a bind address; 0.0.0.0 is not something you can connect to.
 health_host="$HOST"
 case "$health_host" in
@@ -112,6 +107,11 @@ HEALTH_URL="http://$health_host:$PORT/health"
 
 SUMMARY_CSV="$RESULTS_DIR/benchmark_sweep.csv"
 DETAILED_CSV="$RESULTS_DIR/benchmark_sweep_detailed.csv"
+# One row per level per sweep, next to the run folders rather than inside one:
+# the point of it is comparing runs that differ in strategy, context or
+# checkpoint, which no single run's folder can hold.
+RUN_ID="$(basename "$RESULTS_DIR")"
+: "${ROLLUP_CSV:=$(dirname "$RESULTS_DIR")/benchmark_sweep_all.csv}"
 
 # benchmark/ falls back to a plain python3 for the same reason: the venv is the
 # serving install's, and it may not be the interpreter this box has.
@@ -120,11 +120,46 @@ if [ ! -x "$PYTHON_BIN" ]; then
   [ -n "$PYTHON_BIN" ] || { echo "no python3 found -- needed to write the CSVs" >&2; exit 1; }
 fi
 
+# --- levels --------------------------------------------------------------------
+
+# The levels are a list, not a rule: which concurrencies are worth an hour of
+# this node is a judgement about the model and the GPUs, so it is written down
+# in one file rather than derived from a cap. Validation lives in python because
+# that is what reads the JSON anyway.
+LEVELS_LINE="$("$PYTHON_BIN" - "$SWEEP_CONFIG" <<'PY'
+import json
+import sys
+
+path = sys.argv[1]
+try:
+    with open(path) as f:
+        doc = json.load(f)
+except OSError as e:
+    sys.exit(f"cannot read the sweep config: {e}")
+except ValueError as e:
+    sys.exit(f"{path} is not valid JSON: {e}")
+
+# A bare array is accepted too -- the file exists to hold a list of numbers, and
+# refusing the shortest spelling of one would be pedantry.
+levels = doc if isinstance(doc, list) else doc.get("concurrency_levels")
+if not isinstance(levels, list) or not levels:
+    sys.exit(f'{path}: expected a non-empty "concurrency_levels" array')
+
+for value in levels:
+    if isinstance(value, bool) or not isinstance(value, int) or value < 1:
+        sys.exit(f"{path}: levels must be positive whole numbers, got {value!r}")
+
+print(" ".join(str(v) for v in levels))
+PY
+)" || exit 1
+read -r -a LEVELS <<<"$LEVELS_LINE"
+
 # --- plan ---------------------------------------------------------------------
 
 printf '\033[1mConcurrency sweep\033[0m\n'
 printf '  model       %s\n' "$MODEL_ID"
 printf '  levels      %s\n' "${LEVELS[*]}"
+printf '  from        %s\n' "$SWEEP_CONFIG"
 printf '  requests    %s per level (%s x level)\n' \
   "$(for n in "${LEVELS[@]}"; do printf '%s ' "$((n * PROMPTS_PER_LEVEL))"; done)" "$PROMPTS_PER_LEVEL"
 printf '  ISL/OSL     %s / %s tokens\n' "$RANDOM_INPUT_LEN" "$RANDOM_OUTPUT_LEN"
@@ -142,7 +177,7 @@ if [ "$PLAN_ONLY" -eq 1 ]; then
   exit 0
 fi
 
-mkdir -p "$RESULTS_DIR"
+mkdir -p "$RESULTS_DIR" "$(dirname "$ROLLUP_CSV")"
 
 # --- the server, one level at a time -------------------------------------------
 
@@ -217,17 +252,20 @@ start_server() {
 
 # --- CSVs ----------------------------------------------------------------------
 
-# Two files on purpose: the summary is the answer to "how does this node scale",
-# the detailed one is everything the run measured, for when the summary raises a
-# question. Both are appended per level, so an interrupted sweep still leaves
-# the levels it finished.
+# Three files, each answering a different question: the summary is "how does this
+# node scale", the detailed one is everything the run measured for when the
+# summary raises a question, and the rollup is "how does this run compare to the
+# last one". All three are appended per level, so an interrupted sweep still
+# leaves the levels it finished.
 append_csv() {
   local json="$1" n="$2" prompts="$3"
   "$PYTHON_BIN" - "$json" "$n" "$prompts" "$RANDOM_INPUT_LEN" "$RANDOM_OUTPUT_LEN" \
-    "$SUMMARY_CSV" "$DETAILED_CSV" <<'PY'
+    "$SUMMARY_CSV" "$DETAILED_CSV" "$ROLLUP_CSV" "$RUN_ID" \
+    "${STRATEGY:-}" "${MAX_MODEL_LEN:-}" <<'PY'
 import csv, json, os, sys
 
-result_path, level, prompts, isl, osl, summary_csv, detailed_csv = sys.argv[1:8]
+(result_path, level, prompts, isl, osl, summary_csv, detailed_csv,
+ rollup_csv, run_id, strategy, max_model_len) = sys.argv[1:12]
 
 with open(result_path) as f:
     r = json.load(f)
@@ -272,7 +310,23 @@ detailed = {
     "date": r.get("date", ""),
 }
 
-for path, row in ((summary_csv, summary), (detailed_csv, detailed)):
+# Carries the settings that make two runs different -- without them a row from
+# a dep/131072 sweep is indistinguishable from a tep/200000 one.
+rollup = {
+    "run": run_id,
+    "concurrency": level,
+    "isl": isl,
+    "osl": osl,
+    "strategy": strategy,
+    "max_model_len": max_model_len,
+    "mean_request_latency_s": sec("mean_e2el_ms"),
+    "total_throughput_tok_s": num("total_token_throughput"),
+    "output_throughput_tok_s": num("output_throughput"),
+    "p99_request_latency_s": sec("p99_e2el_ms"),
+    "model_id": r.get("model_id", ""),
+}
+
+for path, row in ((summary_csv, summary), (detailed_csv, detailed), (rollup_csv, rollup)):
     is_new = not (os.path.exists(path) and os.path.getsize(path) > 0)
     with open(path, "a", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=list(row))
@@ -333,6 +387,10 @@ if [ -f "$SUMMARY_CSV" ]; then
     cat "$SUMMARY_CSV"
   fi
   printf '\n%s\n%s  (every metric the run reported)\n' "$SUMMARY_CSV" "$DETAILED_CSV"
+  if [ -f "$ROLLUP_CSV" ]; then
+    printf '%s  (%s rows, every sweep so far)\n' \
+      "$ROLLUP_CSV" "$(($(wc -l <"$ROLLUP_CSV") - 1))"
+  fi
 else
   echo "No level produced a result -- nothing was written." >&2
 fi

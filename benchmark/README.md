@@ -99,4 +99,5 @@ it just queues. `benchmark.sh` warns when you cross the value in `defaults.env`
 (16, matching the recipe); keep the two in step if you retune the server.
 
 Sweeping both together — a server at `MAX_NUM_SEQS=N` measured at
-`CONCURRENCY=N`, for N in 1, 2, 4, 8, 16 — is what `../benchmark_sweep.sh` does.
+`CONCURRENCY=N`, for each N in `../benchmark_sweep_config.json` — is what
+`../benchmark_sweep.sh` does.

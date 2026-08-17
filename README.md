@@ -10,7 +10,7 @@ work, and a third that drives both:
 | --- | --- | --- |
 | `./serve_model.sh` | [model_serving/serve_model.sh](model_serving/serve_model.sh) | Launch vLLM, wait for `/health`, shut down cleanly, report failures |
 | `./benchmark.sh` | [benchmark/benchmark.sh](benchmark/benchmark.sh) | Smoke test the reasoning modes, then measure throughput and latency |
-| `./benchmark_sweep.sh` | both of the above | Sweep concurrency 1, 2, 4 ... 16, reloading the model at each level, into two CSVs |
+| `./benchmark_sweep.sh` | both of the above | Benchmark each concurrency level in `benchmark_sweep_config.json`, reloading the model per level, into two CSVs |
 
 Everything else is a separately runnable tool inside one of the two folders. The
 split is server side versus client side: [model_serving/](model_serving/) owns
@@ -45,18 +45,31 @@ the fastest way to diff the flags against the recipe page.
 
 `./benchmark_sweep.sh` answers one question — what does this node do as
 concurrency rises — by measuring each level on its own server. For every level
-in 1, 2, 4, 8, 16 it starts `./serve_model.sh` with `MAX_NUM_SEQS` set to that
-level, waits for `/health`, runs `./benchmark.sh --bench-only` at the same
-`CONCURRENCY`, and tears the server down before the next one. Reloading the
-checkpoint five times is what makes it a ~2 hour run, and the reason each number
-describes a server actually configured for that batch size rather than one
-16-wide server being under-driven.
+it starts `./serve_model.sh` with `MAX_NUM_SEQS` set to that level, waits for
+`/health`, runs `./benchmark.sh --bench-only` at the same `CONCURRENCY`, and
+tears the server down before the next one. Reloading the checkpoint per level is
+what makes it a multi-hour run, and the reason each number describes a server
+actually configured for that batch size rather than one wide server being
+under-driven.
 
-Requests scale with the level (`PROMPTS_PER_LEVEL=8`, so 8 at level 1 and 128 at
-level 16) so every level runs the same number of batch rounds; ISL/OSL is
+The levels live in [benchmark_sweep_config.json](benchmark_sweep_config.json),
+because which concurrencies are worth an hour of this node is a judgement about
+the model and the GPUs, not something to derive from a rule:
+
+```json
+{"concurrency_levels": [1, 8, 64, 128, 164]}
+```
+
+164 is the KV ceiling for this checkpoint at 2048/512 — 18.95 GiB of KV cache
+per GPU at 39.1 KiB per token is ~508k tokens, and V4's sparse-attention index
+cache eats into that. Above it requests queue rather than run, which the numbers
+will show as latency climbing with throughput flat.
+
+Requests scale with the level (`PROMPTS_PER_LEVEL=8`, so 8 at level 1 and 1312
+at level 164) so every level runs the same number of batch rounds; ISL/OSL is
 2048/512. A level that fails is reported at the end and does not stop the sweep.
 
-Each run writes to `results/sweep-<timestamp>/`:
+Each run writes to `results/sweep-<timestamp>/`, one row per level per file:
 
 | File | Holds |
 | --- | --- |
@@ -65,8 +78,13 @@ Each run writes to `results/sweep-<timestamp>/`:
 | `result-c<N>.json` | the raw `vllm bench serve` result for one level |
 | `serve-c<N>.log`, `bench-c<N>.log` | that level's server and client output |
 
-Both CSVs are appended per level, so an interrupted sweep still leaves every
-level that finished. Read one at the terminal with `column -s, -t < FILE`.
+One file sits outside the run folders: `results/benchmark_sweep_all.csv`, which
+every sweep appends to. It carries the run id and the settings that make two
+sweeps different — strategy, max model length, ISL/OSL, checkpoint — so
+comparing today's run against last week's is one file, not two folders.
+
+All three CSVs are appended per level, so an interrupted sweep still leaves
+every level that finished. Read one at the terminal with `column -s, -t < FILE`.
 
 ## Configuration
 
@@ -97,6 +115,7 @@ comments. `defaults.env` in each folder is the reference list of what exists.
 serve_model.sh          root entrypoint -> model_serving/serve_model.sh
 benchmark.sh            root entrypoint -> benchmark/benchmark.sh
 benchmark_sweep.sh      the concurrency sweep, driving both of the above
+benchmark_sweep_config.json   which concurrency levels the sweep measures
 model_serving/          the server, the node and the checkpoint
 benchmark/              client-side evaluation over HTTP
 dev/                    host bootstrap: system packages, the dev pod spec
