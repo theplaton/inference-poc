@@ -13,3 +13,6 @@ venv/
 # serve_model.sh writes to stdout; this is where you land if you redirect it:
 #   ./serve_model.sh > serve.log 2>&1
 serve.log
+
+# benchmark_sweep.sh output: one folder per sweep, CSVs plus raw JSON and logs.
+results/

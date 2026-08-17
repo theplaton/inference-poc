@@ -9,6 +9,7 @@
 #   ./benchmark.sh --all                 # include Think Max in the smoke test
 #   ./benchmark.sh NUM_PROMPTS=128 CONCURRENCY=32
 #   ./benchmark.sh BASE_URL=http://gpu-01:8000/v1
+#   ./benchmark.sh RESULT_FILE=run.json   # also save the numbers as JSON
 #
 # The recipe does not publish H200 numbers, so the benchmark measures your node
 # rather than checking it against a target.
@@ -35,6 +36,10 @@ Any setting can be overridden as an argument, which outranks the environment,
   ./benchmark.sh NUM_PROMPTS=128 CONCURRENCY=32
   ./benchmark.sh BASE_URL=http://gpu-01:8000/v1
   ./benchmark.sh RANDOM_INPUT_LEN=8192 RANDOM_OUTPUT_LEN=1024
+  ./benchmark.sh RESULT_FILE=run.json
+
+RESULT_FILE writes the run's numbers to that path as JSON in addition to the
+table on stdout, which is what ../benchmark_sweep.sh reads to build its CSVs.
 EOF
 }
 
@@ -98,7 +103,17 @@ if [ "$CONCURRENCY" -gt "$MAX_NUM_SEQS" ]; then
   echo "note: concurrency $CONCURRENCY exceeds --max-num-seqs $MAX_NUM_SEQS, requests will queue"
 fi
 
+# Stdout is for reading; RESULT_FILE is for a program to read afterwards. Unset
+# (the default) means the run leaves nothing behind but its output.
+SAVE_ARGS=()
+if [ -n "${RESULT_FILE:-}" ]; then
+  mkdir -p "$(dirname "$RESULT_FILE")"
+  SAVE_ARGS+=(--save-result --result-filename "$RESULT_FILE")
+  echo "note: saving the result JSON to $RESULT_FILE"
+fi
+
 exec "$VLLM_BIN" bench serve \
+  ${SAVE_ARGS[@]+"${SAVE_ARGS[@]}"} \
   --backend "$BACKEND" \
   --endpoint "$BENCH_ENDPOINT" \
   --host "$HOST" \

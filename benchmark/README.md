@@ -46,8 +46,14 @@ list; anything in it can be set from any layer.
 ./benchmark.sh NUM_PROMPTS=128 CONCURRENCY=32
 ./benchmark.sh RANDOM_INPUT_LEN=8192 RANDOM_OUTPUT_LEN=1024
 ./benchmark.sh BASE_URL=http://gpu-01:8000/v1
+./benchmark.sh RESULT_FILE=runs/c32.json
 python smoke_test.py MODEL_ID=Qwen/Qwen3-8B
 ```
+
+`RESULT_FILE` saves the throughput run's numbers as JSON alongside the table on
+stdout, which is how a caller reads them back: `../benchmark_sweep.sh` sets it
+per sweep level and builds its CSVs from the files. Unset, the default, the run
+leaves nothing behind.
 
 `MODEL_ID` has no default on purpose — the server decides which checkpoint is
 loaded and rejects a request naming any other, so guessing is worse than
@@ -91,3 +97,6 @@ offload tier.
 `CONCURRENCY` above the server's `--max-num-seqs` does not increase parallelism,
 it just queues. `benchmark.sh` warns when you cross the value in `defaults.env`
 (16, matching the recipe); keep the two in step if you retune the server.
+
+Sweeping both together — a server at `MAX_NUM_SEQS=N` measured at
+`CONCURRENCY=N`, for N in 1, 2, 4, 8, 16 — is what `../benchmark_sweep.sh` does.
