@@ -9,8 +9,9 @@ ARG NCCL_TESTS_TAG=v2.19.7
 # Ampere + Hopper by default; add e.g. "100" for Blackwell (needs CUDA >= 12.8).
 ARG CUDA_ARCHS="80 90"
 
+# The devel image already provides nvcc, g++, make, cuBLAS and NCCL headers.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        git ca-certificates make g++ libnccl-dev \
+        git ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /src
@@ -32,10 +33,8 @@ RUN git clone --depth 1 --branch ${NCCL_TESTS_TAG} \
     cp nccl-tests/build/all_reduce_perf /out/
 
 # ---------- runtime ----------
+# Provides the cuBLAS and NCCL runtimes; no extra packages needed.
 FROM nvidia/cuda:${CUDA_VERSION}-runtime-${UBUNTU}
-
-RUN apt-get update && apt-get install -y --no-install-recommends libnccl2 \
-    && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /out/gemm_bench /usr/local/bin/gemm_bench
 COPY --from=builder /out/all_reduce_perf /usr/local/bin/all_reduce_perf

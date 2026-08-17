@@ -10,6 +10,34 @@ It answers only:
 2. Does each GPU deliver roughly the expected compute?
 3. Does multi-GPU communication run at roughly the expected bandwidth?
 
+## Requirements
+
+- NVIDIA datacenter GPU(s) + host driver (`nvidia-smi` works on the host)
+- Docker
+- **NVIDIA Container Toolkit** — without it `--gpus all` fails with
+  `failed to discover GPU vendor from CDI: no known GPU vendor found`. The image
+  ships cuBLAS/NCCL and the two benchmark binaries, but the driver-side pieces they
+  need (`libcuda.so.1`, `libnvidia-ml.so.1`, `nvidia-smi`, `/dev/nvidia*`) are
+  version-locked to the host kernel driver and must be injected at runtime — that
+  injection is what the toolkit does.
+
+  ```bash
+  curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey \
+    | gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
+  curl -fsSL https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list \
+    | sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' \
+    > /etc/apt/sources.list.d/nvidia-container-toolkit.list
+  apt-get update && apt-get install -y nvidia-container-toolkit
+  nvidia-ctk runtime configure --runtime=docker && systemctl restart docker
+  # no systemd (e.g. dockerd started by hand)? use CDI instead of the runtime hook:
+  #   nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml
+  ```
+
+  Verify: `docker run --rm --gpus all nvidia/cuda:12.8.1-base-ubuntu24.04 nvidia-smi -L`
+  (if that errors on vendor detection, see the `--device` note under [Run](#run))
+
+`make build` needs none of the above — nvcc cross-compiles. Only `make run` does.
+
 ## Tests
 
 ```text
@@ -60,7 +88,17 @@ docker run --rm \
 ```
 
 `make run` does the same with dev defaults (thresholds unset). No `--privileged`
-needed. Exit code: `0` = PASS, `1` = FAIL.
+needed. `--ipc=host` is required — NCCL uses host shared memory for intra-node
+transport. Exit code: `0` = PASS, `1` = FAIL.
+
+If `--gpus all` fails with `AMD CDI spec not found` or `no known GPU vendor
+found`, the `--gpus` shorthand is misdetecting the vendor (seen on Docker 29 with
+CDI). Address the GPUs explicitly instead:
+
+```bash
+docker run --rm --device nvidia.com/gpu=all --ipc=host ... gpu-validator
+make run GPU_FLAG="--device nvidia.com/gpu=all"
+```
 
 ### Environment variables
 
@@ -87,9 +125,7 @@ results/
 
 ## Example result
 
-Real run on an 8× H200 node (`results/example-report.txt`). Docker was not
-installed on that host, so `validate.sh` was executed directly against natively
-compiled copies of the same two binaries — identical code path, thresholds
+Real container run on an 8× H200 node (`results/example-report.txt`), thresholds
 `MIN_GEMM_TFLOPS=700`, `MIN_NCCL_BUSBW_GBPS=300`:
 
 ```text
@@ -102,22 +138,22 @@ System
   GPU model:           NVIDIA H200                PASS
 
 Per-GPU Compute
-  GPU0:                799.2 TFLOPS (99% median)  PASS
-  GPU1:                807.0 TFLOPS (100% median) PASS
-  GPU2:                809.6 TFLOPS (100% median) PASS
-  GPU3:                807.8 TFLOPS (100% median) PASS
-  GPU4:                802.0 TFLOPS (99% median)  PASS
-  GPU5:                812.6 TFLOPS (100% median) PASS
-  GPU6:                810.5 TFLOPS (100% median) PASS
-  GPU7:                817.2 TFLOPS (101% median) PASS
+  GPU0:                806.0 TFLOPS (99% median)  PASS
+  GPU1:                811.7 TFLOPS (100% median) PASS
+  GPU2:                802.1 TFLOPS (99% median)  PASS
+  GPU3:                817.0 TFLOPS (101% median) PASS
+  GPU4:                801.6 TFLOPS (99% median)  PASS
+  GPU5:                813.4 TFLOPS (100% median) PASS
+  GPU6:                817.5 TFLOPS (101% median) PASS
+  GPU7:                821.1 TFLOPS (101% median) PASS
 
-  Median:              808.7 TFLOPS
+  Median:              812.5 TFLOPS
   Relative floor:      90%
   Absolute floor:      700 TFLOPS
 
 Multi-GPU
   NCCL AllReduce
-  busbw:               468.16 GB/s                PASS
+  busbw:               468.69 GB/s                PASS
 
 ----------------------------------------------------
  OVERALL: PASS

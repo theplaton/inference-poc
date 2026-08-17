@@ -157,7 +157,7 @@ parallel layout against another:
 {"sweeps": [
   {"profile": "deepseek_v4_tp8dp1_speculative", "concurrency_levels": [8, 64]},
   {"profile": "deepseek_v4_tp8dp1",             "concurrency_levels": [8, 64]},
-  {"profile": "deepseek_v4_tp4dp2_speculative", "tp": 4, "dp": 2, "concurrency_levels": [64]}
+  {"profile": "granite", "tp": 1, "dp": 1, "concurrency_levels": [64]}
 ]}
 ```
 
@@ -224,14 +224,21 @@ A DeepSeek profile is named `deepseek_v4_tp<N>dp<M>` for its parallel layout, pl
 configuration, so a `--plan` line, a filename and a CSV row all say what produced
 them without a lookup.
 
-The six DeepSeek profiles are a 2x3: three parallel layouts, each with and
-without speculation.
+Two run, four do not. A profile prefixed `NOT_WORKING_` has been tried on this
+node and failed; it is kept because the failure is worth knowing about and the
+numbers it printed before dying are worth having. The stack that killed each one
+is at the top of its file.
 
 | Layout | Speculative | Not |
 | --- | --- | --- |
 | TP8/DP1 — the recipe as published | `deepseek_v4_tp8dp1_speculative` (default) | `deepseek_v4_tp8dp1` |
-| TP4/DP2 — 2 replicas of 4-way TP | `deepseek_v4_tp4dp2_speculative` | `deepseek_v4_tp4dp2` |
-| TP2/DP4 — 4 replicas of 2-way TP | `deepseek_v4_tp2dp4_speculative` | `deepseek_v4_tp2dp4` |
+| TP4/DP2 | `NOT_WORKING_deepseek_v4_tp4dp2_speculative` | `NOT_WORKING_deepseek_v4_tp4dp2` |
+| TP2/DP4 | `NOT_WORKING_deepseek_v4_tp2dp4_speculative` | `NOT_WORKING_deepseek_v4_tp2dp4` |
+
+Both hybrids load their weights and size their KV cache — 1.8x and 2.2x TP8/DP1's
+pool, which is why they were worth trying — then die during CUDA graph capture in
+DeepSeek-V4's fused FlashMLA and DeepGEMM kernels. Those are built for the
+recipe's TP8/DP1, and nothing below TP8 has run here.
 
 All six serve DeepSeek-V4-Pro-0813 and take hours to sweep. `granite` (Granite
 3.1 1B A400M, one GPU) is the seventh, and takes minutes.

@@ -1,4 +1,7 @@
 IMAGE ?= gpu-validator
+# How GPUs are exposed. Use --device nvidia.com/gpu=all on hosts where the
+# --gpus shorthand misdetects the vendor (seen on Docker 29 + CDI).
+GPU_FLAG ?= --gpus all
 
 .PHONY: build run clean
 
@@ -7,7 +10,7 @@ build:
 
 # Development defaults: inventory checks off, relative-only compute check.
 run:
-	docker run --rm --gpus all --ipc=host \
+	docker run --rm $(GPU_FLAG) --ipc=host \
 		-e EXPECTED_GPU_COUNT="$(EXPECTED_GPU_COUNT)" \
 		-e EXPECTED_GPU_NAME="$(EXPECTED_GPU_NAME)" \
 		-e MIN_GEMM_TFLOPS="$(MIN_GEMM_TFLOPS)" \
