@@ -1,8 +1,6 @@
 {
   "sweeps": [
-    {"profile": "deepseek_v4_tp8dp1", "tp": 8, "dp": 1, "isl": 2048, "osl": 512,  "concurrency_levels": [8], "prompts_per_level": 8},
-    {"profile": "deepseek_v4_tp8dp1", "tp": 8, "dp": 1, "isl": 2048, "osl": 512,  "concurrency_levels": [64], "prompts_per_level": 8},
-    {"profile": "deepseek_v4_tp8dp1", "tp": 8, "dp": 1, "isl": 2048, "osl": 512,  "concurrency_levels": [256], "prompts_per_level": 2},
-    {"profile": "deepseek_v4_tp8dp1", "tp": 8, "dp": 1, "isl": 4096, "osl": 1024, "concurrency_levels": [32], "prompts_per_level": 2}
+    {"profile": "deepseek_v4_tp8dp1", "tp": 8, "dp": 1, "isl": 2048, "osl": 512,  "concurrency_levels": [1], "prompts_per_level": 8},
+    {"profile": "deepseek_v4_tp8dp1", "tp": 8, "dp": 1, "isl": 2048, "osl": 512,  "concurrency_levels": [128], "prompts_per_level": 2}
   ]
 }
