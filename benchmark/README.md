@@ -162,3 +162,24 @@ step with `model_serving/defaults.env` if you retune the server.
 Sweeping both together — a server at `DEFAULT_NUM_SEQS=N` measured at
 `CONCURRENCY=N`, for each N and each request shape in
 `../benchmark_sweep_config.json` — is what `../benchmark_sweep.sh` does.
+
+The other ceiling is the KV cache, and it is the one that binds first on V4-Pro:
+the pool is ~380k tokens, so how far a level can go depends on what each request
+holds while it is resident.
+
+| Shape | tok/req | KV ceiling | What it exercises |
+| --- | --- | --- | --- |
+| 2048/512 | 2,560 | ~148 | the comparable baseline; prefill-heavy |
+| 2048/8192 | 10,240 | ~37 | a full reasoning trace, decode-dominated |
+| 32768/1024 | 33,792 | ~11 | long context and the sparse-attention path |
+
+Past the ceiling requests queue rather than run, which shows up as latency
+climbing while throughput stays flat. Every sweep row records `kv_fit_pct` — the
+share of the pool the level's requests want at once — so a queue-limited
+measurement is visible rather than inferred. Over 100 % means the level could not
+have run at full width whatever the other numbers say.
+
+The pool itself shrinks as the level rises, because a wider batch costs more
+activation and CUDA-graph memory out of the same budget: 380,600 tokens at
+`DEFAULT_NUM_SEQS=1` down to 360,155 at 256 on this node. The ceiling drops as you
+push toward it.

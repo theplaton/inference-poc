@@ -28,13 +28,17 @@ Any setting can be overridden as an argument, which outranks the environment,
 .env, the profile and defaults.env:
 
   ./serve_model.sh PROFILE=granite         the small model, one GPU, ~1 min
-  ./serve_model.sh STRATEGY=dep            data + expert parallel
+  ./serve_model.sh TP_SIZE=4 DP_SIZE=2     4-way tensor parallel, 2 DP ranks
   ./serve_model.sh PORT=8001 MODEL_ID=...  different endpoint and checkpoint
   ./serve_model.sh MAX_MODEL_LEN=131072    shorter context, more KV headroom
   ./serve_model.sh HEALTH_TIMEOUT=3600     allow a slower cold start
 
 PROFILE picks the model: which checkpoint, how it is sharded, how much VRAM it
 needs and which engine flags it takes. See profiles/ for what exists.
+
+Parallelism is TP_SIZE x DP_SIZE, which must equal GPU_COUNT, plus
+EXPERT_PARALLEL=1 to shard a MoE's experts across the whole world. The profile
+sets all three; an argument overrides them for one run.
 
 Run ./preflight.sh first; it fails in seconds on a node that cannot hold the
 checkpoint, where the engine takes minutes to reach the same conclusion.
@@ -55,16 +59,40 @@ done
 
 require_config MODEL_ID
 
-# TP splits dense layers across the GPUs; DP replicates them per rank. Both add
-# --enable-expert-parallel so a MoE's experts are sharded, not copied. solo is
-# one GPU and no sharding at all, which is what a model small enough to fit on
-# one card wants.
-case "$STRATEGY" in
-tep) PARALLEL_ARGS=(--enable-expert-parallel --tensor-parallel-size "$GPU_COUNT") ;;
-dep) PARALLEL_ARGS=(--enable-expert-parallel --data-parallel-size "$GPU_COUNT") ;;
-solo) PARALLEL_ARGS=(--tensor-parallel-size "$GPU_COUNT") ;;
-*) echo "STRATEGY must be tep, dep or solo, got '$STRATEGY'" >&2; exit 2 ;;
+# TP splits the dense layers across a rank's GPUs; DP gives each rank its own
+# copy of them and its own stream of requests. The two multiply -- vLLM's world
+# is TP x DP -- so they are written as the two numbers they are rather than as
+# named combinations, which could only ever name a few of them.
+#
+# EXPERT_PARALLEL shards a MoE's experts across that whole world instead of
+# copying them per rank. For a checkpoint whose experts are most of its weight
+# it is the difference between fitting and not, and it is independent of how TP
+# and DP divide the rest.
+require_config TP_SIZE DP_SIZE GPU_COUNT
+
+for _n in TP_SIZE DP_SIZE GPU_COUNT; do
+  case "${!_n}" in
+  '' | *[!0-9]*) echo "$_n must be a positive whole number, got '${!_n}'" >&2; exit 2 ;;
+  0) echo "$_n must be at least 1" >&2; exit 2 ;;
+  esac
+done
+
+# The engine would discover this itself, minutes in, as a process-count mismatch.
+if [ "$((TP_SIZE * DP_SIZE))" -ne "$GPU_COUNT" ]; then
+  printf 'TP_SIZE x DP_SIZE must equal GPU_COUNT: %s x %s = %s, not %s\n' \
+    "$TP_SIZE" "$DP_SIZE" "$((TP_SIZE * DP_SIZE))" "$GPU_COUNT" >&2
+  exit 2
+fi
+
+PARALLEL_ARGS=(--tensor-parallel-size "$TP_SIZE" --data-parallel-size "$DP_SIZE")
+case "$(printf '%s' "${EXPERT_PARALLEL:-0}" | tr '[:upper:]' '[:lower:]')" in
+1 | true | yes | on) PARALLEL_ARGS+=(--enable-expert-parallel) ;;
 esac
+
+# The layout, as one word, for logs and for the CSV column that has to tell two
+# sweeps apart. Derived rather than set, so it cannot disagree with the flags.
+PARALLEL_LABEL="tp${TP_SIZE}dp${DP_SIZE}"
+export PARALLEL_LABEL
 
 # PROFILE_ARGS is whatever the -- lines of profiles/$PROFILE.env and its bases
 # came to; config.sh collected them. Nothing here knows which flags any model
@@ -91,7 +119,7 @@ if [ -n "$profile_model" ] && [ "$profile_model" != "$MODEL_ID" ]; then
     "$PROFILE" "$profile_model" "$MODEL_ID"
 fi
 
-printf 'Launching %s (%s):\n\n' "$PROFILE" "$STRATEGY"
+printf 'Launching %s (%s):\n\n' "$PROFILE" "$PARALLEL_LABEL"
 printf '%q ' "${CMD[@]}"
 printf '\n\n'
 

@@ -2,7 +2,7 @@
 
     python sweep_csv.py migrate SUMMARY DETAILED ROLLUP
     python sweep_csv.py write RESULT SUMMARY DETAILED ROLLUP \\
-        LEVEL ISL OSL PROMPTS KV_TOKENS RUN_ID STRATEGY MAX_MODEL_LEN PROFILE
+        LEVEL ISL OSL PROMPTS KV_TOKENS RUN_ID MAX_MODEL_LEN PROFILE TP DP
 
 Three files, each answering a different question: the summary is "how does this
 node scale", the detailed one is everything the run measured for when the
@@ -43,10 +43,21 @@ def build_rows(r, ctx):
     except (KeyError, TypeError, ValueError):
         pass
 
+    # The parallel layout as one word. Derived from the two numbers rather than
+    # carried alongside them, so the label and the flags cannot disagree. It
+    # keeps the meaning the `strategy` column always had -- rows written when
+    # this said `tep` were TP8/DP1 -- so old and new rows still read together.
+    strategy = f"tp{ctx['tp']}dp{ctx['dp']}" if ctx.get("tp") and ctx.get("dp") else ""
+
+    # A sweep can now span several servers, so every file needs to say which one
+    # a row came from. Without it two rows at the same concurrency and shape are
+    # indistinguishable, which is exactly the comparison these files exist for.
     summary = {
         "concurrency": ctx["level"],
         "isl": ctx["isl"],
         "osl": ctx["osl"],
+        "profile": ctx["profile"],
+        "strategy": strategy,
         "mean_request_latency_s": sec("mean_e2el_ms"),
         "total_throughput_tok_s": num("total_token_throughput"),
     }
@@ -56,6 +67,10 @@ def build_rows(r, ctx):
     # column in every row.
     detailed = {
         "concurrency": ctx["level"],
+        "profile": ctx["profile"],
+        "strategy": strategy,
+        "tp": ctx["tp"],
+        "dp": ctx["dp"],
         "num_prompts": ctx["prompts"],
         "completed": r.get("completed", ""),
         "input_len": ctx["isl"],
@@ -100,7 +115,9 @@ def build_rows(r, ctx):
         "concurrency": ctx["level"],
         "isl": ctx["isl"],
         "osl": ctx["osl"],
-        "strategy": ctx["strategy"],
+        "strategy": strategy,
+        "tp": ctx["tp"],
+        "dp": ctx["dp"],
         "max_model_len": ctx["max_model_len"],
         "mean_request_latency_s": sec("mean_e2el_ms"),
         "total_throughput_tok_s": num("total_token_throughput"),
@@ -126,11 +143,12 @@ CTX_KEYS = (
     "prompts",
     "kv_tokens",
     "run_id",
-    "strategy",
     "max_model_len",
     # Appended rather than slotted in beside run_id: these keys are positional
     # arguments, so a new one goes last or every caller has to be rewritten.
     "profile",
+    "tp",
+    "dp",
 )
 
 BLANK_CTX = dict.fromkeys(CTX_KEYS, "")

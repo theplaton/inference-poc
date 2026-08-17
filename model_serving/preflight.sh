@@ -166,8 +166,8 @@ check_context() {
   fi
 }
 
-printf 'Preflight: %s on %sx GPU (profile=%s, strategy=%s, runtime=%s)\n' \
-  "$MODEL_ID" "$GPU_COUNT" "$PROFILE" "$STRATEGY" "$RUNTIME"
+printf 'Preflight: %s on %sx GPU (profile=%s, parallel=tp%sdp%s, runtime=%s)\n' \
+  "$MODEL_ID" "$GPU_COUNT" "$PROFILE" "${TP_SIZE:-?}" "${DP_SIZE:-?}" "$RUNTIME"
 check_gpus
 check_shm
 check_disk

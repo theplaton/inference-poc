@@ -79,7 +79,7 @@ not; anything in either can be set from any layer.
 
 ```bash
 ./serve_model.sh PROFILE=granite           # the small model, one GPU
-./serve_model.sh STRATEGY=dep              # data + expert parallel
+./serve_model.sh TP_SIZE=4 DP_SIZE=2       # 4-way TP across 2 DP ranks
 ./serve_model.sh PORT=8001 MAX_MODEL_LEN=131072
 ./serve_model.sh HEALTH_TIMEOUT=3600       # allow a slower cold start
 ./preflight.sh RUNTIME=docker              # check for docker, not a local vllm
@@ -114,7 +114,8 @@ spaces it contains. `serve_model.sh` splices the block without knowing what any
 flag means, so a new model is a new file rather than a new branch, and the block
 can be diffed line by line against the recipe page it came from.
 
-`STRATEGY=solo` is the third parallelism mode, one GPU with no sharding.
+`TP_SIZE=1 DP_SIZE=1` with `EXPERT_PARALLEL=0` is one GPU and no sharding, which
+is what `granite` runs.
 
 `PROFILE_BASE` makes one profile inherit another: the base fills in every key the
 derived file leaves unset, which is how every layer here already works. Argument
@@ -145,11 +146,28 @@ requires vLLM **0.25.0** rather than the model's 0.20.0 baseline, and why
 `deepseek_v4_speculative` carries `--speculative-config {"method":"dspark",...}`.
 `deepseek_v4_baseline` is the same profile without it.
 
-**Parallelism.** Default is `tep` — `--tensor-parallel-size 8` with
-`--enable-expert-parallel`. TP must equal the GPU count or replicated dense
-layers OOM you. `STRATEGY=dep` swaps in `--data-parallel-size 8`, which the
-guide names as the H200 recommendation; it trades KV capacity (dense params are
-replicated per rank) for better throughput at high concurrency. Try `tep` first.
+**Parallelism.** `TP_SIZE x DP_SIZE` must equal `GPU_COUNT`; `EXPERT_PARALLEL=1`
+shards a MoE's experts across that whole world. The recipe's layout is TP8/DP1,
+which is what `deepseek_v4_speculative` sets.
+
+The experts are 96.6% of this checkpoint — 803 of 831 GiB, summed from the
+shards — and expert parallel shards them across all 8 GPUs whatever TP and DP
+are. So TP only divides the 28 GiB of dense weight that is left, and lowering it
+costs ~3.5 GiB per GPU while buying a whole extra KV pool, because DP ranks
+serve different requests where TP ranks replicate the same ones. V4 uses MLA,
+whose KV is a single head however wide TP is, so TP8 stores one cache eight
+times over.
+
+| Layout | dense/GPU | weights/GPU | est. node KV |
+| --- | --- | --- | --- |
+| TP8/DP1 (default) | 3.5 GiB | 103.9 GiB | ~18.9 GiB |
+| TP4/DP2 (`deepseek_v4_tp4dp2`) | 7.0 GiB | 107.5 GiB | ~30.8 GiB |
+| TP2/DP4 (`deepseek_v4_tp2dp4`) | 14.1 GiB | 114.5 GiB | ~33.4 GiB |
+| TP1/DP8 | 28.2 GiB | 128.6 GiB | does not fit |
+
+Estimates, against 124.8 GiB usable per H200. DP also pays all-to-all traffic
+for expert routing that TP8 does not, so more KV is not automatically more
+throughput — which is what the sweep's `strategy` column is there to settle.
 
 **Context is 200K, not 1M.** The recipe's H200 config sets `--max-model-len
 200000` with `--max-num-seqs 16` (`DEFAULT_NUM_SEQS`, which

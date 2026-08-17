@@ -3,63 +3,106 @@
 Serves an open-weight model with vLLM and measures what comes back. Pinned to the
 official recipe for DeepSeek-V4-Pro on an 8x H200 node.
 
-Two entrypoints at the root, each a thin wrapper around the folder that owns the
-work, and a third that drives both:
+| Entrypoint | Does |
+| --- | --- |
+| `./serve_model.sh` | Launch vLLM, wait for `/health`, shut down cleanly |
+| `./benchmark.sh` | Smoke test the reasoning modes, then measure throughput and latency |
+| `./benchmark_sweep.sh` | Drive both across a list of concurrency levels, into CSVs |
 
-| Entrypoint | Wraps | Does |
-| --- | --- | --- |
-| `./serve_model.sh` | [model_serving/serve_model.sh](model_serving/serve_model.sh) | Launch vLLM, wait for `/health`, shut down cleanly, report failures |
-| `./benchmark.sh` | [benchmark/benchmark.sh](benchmark/benchmark.sh) | Smoke test the reasoning modes, then measure throughput and latency |
-| `./benchmark_sweep.sh` | both of the above | Benchmark each concurrency level in `benchmark_sweep_config.json`, reloading the model per level, into two CSVs |
+Each is a thin wrapper around the folder that owns the work.
+[model_serving/](model_serving/) owns the node, the checkpoint and the engine;
+[benchmark/](benchmark/) only speaks HTTP to an OpenAI-compatible endpoint and
+runs anywhere. Both folders have their own README with the detail this one skips.
 
-Everything else is a separately runnable tool inside one of the two folders. The
-split is server side versus client side: [model_serving/](model_serving/) owns
-the node, the checkpoint and the engine; [benchmark/](benchmark/) only speaks
-HTTP to an OpenAI-compatible endpoint and runs anywhere.
-
-## Quickstart
+## Setup, once per machine
 
 ```bash
-dev/install_system.sh                     # apt packages + uv (Ubuntu/Debian)
-cp model_serving/.env.example model_serving/.env   # HF token, cache location
-cp benchmark/.env.example benchmark/.env           # endpoint, if not localhost
-
-model_serving/install.sh                  # build venv/ from requirements.txt
-model_serving/preflight.sh                # fail fast on a node that cannot hold it
-venv/bin/python model_serving/download_model.py    # ~893 GB for V4-Pro
-
-./serve_model.sh                          # stays in the foreground once healthy
-# in another shell:
-./benchmark.sh
+dev/install_system.sh        # apt packages + uv (Ubuntu/Debian)
+model_serving/install.sh     # build venv/ from requirements.txt
 ```
 
-The model comes from `PROFILE`, not from `.env` — the default is the V4-Pro
-recipe, and every command above takes `PROFILE=granite` to do the same thing
-with a 2.5 GB model in about a minute. See [Profiles](#profiles).
+`install.sh` is the one step nothing does for you. `serve_model.sh` and
+`benchmark.sh` both check for the venv and stop with `run
+model_serving/install.sh` rather than building it themselves, so the runtime is
+always something you chose to install.
+
+Everything else is optional, and worth knowing when to reach for:
+
+```bash
+cp model_serving/.env.example model_serving/.env   # HF token, cache location
+model_serving/preflight.sh                         # fail fast on a node that cannot hold it
+venv/bin/python model_serving/download_model.py    # ~830 GB for V4-Pro
+```
+
+**`.env`** — a missing one is skipped, and the profile plus `defaults.env` supply
+everything needed to serve and benchmark on localhost. Create it for a Hugging
+Face token, or to point `HF_HUB_CACHE` at weights that live outside the repo;
+otherwise the cache is `.hf-cache/hub` here. `benchmark/.env` is the same story
+for an endpoint that is not localhost.
+
+**`preflight.sh`** — a diagnostic over GPU count, VRAM, `/dev/shm`, disk and vLLM
+version. Nothing depends on it; skipping it only means a bad node fails minutes
+later inside the engine instead of seconds earlier here.
+
+**`download_model.py`** — vLLM fetches missing weights on demand, so the question
+is only whether that finishes inside `HEALTH_TIMEOUT`: 1800s for the DeepSeek
+profiles, 600s for granite. Granite's 2.5 GB clears it; V4-Pro's 830 GB does not,
+and the failure reads as a readiness timeout rather than a download, retried once
+per sweep level. Pre-download anything large.
+
+## Serve a model
+
+`PROFILE` picks the model and everything that comes with it. It is the one choice
+you make here:
+
+```bash
+./serve_model.sh                                   # deepseek_v4_speculative, the default
+./serve_model.sh PROFILE=deepseek_v4_baseline      # same checkpoint, speculation off
+./serve_model.sh PROFILE=granite                   # a 2.5 GB model, ~30s to load
+```
+
+It stays in the foreground once healthy; Ctrl-C stops it and its workers. A
+V4-Pro load takes 10-20 minutes before `/health` answers.
 
 `./serve_model.sh --dry-run` prints the exact vLLM command and exits, which is
-the fastest way to diff the flags against the recipe page.
+both the fastest way to check a profile and how to diff the flags against the
+recipe page.
 
-## Concurrency sweep
+## Benchmark it, from another shell
+
+Pass the same `PROFILE` — the client names a checkpoint in every request and vLLM
+rejects any other:
 
 ```bash
-./benchmark_sweep.sh --plan        # the plan and the exact per-level commands
-./benchmark_sweep.sh               # the sweep itself; leave it running
+./benchmark.sh PROFILE=granite                     # smoke test, then throughput
+./benchmark.sh --smoke-only                        # just the reasoning-mode round trips
+./benchmark.sh --bench-only CONCURRENCY=32 NUM_PROMPTS=256
 ```
 
-`./benchmark_sweep.sh` answers one question — what does this node do as
-concurrency rises — by measuring each level on its own server. For every level
-it starts `./serve_model.sh` with `DEFAULT_NUM_SEQS` set to that level, waits
-for `/health`, runs `./benchmark.sh --bench-only` at the same `CONCURRENCY` for
-each request shape, and tears the server down before the next level. Reloading
-the checkpoint per level is what makes it a multi-hour run, and the reason each
-number describes a server actually configured for that batch size rather than
-one wide server being under-driven.
+## Or sweep concurrency
 
-What to measure lives in
-[benchmark_sweep_config.json](benchmark_sweep_config.json), because which shapes
-and concurrencies are worth an hour of this node is a judgement about the model
-and the GPUs, not something to derive from a rule:
+One command, and no server of your own: the sweep starts one per level, benchmarks
+it, and tears it down.
+
+```bash
+./benchmark_sweep.sh --plan                        # what it would do, then exit
+./benchmark_sweep.sh                               # the sweep itself; leave it running
+./benchmark_sweep.sh PROFILE=deepseek_v4_baseline
+```
+
+Each run names a server — a profile and a `tp`/`dp` layout — and a concurrency
+level, and the sweep starts one whenever that combination changes, with
+`DEFAULT_NUM_SEQS` set to the level it is about to drive. So every number
+describes a server actually configured for that batch size rather than a wide one
+being under-driven, and one sweep can span several servers. Reloading the
+checkpoint per server is what makes it a multi-hour run. A run that fails is
+reported at the end and does not stop the sweep.
+
+## Choosing what to measure
+
+[benchmark_sweep_config.json](benchmark_sweep_config.json) is the whole plan —
+which request shapes and concurrency levels are worth an hour of this node is a
+judgement about the model and the GPUs, not something to derive from a rule:
 
 ```json
 {"sweeps": [
@@ -69,122 +112,137 @@ and the GPUs, not something to derive from a rule:
 ]}
 ```
 
-The shape is a client-side parameter, so every shape at a given concurrency is
-measured against the *same* server: the checkpoint loads once per distinct
-level, not once per (level, shape). Aligning the level lists on 1 and 8 is what
-turns 11 measurements into 7 loads.
+| Key | Means | Default |
+| --- | --- | --- |
+| `concurrency_levels` | how many requests in flight — required | — |
+| `isl` / `osl` | input and output length per request: the shape | 2048 / 512 |
+| `prompts_per_level` | requests sent = this x the level | 8 |
+| `profile` | which model and engine flags this run needs a server for | `PROFILE` |
+| `tp` / `dp` | tensor- and data-parallel width of that server; `tp` x `dp` must equal `GPU_COUNT` | the profile's |
 
-Each shape asks a different question, and each has its own ceiling — the KV pool
-is ~508k tokens (18.95 GiB per GPU at 39.1 KiB per token), so a level is capped
-by tokens per request:
+An entry that omits a key gets the sweep's own resolved setting, so a sweep naming
+nothing but levels still fully describes a server. An unknown key is refused
+before the first load rather than ignored — `prompts_per_run` would otherwise
+quietly measure eight times what it meant to.
 
-| Shape | tok/req | KV ceiling | What it exercises |
-| --- | --- | --- | --- |
-| 2048/512 | 2,560 | ~198 | the comparable baseline; prefill-heavy |
-| 2048/8192 | 10,240 | ~49 | a full reasoning trace, decode-dominated |
-| 32768/1024 | 33,792 | ~15 | long context and the sparse-attention path |
+Because `profile`, `tp` and `dp` are per entry, one config can compare things a
+single server cannot hold at once — speculation against baseline, or one
+parallel layout against another:
 
-Top levels sit near 80% of each ceiling; past it requests queue rather than run,
-which shows up as latency climbing while throughput stays flat. Every row records
-`kv_fit_pct` so a queue-limited measurement is visible rather than inferred.
+```json
+{"sweeps": [
+  {"profile": "deepseek_v4_speculative", "concurrency_levels": [8, 64]},
+  {"profile": "deepseek_v4_baseline",    "concurrency_levels": [8, 64]},
+  {"profile": "deepseek_v4_tp4dp2", "tp": 4, "dp": 2, "concurrency_levels": [64]}
+]}
+```
 
-Requests scale with the level (`prompts_per_level`, default 8) so every run does
-the same number of batch rounds. A run that fails is reported at the end and does
-not stop the sweep.
+The shape is a client-side parameter, so every shape at a given server and level
+is measured against the *same* server: the checkpoint loads once per distinct
+(profile, tp, dp, level), not once per run. Entries differing only in shape
+therefore share a load; entries differing in `profile`, `tp` or `dp` never do,
+however well their levels line up — the three above cost five loads, not three.
+Comparing servers is priced in checkpoint loads, so `--plan` counts them first.
 
-Runs are numbered: the first sweep writes `results/1`, the next `results/2`, and
-everything one invocation measures lands inside its own folder, one row per
-(level, shape):
+Runs are ordered by server first, then level ascending, so an interrupted sweep
+leaves whole layouts finished rather than a fragment of each. Requests scale with
+the level so every run does the same number of batch rounds; comparing a run of
+two rounds against one of fifty would compare warm-up against steady state.
+
+## Where the output lives
+
+Runs are numbered: the first sweep writes `results/1`, the next `results/2`.
+Everything one invocation measures lands in its own folder, one row per
+(server, level, shape). Per-run files are named for the server that produced
+them — `<profile>-tp<N>dp<M>-c<level>` below — because a sweep spanning two
+layouts would otherwise write both to the same filename and keep the second:
 
 | File | Holds |
 | --- | --- |
-| `benchmark_sweep.csv` | concurrency, ISL, OSL, mean request latency (s), total throughput (tok/s) |
-| `benchmark_sweep_detailed.csv` | the same rows with p99s, TTFT/TPOT/ITL, actual output tokens, KV fit, spec-decode acceptance |
-| `gpu_telemetry.csv` | average temperature, power, SM utilization and memory utilization per GPU, sampled only while each measurement was running |
-| `result-c<N>-i<ISL>o<OSL>.json` | the raw `vllm bench serve` result for one measurement |
-| `serve-c<N>.log` | that level's server output — one per level, shared by its shapes |
-| `bench-c<N>-i<ISL>o<OSL>.log` | that measurement's client output |
+| `benchmark_sweep.csv` | concurrency, ISL, OSL, profile, layout, mean request latency, total throughput |
+| `benchmark_sweep_detailed.csv` | the same rows with p99s, TTFT/TPOT/ITL, KV fit, spec-decode acceptance |
+| `gpu_telemetry.csv` | per-GPU temperature, power and utilization while each measurement ran |
+| `result-<server>-i<ISL>o<OSL>.json` | the raw `vllm bench serve` result for one measurement |
+| `serve-<server>.log` | that server's output, shared by every shape it measured |
+| `bench-<server>-i<ISL>o<OSL>.log` | that measurement's client output |
+
+Every row carries `profile`, `strategy` (the layout as one word, `tp8dp1`), `tp`
+and `dp`, so two rows at the same concurrency and shape are still tellable apart —
+which is the whole point of letting one sweep span servers.
 
 One file sits outside the run folders: `results/benchmark_sweep_all.csv`, which
-every sweep appends to. It carries the run number and the settings that make two
-sweeps different — strategy, max model length, ISL/OSL, `ignore_eos`,
-checkpoint — so comparing today's run against last week's is one file, not two
-folders. When a newer version of the sweep adds columns, the rollup is widened
-in place and older rows keep empty cells rather than being refused.
+every sweep appends to. It carries the run number and the same identifying
+columns, so comparing today's run against last week's is one file rather than two
+folders. When a newer version of the sweep adds columns it is widened in place and
+older rows keep empty cells.
 
 Every CSV is appended per measurement, so an interrupted sweep still leaves what
 it finished. Read one at the terminal with `column -s, -t < FILE`.
 
-`gpu_telemetry.csv` answers what the hardware was doing while those numbers were
-produced — two runs at the same throughput are not the same result if one held
+### GPU telemetry
+
+`gpu_telemetry.csv` says what the hardware was doing while those numbers were
+produced. Two runs at the same throughput are not the same result if one held
 620 W at 62 °C and the other throttled at 84 °C, and one hot GPU can pace the
-whole group without showing up anywhere else. The utilization columns say
-whether the node was actually busy: SM utilization near 100 % across the sweep
-mostly marks the runs that were *not* saturated, while memory utilization is the
-more telling figure for long-output shapes, where decode is bandwidth-bound.
-`benchmark.sh` writes it, not the sweep: the server is up far longer than any one
-measurement, so only the client knows the window worth sampling.
+whole group without showing up anywhere else. The utilization columns say whether
+the node was actually busy — memory utilization is the more telling figure for
+long-output shapes, where decode is bandwidth-bound.
+
+`benchmark.sh` writes it, not the sweep, and samples only while a measurement is
+in flight: the server is up far longer than any one benchmark, so a poller running
+with it would average the idle gaps into every figure. Set `GPU_TELEMETRY_CSV` to
+get the same row from a standalone run.
 
 ## Profiles
 
-`PROFILE` decides which model everything runs against. Three exist:
-
-| Profile | Model | Shape | A whole sweep takes |
-| --- | --- | --- | --- |
-| `deepseek_v4_speculative` (default) | DeepSeek-V4-Pro-0813, dspark speculative decoding | 8 GPUs, TP+EP, 200k context | hours |
-| `deepseek_v4_baseline` | the same, speculation off | identical in every other respect | hours |
-| `granite` | Granite 3.1 1B A400M | 1 GPU, no sharding, 32k context | minutes |
-
-```bash
-./serve_model.sh PROFILE=granite         # in one shell
-./benchmark_sweep.sh PROFILE=granite     # in another — the same tools, ~30s per load
-```
+| Profile | Is | A whole sweep takes |
+| --- | --- | --- |
+| `deepseek_v4_speculative` (default) | DeepSeek-V4-Pro-0813, dspark speculative decoding, TP8/DP1 | hours |
+| `deepseek_v4_baseline` | the same, speculation off | hours |
+| `deepseek_v4_tp4dp2` | the same, 2 data-parallel replicas of 4-way TP | hours |
+| `deepseek_v4_tp2dp4` | the same, 4 replicas of 2-way TP | hours |
+| `granite` | Granite 3.1 1B A400M, one GPU | minutes |
 
 `granite` exists to exercise the tooling: same MoE shape as the big checkpoint at
 1/900th the weight, so a bug in the sweep costs a 30-second load instead of a
 15-minute one. The sweep exports `PROFILE` to the client, so both halves agree
 without being wired together.
 
-The two DeepSeek profiles are named for what separates them, so neither the
-default nor a row in a CSV leaves you guessing whether speculation was on. They
-exist as a pair to answer what it is worth.
-`spec_decode_acceptance_length` says how many tokens each pass through the model
-emitted — the ceiling on the gain — but not what the wider verify pass cost to
-get them, which at high concurrency can exceed it. Sweep both profiles and the
-difference in `mean_tpot_ms` at matched concurrency is the answer:
+The DeepSeek profiles are variants of one recipe, each named for the single thing
+that separates it from the others, so no run and no CSV row leaves you guessing
+which server produced it. They exist to be compared — what speculative decoding is
+worth, what a parallel layout costs — and since a sweep entry can name its own
+profile, one config file measures the lot:
 
-```bash
-./benchmark_sweep.sh                              # dspark on
-./benchmark_sweep.sh PROFILE=deepseek_v4_baseline # off
-column -s, -t < results/benchmark_sweep_all.csv   # both, side by side
+```json
+{"sweeps": [
+  {"profile": "deepseek_v4_speculative", "concurrency_levels": [8, 64]},
+  {"profile": "deepseek_v4_baseline",    "concurrency_levels": [8, 64]}
+]}
 ```
 
-A profile is a file per side — [model_serving/profiles/](model_serving/profiles/)
-for the checkpoint, parallelism, memory envelope, preflight footprint and engine
-flags; [benchmark/profiles/](benchmark/profiles/) for the model name requests
-carry and which smoke-test modes the chat template understands.
+```bash
+./benchmark_sweep.sh                               # both, one invocation
+column -s, -t < results/benchmark_sweep_all.csv
+```
 
-The serving file holds two kinds of line: `KEY=VALUE` for anything you might
-retune for one run, and a line beginning `--` for an engine argument, passed to
-`vllm serve` exactly as written. Flag and value split on the first run of
-whitespace and no further, so `--speculative-config {"method":"dspark",...}`
-needs no quoting. Nothing in `serve_model.sh` knows what any flag means, so
-supporting a new model is a new file rather than a new branch.
+Then read `mean_tpot_ms` across the two `profile` values at matched concurrency:
+that ratio is what speculation actually bought, which `spec_decode_acceptance_length`
+can only put a ceiling on.
 
-A profile may name another as its base with `PROFILE_BASE`, and takes from it
-everything it does not set itself — the same rule as every other layer, applied
-to argument lines as well, where the value `off` drops a flag the base sets. That
-is all `deepseek_v4_baseline` is: `PROFILE_BASE=deepseek_v4_speculative` and
-`--speculative-config off`. A control that had drifted from the thing it controls
-for would answer a question nobody asked, so the two share one file rather than
-two copies of it.
+A profile is one file per side — [model_serving/profiles/](model_serving/profiles/)
+for the checkpoint, memory envelope and engine flags,
+[benchmark/profiles/](benchmark/profiles/) for what requests carry. Adding a model
+is adding those files, not editing a script; the format and the `PROFILE_BASE`
+inheritance that makes `deepseek_v4_baseline` two lines long are in
+[model_serving/README.md](model_serving/README.md#profiles).
 
 ## Configuration
 
 Each folder is self-contained: its own `.env`, `.env.example`, `defaults.env`,
 `profiles/` and loader (`config.sh` for bash, `envfile.py` for python). No file
-outside a folder configures the tools inside it, so either folder can be copied
-to another machine on its own.
+outside a folder configures the tools inside it, so either folder can be copied to
+another machine on its own.
 
 Five layers, highest precedence first:
 
@@ -196,16 +254,12 @@ Five layers, highest precedence first:
 | 4 | folder `profiles/$PROFILE.env` | everything that changes with the model |
 | 5 | folder `defaults.env` | committed, the same for any model |
 
-Because `.env` outranks the profile, a `MODEL_ID` pinned there would survive a
-profile switch and serve the wrong checkpoint — so the shipped `.env` leaves it
-commented out and `serve_model.sh` says so when the two disagree.
-
 Every setting is reachable from every layer — there are no flags for things that
-are also settings. A tool aborts rather than guessing when a required value such
-as `MODEL_ID` is missing anywhere in the chain.
-
-Settings files are plain `KEY=VALUE`: no quoting, no shell expansion, no inline
-comments. `defaults.env` in each folder is the reference list of what exists.
+are also settings, and a tool aborts rather than guessing when a required value is
+missing. `defaults.env` in each folder is the reference list of what exists. One
+trap worth knowing: `.env` outranks the profile, so a `MODEL_ID` pinned there
+survives a profile switch and serves the wrong checkpoint. The shipped `.env`
+leaves it commented out and `serve_model.sh` says so when the two disagree.
 
 ## Layout
 
@@ -215,7 +269,7 @@ benchmark.sh            root entrypoint -> benchmark/benchmark.sh
 benchmark_sweep.sh      the concurrency sweep, driving both of the above
 benchmark_sweep_config.json   which shapes and levels the sweep measures
 model_serving/          the server, the node and the checkpoint
-model_serving/profiles/ one file per model: parallelism, memory, footprint
+model_serving/profiles/ one file per model: parallelism, memory, engine flags
 benchmark/              client-side evaluation over HTTP
 benchmark/profiles/     one file per model: name, smoke-test modes
 dev/                    host bootstrap: system packages, the dev pod spec
@@ -224,21 +278,17 @@ venv/                   created by model_serving/install.sh, gitignored
 results/                sweep output, gitignored
 ```
 
-`benchmark_sweep.sh` is the one root script with logic of its own, because a
-sweep is neither server side nor client side: it belongs to neither folder and
-drives both through the same entrypoints and settings a person would use by hand.
-
 Weights land in the repo-local cache rather than `~/.cache` so the PoC is
 self-contained; `HF_HUB_CACHE` overrides it, which is what
-[dev/dev-pod.yaml](dev/dev-pod.yaml) does to keep them on a volume that survives
-a pod restart.
+[dev/dev-pod.yaml](dev/dev-pod.yaml) does to keep them on a volume that survives a
+pod restart.
 
 ## State of play
 
 `model_serving/preflight.sh` passes on this node: 8 GPUs, 1123 GB of aggregate
-VRAM, 128 GiB of `/dev/shm`, and vLLM 0.27.1 against the 0.25.0 floor. The
-recipe flags match `h200.json` exactly.
+VRAM, 128 GiB of `/dev/shm`, and vLLM 0.27.1 against the 0.25.0 floor. The recipe
+flags match `h200.json` exactly.
 
-The launch, readiness, signal and failure paths in `serve_model.sh` have been
-exercised against stub servers rather than a full V4-Pro load; the first real
-serve is recorded in commit 1ff6b4e.
+Full sweeps have run against the real checkpoint under the speculative profile,
+up to concurrency 384; `results/` holds them. The baseline profile has been
+verified by `--dry-run` but not yet loaded.
