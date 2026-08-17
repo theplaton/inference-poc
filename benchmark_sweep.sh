@@ -209,7 +209,7 @@ append_csv() {
   "$PYTHON_BIN" "$REPO_ROOT/benchmark/sweep_csv.py" write "$json" \
     "$SUMMARY_CSV" "$DETAILED_CSV" "$ROLLUP_CSV" \
     "$level" "$isl" "$osl" "$prompts" "$kv_tokens" "$RUN_ID" \
-    "${STRATEGY:-}" "${MAX_MODEL_LEN:-}"
+    "${STRATEGY:-}" "${MAX_MODEL_LEN:-}" "${PROFILE:-}"
 }
 
 # --- plan ---------------------------------------------------------------------

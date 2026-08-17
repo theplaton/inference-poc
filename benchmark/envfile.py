@@ -71,7 +71,7 @@ def load_config(argv: Iterable[str] | None = None) -> list[str]:
     # then from defaults.env -- which must not be merged in before it, or it
     # would outrank the layer it sits below.
     profile = os.environ.get("PROFILE") or dict(_pairs(DEFAULTS_FILE)).get(
-        "PROFILE", "deepseek_v4"
+        "PROFILE", "deepseek_v4_speculative"
     )
     os.environ["PROFILE"] = profile
     profile_file = PROFILES_DIR / f"{profile}.env"
@@ -84,7 +84,32 @@ def load_config(argv: Iterable[str] | None = None) -> list[str]:
         )
         raise SystemExit(1)
 
-    for path in (profile_file, DEFAULTS_FILE):
+    # A profile may name another as its base, and takes from it everything it
+    # does not set itself -- the same rule as every layer above, so a variant
+    # profile holds only what makes it a variant. Read from the file rather than
+    # the environment, so an inherited PROFILE_BASE cannot redirect an unrelated
+    # run. config.sh resolves the chain identically.
+    chain = [profile_file]
+    seen = {profile}
+    while base := dict(_pairs(chain[-1])).get("PROFILE_BASE", "").strip():
+        if base in seen:
+            print(
+                f'error: profile "{profile}" inherits in a cycle ({base})',
+                file=sys.stderr,
+            )
+            raise SystemExit(1)
+        seen.add(base)
+        base_file = PROFILES_DIR / f"{base}.env"
+        if not base_file.is_file():
+            print(
+                f'error: profile "{profile}" names base "{base}", but '
+                f"{base_file} does not exist.",
+                file=sys.stderr,
+            )
+            raise SystemExit(1)
+        chain.append(base_file)
+
+    for path in (*chain, DEFAULTS_FILE):
         for key, value in _pairs(path):
             os.environ.setdefault(key, value)
 

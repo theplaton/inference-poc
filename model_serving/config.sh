@@ -15,6 +15,12 @@
 # repo lives cannot be written in a plain KEY=value file, so they are derived
 # at the end -- still below every layer above.
 #
+# A profile carries one thing the other layers do not: its engine arguments, as
+# lines beginning with --. load_config leaves them in PROFILE_ARGS for
+# serve_model.sh to splice into its command line. They are not settings and no
+# layer above can override one, because a flag a model needs is a property of
+# the model rather than of a run.
+#
 # model_serving/ carries its own copy of this loader, .env and defaults so it
 # stays runnable on its own; benchmark/ has an independent set.
 
@@ -52,9 +58,58 @@ _config_read_file() {
   done <"$file"
 }
 
+# The other kind of line a profile may hold: an engine argument, written exactly
+# as it appears on the command line. A flag and its value are split on the first
+# run of whitespace and no further, so a JSON value needs no quoting and no
+# escaping -- the rest of the line is one argument however many spaces it has.
+#
+# Collected first-seen-wins, like every setting: the profile is read before its
+# base, so a derived profile restating a flag overrides it, and the value `off`
+# drops it. Nothing here knows what any particular flag means.
+_config_read_args() {
+  local file="$1" line flag value i
+  [ -f "$file" ] || return 0
+  while IFS= read -r line || [ -n "$line" ]; do
+    line="${line#"${line%%[![:space:]]*}"}"
+    case "$line" in '--'*) ;; *) continue ;; esac
+    flag="${line%%[[:space:]]*}"
+    value="${line#"$flag"}"
+    value="${value#"${value%%[![:space:]]*}"}"
+    for i in ${_profile_arg_names[@]+"${!_profile_arg_names[@]}"}; do
+      if [ "${_profile_arg_names[$i]}" = "$flag" ]; then
+        continue 2 # a nearer layer already decided this flag
+      fi
+    done
+    _profile_arg_names+=("$flag")
+    _profile_arg_values+=("$value")
+  done <"$file"
+  return 0
+}
+
+# Flatten what the profile chain collected into the array serve_model.sh splices
+# into its command line.
+_config_build_profile_args() {
+  local i flag value
+  PROFILE_ARGS=()
+  for i in ${_profile_arg_names[@]+"${!_profile_arg_names[@]}"}; do
+    flag="${_profile_arg_names[$i]}"
+    value="${_profile_arg_values[$i]}"
+    if [ "$value" = off ]; then
+      continue # set by a base, switched off here
+    fi
+    PROFILE_ARGS+=("$flag")
+    if [ -n "$value" ]; then
+      PROFILE_ARGS+=("$value")
+    fi
+  done
+  return 0
+}
+
 load_config() {
   CONFIG_ARGV=()
   local arg
+  _profile_arg_names=()
+  _profile_arg_values=()
 
   for arg in "$@"; do
     if _config_is_assignment "$arg"; then
@@ -73,7 +128,7 @@ load_config() {
   # per model, and none of them belong in a defaults file shared by all of them.
   # It is resolved from the layers already applied, then from defaults.env.
   [ -n "${PROFILE:-}" ] || PROFILE="$(_config_value_from "$CONFIG_DIR/defaults.env" PROFILE)"
-  : "${PROFILE:=deepseek_v4}"
+  : "${PROFILE:=deepseek_v4_speculative}"
   export PROFILE
   PROFILE_FILE="$CONFIG_DIR/profiles/$PROFILE.env"
   export PROFILE_FILE
@@ -84,6 +139,37 @@ load_config() {
     exit 1
   fi
   _config_read_file "$PROFILE_FILE"
+  _config_read_args "$PROFILE_FILE"
+
+  # A profile may name another as its base, and takes from it everything it does
+  # not set itself -- the same rule as every layer above, so a variant profile
+  # holds only what makes it a variant. That matters when the variant exists to
+  # be compared against its base: parity is then structural rather than a
+  # promise that two files stay in step. Read from the file rather than the
+  # environment, so an inherited PROFILE_BASE cannot redirect an unrelated run.
+  local base seen base_file
+  base="$(_config_value_from "$PROFILE_FILE" PROFILE_BASE)"
+  seen=" $PROFILE "
+  while [ -n "$base" ]; do
+    case "$seen" in
+    *" $base "*)
+      printf 'error: profile "%s" inherits in a cycle (%s)\n' "$PROFILE" "$base" >&2
+      exit 1
+      ;;
+    esac
+    seen="$seen$base "
+    base_file="$CONFIG_DIR/profiles/$base.env"
+    if [ ! -f "$base_file" ]; then
+      printf 'error: profile "%s" names base "%s", but %s does not exist.\n' \
+        "$PROFILE" "$base" "$base_file" >&2
+      exit 1
+    fi
+    _config_read_file "$base_file"
+    _config_read_args "$base_file"
+    base="$(_config_value_from "$base_file" PROFILE_BASE)"
+  done
+
+  _config_build_profile_args
 
   _config_read_file "$CONFIG_DIR/defaults.env"
 

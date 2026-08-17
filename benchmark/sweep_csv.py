@@ -2,7 +2,7 @@
 
     python sweep_csv.py migrate SUMMARY DETAILED ROLLUP
     python sweep_csv.py write RESULT SUMMARY DETAILED ROLLUP \\
-        LEVEL ISL OSL PROMPTS KV_TOKENS RUN_ID STRATEGY MAX_MODEL_LEN
+        LEVEL ISL OSL PROMPTS KV_TOKENS RUN_ID STRATEGY MAX_MODEL_LEN PROFILE
 
 Three files, each answering a different question: the summary is "how does this
 node scale", the detailed one is everything the run measured for when the
@@ -92,6 +92,11 @@ def build_rows(r, ctx):
     # from a dep/131072 sweep is indistinguishable from a tep/200000 one.
     rollup = {
         "run": ctx["run_id"],
+        # Two sweeps can differ in a way no other column here shows: same
+        # checkpoint, same strategy, same context, different engine flags. The
+        # profile is the name of that difference -- without it a speculative run
+        # and a baseline one are the same row twice.
+        "profile": ctx["profile"],
         "concurrency": ctx["level"],
         "isl": ctx["isl"],
         "osl": ctx["osl"],
@@ -123,6 +128,9 @@ CTX_KEYS = (
     "run_id",
     "strategy",
     "max_model_len",
+    # Appended rather than slotted in beside run_id: these keys are positional
+    # arguments, so a new one goes last or every caller has to be rewritten.
+    "profile",
 )
 
 BLANK_CTX = dict.fromkeys(CTX_KEYS, "")
@@ -160,7 +168,10 @@ if mode == "migrate":
     sys.exit(0)
 
 (result_path, summary_csv, detailed_csv, rollup_csv) = sys.argv[2:6]
-ctx = dict(zip(CTX_KEYS, sys.argv[6:14]))
+# Over BLANK_CTX so a context key the caller did not pass becomes an empty cell
+# rather than a KeyError: the positional list grows as the sweep records more,
+# and a stale caller should write a thinner row, not fail a finished run.
+ctx = {**BLANK_CTX, **dict(zip(CTX_KEYS, sys.argv[6:]))}
 
 with open(result_path) as f:
     result = json.load(f)

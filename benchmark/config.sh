@@ -73,7 +73,7 @@ load_config() {
   # what the chat template understands. The sweep exports PROFILE when it drives
   # this script, so the two halves stay in step without being wired together.
   [ -n "${PROFILE:-}" ] || PROFILE="$(_config_value_from "$CONFIG_DIR/defaults.env" PROFILE)"
-  : "${PROFILE:=deepseek_v4}"
+  : "${PROFILE:=deepseek_v4_speculative}"
   export PROFILE
   PROFILE_FILE="$CONFIG_DIR/profiles/$PROFILE.env"
   export PROFILE_FILE
@@ -84,6 +84,31 @@ load_config() {
     exit 1
   fi
   _config_read_file "$PROFILE_FILE"
+
+  # A profile may name another as its base, and takes from it everything it does
+  # not set itself -- the same rule as every layer above, so a variant profile
+  # holds only what makes it a variant. Read from the file rather than the
+  # environment, so an inherited PROFILE_BASE cannot redirect an unrelated run.
+  local base seen base_file
+  base="$(_config_value_from "$PROFILE_FILE" PROFILE_BASE)"
+  seen=" $PROFILE "
+  while [ -n "$base" ]; do
+    case "$seen" in
+    *" $base "*)
+      printf 'error: profile "%s" inherits in a cycle (%s)\n' "$PROFILE" "$base" >&2
+      exit 1
+      ;;
+    esac
+    seen="$seen$base "
+    base_file="$CONFIG_DIR/profiles/$base.env"
+    if [ ! -f "$base_file" ]; then
+      printf 'error: profile "%s" names base "%s", but %s does not exist.\n' \
+        "$PROFILE" "$base" "$base_file" >&2
+      exit 1
+    fi
+    _config_read_file "$base_file"
+    base="$(_config_value_from "$base_file" PROFILE_BASE)"
+  done
 
   _config_read_file "$CONFIG_DIR/defaults.env"
 

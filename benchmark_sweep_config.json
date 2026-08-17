@@ -1,10 +1,8 @@
 {
   "sweeps": [
-    {"isl": 2048, "osl": 512,  "concurrency_levels": [1, 8, 64], "prompts_per_level": 8},
-    {"isl": 2048, "osl": 512,  "concurrency_levels": [128, 192, 256], "prompts_per_level": 2},
-    {"isl": 4096, "osl": 1024, "concurrency_levels": [1, 8], "prompts_per_level": 8},
+    {"isl": 2048, "osl": 512,  "concurrency_levels": [64], "prompts_per_level": 8},
+    {"isl": 2048, "osl": 512,  "concurrency_levels": [256], "prompts_per_level": 2},
     {"isl": 4096, "osl": 1024, "concurrency_levels": [32], "prompts_per_level": 2},
-    {"isl": 1024, "osl": 4096, "concurrency_levels": [1, 8], "prompts_per_level": 8},
     {"isl": 1024, "osl": 4096, "concurrency_levels": [32], "prompts_per_level": 2}
   ]
 }

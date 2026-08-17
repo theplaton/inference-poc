@@ -89,16 +89,48 @@ python download_model.py PROFILE=granite   # ~2.5 GB instead of ~893 GB
 
 ## Profiles
 
-`PROFILE` names the model. `deepseek_v4` is this recipe; `granite`
+`PROFILE` names the model. `deepseek_v4_speculative` is this recipe; `granite`
 (Granite 3.1 1B A400M) is a small MoE that exercises the same tools on one GPU
 in about a minute, which is how you shake out the sweep, the CSVs and the signal
 handling without spending 15 minutes per checkpoint load.
 
-A profile is `profiles/$PROFILE.env` — checkpoint, parallelism, memory envelope,
-preflight footprint, health timeout — plus a branch in `serve_model.sh` for the
-engine flags that are not `KEY=VALUE`: fp8 MLA KV and the `deepseek_v4` parsers
-for one, nothing at all for the other. `STRATEGY=solo` is the third parallelism
-mode, one GPU with no sharding.
+A profile is one file, `profiles/$PROFILE.env`, and it holds everything that run
+needs. Two kinds of line:
+
+| Line | Is | Overridable per run |
+| --- | --- | --- |
+| `MAX_MODEL_LEN=200000` | a setting | yes — argument, environment or `.env` |
+| `--kv-cache-dtype fp8` | an engine argument, passed to `vllm serve` as written | no |
+
+Which one a thing is follows from whether you would ever change it for a single
+run. `MAX_MODEL_LEN` is a setting because sweeps retune it; `--tokenizer-mode
+deepseek_v4` is an argument because a checkpoint needing a different one would be
+a different profile.
+
+Argument lines split on the first run of whitespace and no further, so a JSON
+value needs no quoting and no escaping — `--compilation-config {"mode": 0,
+"cudagraph_mode": "FULL_DECODE_ONLY"}` is one flag and one value however many
+spaces it contains. `serve_model.sh` splices the block without knowing what any
+flag means, so a new model is a new file rather than a new branch, and the block
+can be diffed line by line against the recipe page it came from.
+
+`STRATEGY=solo` is the third parallelism mode, one GPU with no sharding.
+
+`PROFILE_BASE` makes one profile inherit another: the base fills in every key the
+derived file leaves unset, which is how every layer here already works. Argument
+lines merge the same way, by flag — a derived profile restating a flag overrides
+it, and the value `off` drops it. That is the whole of `deepseek_v4_baseline`:
+
+```bash
+PROFILE_BASE=deepseek_v4_speculative
+
+--speculative-config off
+```
+
+Two lines, and it serves this recipe without speculative decoding, so a sweep
+under each profile measures what dspark is worth and nothing else. A variant that
+copied the numbers instead could drift from them, and the comparison would
+quietly stop being one.
 
 `MODEL_ID` comes from the profile. Setting it in `.env` outranks that, which is
 the intended precedence but a good way to serve the wrong checkpoint after a
@@ -110,7 +142,8 @@ profile switch — `serve_model.sh` prints a note when the two disagree.
 default, superseding the preview (87.9 vs 72.1 on Terminal Bench 2.1). It carries
 a fused DSpark speculative-decoding module, which is why `requirements.txt`
 requires vLLM **0.25.0** rather than the model's 0.20.0 baseline, and why
-`serve_model.sh` passes `--speculative-config '{"method":"dspark",...}'`.
+`deepseek_v4_speculative` carries `--speculative-config {"method":"dspark",...}`.
+`deepseek_v4_baseline` is the same profile without it.
 
 **Parallelism.** Default is `tep` — `--tensor-parallel-size 8` with
 `--enable-expert-parallel`. TP must equal the GPU count or replicated dense

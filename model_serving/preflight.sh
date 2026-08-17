@@ -147,10 +147,19 @@ check_vllm() {
 check_context() {
   # Think Max truncates below 384K, but 384K of KV does not fit next to ~960 GB
   # of weights on this node. Surface the tradeoff rather than letting it surprise.
-  # It is a V4 chat-template mode, so it says nothing about any other model.
-  if [ "$PROFILE" != "deepseek_v4" ]; then
+  # It is a V4 chat-template mode, so it says nothing about any other model --
+  # and it is the checkpoint that decides that, not the profile's name, which is
+  # why this asks about MODEL_ID. Every V4 profile is covered however they are
+  # named or added.
+  case "$MODEL_ID" in
+  *DeepSeek-V4*) ;;
+  *)
     pass "MAX_MODEL_LEN=$MAX_MODEL_LEN"
-  elif [ "$MAX_MODEL_LEN" -lt 393216 ]; then
+    return 0
+    ;;
+  esac
+
+  if [ "$MAX_MODEL_LEN" -lt 393216 ]; then
     pass "MAX_MODEL_LEN=$MAX_MODEL_LEN (Think Max needs >= 393216 and will truncate)"
   else
     warn "MAX_MODEL_LEN=$MAX_MODEL_LEN enables Think Max but likely OOMs without KV offload"

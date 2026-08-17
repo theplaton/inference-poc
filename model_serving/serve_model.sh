@@ -66,39 +66,9 @@ solo) PARALLEL_ARGS=(--tensor-parallel-size "$GPU_COUNT") ;;
 *) echo "STRATEGY must be tep, dep or solo, got '$STRATEGY'" >&2; exit 2 ;;
 esac
 
-# The flags a model needs that another model would reject. Everything a profile
-# expresses as a number lives in profiles/$PROFILE.env; these cannot, so they
-# live here, one branch per profile.
-case "$PROFILE" in
-deepseek_v4)
-  # Verbatim from the recipe's h200.json. The Hopper overrides are the compile
-  # mode (FP4/FP8 kernels there need the conservative one) and flashinfer
-  # autotune off, which does not pay for itself on this hardware.
-  PROFILE_ARGS=(
-    --trust-remote-code
-    --kv-cache-dtype fp8
-    --block-size 256
-    --no-enable-flashinfer-autotune
-    --compilation-config '{"mode": 0, "cudagraph_mode": "FULL_DECODE_ONLY"}'
-    --tokenizer-mode deepseek_v4
-    --tool-call-parser deepseek_v4
-    --enable-auto-tool-choice
-    --reasoning-parser deepseek_v4
-    --speculative-config '{"method":"dspark","num_speculative_tokens":7,"draft_sample_method":"probabilistic"}'
-  )
-  ;;
-granite)
-  # Stock vLLM. Granite needs no custom tokenizer, parser or kernel override,
-  # and adding any of the above would either be rejected or measure something
-  # this profile is not here to measure.
-  PROFILE_ARGS=()
-  ;;
-*)
-  echo "no engine flags defined for PROFILE=$PROFILE in $(basename "${BASH_SOURCE[0]}")" >&2
-  exit 2
-  ;;
-esac
-
+# PROFILE_ARGS is whatever the -- lines of profiles/$PROFILE.env and its bases
+# came to; config.sh collected them. Nothing here knows which flags any model
+# needs, which is why adding a model is a file rather than a branch.
 SERVE_ARGS=(
   "$MODEL_ID"
   "${PROFILE_ARGS[@]+"${PROFILE_ARGS[@]}"}"

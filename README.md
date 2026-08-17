@@ -127,11 +127,12 @@ measurement, so only the client knows the window worth sampling.
 
 ## Profiles
 
-`PROFILE` decides which model everything runs against. Two exist:
+`PROFILE` decides which model everything runs against. Three exist:
 
 | Profile | Model | Shape | A whole sweep takes |
 | --- | --- | --- | --- |
-| `deepseek_v4` (default) | DeepSeek-V4-Pro-0813 | 8 GPUs, TP+EP, 200k context | hours |
+| `deepseek_v4_speculative` (default) | DeepSeek-V4-Pro-0813, dspark speculative decoding | 8 GPUs, TP+EP, 200k context | hours |
+| `deepseek_v4_baseline` | the same, speculation off | identical in every other respect | hours |
 | `granite` | Granite 3.1 1B A400M | 1 GPU, no sharding, 32k context | minutes |
 
 ```bash
@@ -144,13 +145,39 @@ measurement, so only the client knows the window worth sampling.
 15-minute one. The sweep exports `PROFILE` to the client, so both halves agree
 without being wired together.
 
+The two DeepSeek profiles are named for what separates them, so neither the
+default nor a row in a CSV leaves you guessing whether speculation was on. They
+exist as a pair to answer what it is worth.
+`spec_decode_acceptance_length` says how many tokens each pass through the model
+emitted — the ceiling on the gain — but not what the wider verify pass cost to
+get them, which at high concurrency can exceed it. Sweep both profiles and the
+difference in `mean_tpot_ms` at matched concurrency is the answer:
+
+```bash
+./benchmark_sweep.sh                              # dspark on
+./benchmark_sweep.sh PROFILE=deepseek_v4_baseline # off
+column -s, -t < results/benchmark_sweep_all.csv   # both, side by side
+```
+
 A profile is a file per side — [model_serving/profiles/](model_serving/profiles/)
-for the checkpoint, parallelism, memory envelope and preflight footprint;
-[benchmark/profiles/](benchmark/profiles/) for the model name requests carry and
-which smoke-test modes the chat template understands. Engine flags that are not
-`KEY=VALUE` — fp8 MLA KV, the `deepseek_v4` parsers, dspark speculative decoding
-— live in a `case` in [serve_model.sh](model_serving/serve_model.sh), one branch
-per profile.
+for the checkpoint, parallelism, memory envelope, preflight footprint and engine
+flags; [benchmark/profiles/](benchmark/profiles/) for the model name requests
+carry and which smoke-test modes the chat template understands.
+
+The serving file holds two kinds of line: `KEY=VALUE` for anything you might
+retune for one run, and a line beginning `--` for an engine argument, passed to
+`vllm serve` exactly as written. Flag and value split on the first run of
+whitespace and no further, so `--speculative-config {"method":"dspark",...}`
+needs no quoting. Nothing in `serve_model.sh` knows what any flag means, so
+supporting a new model is a new file rather than a new branch.
+
+A profile may name another as its base with `PROFILE_BASE`, and takes from it
+everything it does not set itself — the same rule as every other layer, applied
+to argument lines as well, where the value `off` drops a flag the base sets. That
+is all `deepseek_v4_baseline` is: `PROFILE_BASE=deepseek_v4_speculative` and
+`--speculative-config off`. A control that had drifted from the thing it controls
+for would answer a question nobody asked, so the two share one file rather than
+two copies of it.
 
 ## Configuration
 
@@ -205,12 +232,6 @@ Weights land in the repo-local cache rather than `~/.cache` so the PoC is
 self-contained; `HF_HUB_CACHE` overrides it, which is what
 [dev/dev-pod.yaml](dev/dev-pod.yaml) does to keep them on a volume that survives
 a pod restart.
-
-## VS Code
-
-Two launch configs, `download_model` and `smoke_test`, run the python entrypoints
-with the matching folder `.env` loaded through `envFile`. They use the `debugpy`
-adapter, so select the `venv` interpreter first (Python: Select Interpreter).
 
 ## State of play
 

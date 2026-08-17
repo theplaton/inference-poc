@@ -44,6 +44,12 @@ environment, then `.env`, then `profiles/$PROFILE.env`, then `defaults.env`. See
 `defaults.env` for the full list and `profiles/` for what changes with the model;
 anything in either can be set from any layer.
 
+A profile may set `PROFILE_BASE` to name another, which then fills in every key
+it did not set itself — one more application of the same rule, sitting directly
+below the profile. `deepseek_v4_baseline` is nothing but that line: the server
+runs without speculative decoding, and the client side is unchanged, because a
+request cannot tell whether its tokens were drafted.
+
 ```bash
 ./benchmark.sh NUM_PROMPTS=128 CONCURRENCY=32
 ./benchmark.sh RANDOM_INPUT_LEN=8192 RANDOM_OUTPUT_LEN=1024
