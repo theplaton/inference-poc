@@ -8,8 +8,9 @@ official recipe for DeepSeek-V4-Pro on an 8x H200 node.
 | `./serve_model.sh` | Launch vLLM, wait for `/health`, shut down cleanly |
 | `./benchmark.sh` | Smoke test the reasoning modes, then measure throughput and latency |
 | `./benchmark_sweep.sh` | Drive both across a list of concurrency levels, into CSVs |
+| `./server_metrics.sh` | Watch a running server: its settings, queue, KV cache, latency, GPUs |
 
-Each is a thin wrapper around the folder that owns the work.
+The first three are thin wrappers around the folder that owns the work.
 [model_serving/](model_serving/) owns the node, the checkpoint and the engine;
 [benchmark/](benchmark/) only speaks HTTP to an OpenAI-compatible endpoint and
 runs anywhere. Both folders have their own README with the detail this one skips.
@@ -67,6 +68,29 @@ V4-Pro load takes 10-20 minutes before `/health` answers.
 `./serve_model.sh --dry-run` prints the exact vLLM command and exits, which is
 both the fastest way to check a profile and how to diff the flags against the
 recipe page.
+
+## Watch what it is doing
+
+From a third shell, at any point during a serve or a sweep:
+
+```bash
+./server_metrics.sh        # redraw every second
+./server_metrics.sh 5      # every five seconds
+./server_metrics.sh --once # one frame, for a log or a paste
+```
+
+What the server was launched with — model, context length, data-parallel ranks,
+KV cache size and dtype, prefix caching, speculation and how much of each draft
+lands — then what it is doing right now: requests running and waiting, KV cache
+use, mean TTFT and ITL. Below that a row per GPU: core and memory utilization,
+memory used, power and temperature.
+
+It only reads, so starting or stopping it never disturbs a run, and with no
+server up it says so and keeps showing the GPUs — safe to start before a serve
+and leave running across it. Two things it cannot tell you: the tensor-parallel
+width, which vLLM does not report anywhere over HTTP, and anything about the
+last few seconds — TTFT and ITL are means since the server started. For
+per-measurement numbers, use the sweep's CSVs.
 
 ## Benchmark it, from another shell
 
@@ -200,13 +224,17 @@ A DeepSeek profile is named `deepseek_v4_tp<N>dp<M>` for its parallel layout, pl
 configuration, so a `--plan` line, a filename and a CSV row all say what produced
 them without a lookup.
 
-| Profile | Is | A whole sweep takes |
+The six DeepSeek profiles are a 2x3: three parallel layouts, each with and
+without speculation.
+
+| Layout | Speculative | Not |
 | --- | --- | --- |
-| `deepseek_v4_tp8dp1_speculative` (default) | DeepSeek-V4-Pro-0813, the recipe as published | hours |
-| `deepseek_v4_tp8dp1` | the same layout, speculation off | hours |
-| `deepseek_v4_tp4dp2_speculative` | 2 data-parallel replicas of 4-way TP | hours |
-| `deepseek_v4_tp2dp4_speculative` | 4 replicas of 2-way TP | hours |
-| `granite` | Granite 3.1 1B A400M, one GPU | minutes |
+| TP8/DP1 — the recipe as published | `deepseek_v4_tp8dp1_speculative` (default) | `deepseek_v4_tp8dp1` |
+| TP4/DP2 — 2 replicas of 4-way TP | `deepseek_v4_tp4dp2_speculative` | `deepseek_v4_tp4dp2` |
+| TP2/DP4 — 4 replicas of 2-way TP | `deepseek_v4_tp2dp4_speculative` | `deepseek_v4_tp2dp4` |
+
+All six serve DeepSeek-V4-Pro-0813 and take hours to sweep. `granite` (Granite
+3.1 1B A400M, one GPU) is the seventh, and takes minutes.
 
 `granite` exists to exercise the tooling: same MoE shape as the big checkpoint at
 1/900th the weight, so a bug in the sweep costs a 30-second load instead of a
