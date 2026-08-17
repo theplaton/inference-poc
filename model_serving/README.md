@@ -81,7 +81,7 @@ list; anything in it can be set from any layer.
 ./serve_model.sh HEALTH_TIMEOUT=3600       # allow a slower cold start
 ./preflight.sh RUNTIME=docker              # check for docker, not a local vllm
 ./cleanup_vllm.sh VLLM_CLEANUP_TIMEOUT=60
-python download_model.py DOWNLOAD_REMOTE_CODE=0   # weights only, no *.py
+python download_model.py MODEL_ID=Qwen/Qwen3-8B
 ```
 
 `MODEL_ID` has no default on purpose — there is no sane checkpoint to guess, so

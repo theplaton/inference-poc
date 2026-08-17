@@ -3,10 +3,12 @@
 # official recipe: https://recipes.vllm.ai/deepseek-ai/DeepSeek-V4-Pro/hw/h200.json
 #
 # This script does four things and nothing else: launch vLLM, wait until it
-# answers /health, shut it down cleanly on a signal, and report failures with
-# the end of the server log. Installing the runtime, downloading the checkpoint,
-# validating the host and clearing stragglers are separate tools next to this
-# one -- see README.md.
+# answers /health, shut it down cleanly on a signal, and report failures.
+# Installing the runtime, downloading the checkpoint, validating the host and
+# clearing stragglers are separate tools next to this one -- see README.md.
+#
+# vLLM's output is this script's output. Keep it if you want it kept:
+#   ./serve_model.sh > serve.log 2>&1
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -96,14 +98,6 @@ if [ ! -x "$VLLM_BIN" ]; then
   exit 1
 fi
 
-# --- failure reporting --------------------------------------------------------
-
-log_tail() {
-  [ -s "$SERVE_LOG" ] || return 0
-  printf '\nLast %s lines of %s:\n' "${LOG_TAIL_LINES:-30}" "$SERVE_LOG" >&2
-  tail -n "${LOG_TAIL_LINES:-30}" "$SERVE_LOG" >&2
-}
-
 # --- signals ------------------------------------------------------------------
 
 SERVE_PID=""
@@ -114,9 +108,9 @@ stop_server() {
   SERVE_PID=""
 
   # Signal the whole process group, not just the process we launched: vLLM forks
-  # EngineCore workers that hold VRAM and keep the log pipe open, and they
-  # outlive a TERM aimed at the parent alone. `set -m` at launch is what put
-  # them in a group of their own; fall back to the bare pid if that failed.
+  # EngineCore workers that hold VRAM and outlive a TERM aimed at the parent
+  # alone. `set -m` at launch is what put them in a group of their own; fall
+  # back to the bare pid if that failed.
   kill -TERM -"$pid" 2>/dev/null || kill -TERM "$pid" 2>/dev/null || true
 
   # Give the engine time to release GPU memory before escalating; a half torn
@@ -129,7 +123,8 @@ stop_server() {
   wait "$pid" 2>/dev/null || true
 
   # Anything that escaped that group -- a re-parented worker, a stale run --
-  # is what cleanup_vllm.sh is for.
+  # is what cleanup_vllm.sh is for. It is host-wide: this node is single-tenant,
+  # so clearing every vLLM on the way out is intended.
   "$SCRIPT_DIR/cleanup_vllm.sh" >/dev/null 2>&1 || true
 }
 
@@ -144,14 +139,12 @@ trap stop_server EXIT
 
 # --- launch -------------------------------------------------------------------
 
-: >"$SERVE_LOG" || { echo "cannot write $SERVE_LOG" >&2; exit 1; }
-echo "Server log: $SERVE_LOG"
-
-# Process substitution rather than a pipeline, so $! is vLLM itself and not tee.
-# `set -m` gives the job its own process group, which is what makes stop_server
-# able to reach the workers vLLM forks; the group outlives the option itself.
+# vLLM inherits this script's stdout and stderr, so its output is simply our
+# output: no log file to own, no tee to orphan, nothing to clean up. Redirect
+# the whole script if you want the run kept. `set -m` gives the job its own
+# process group, which is what lets stop_server reach the workers vLLM forks.
 set -m
-"${CMD[@]}" > >(tee "$SERVE_LOG") 2>&1 &
+"${CMD[@]}" &
 SERVE_PID=$!
 set +m
 
@@ -165,10 +158,11 @@ esac
 HEALTH_URL="http://$health_host:$PORT/health"
 
 if ! command -v curl >/dev/null 2>&1; then
-  echo "curl not found -- skipping the readiness check, watch $SERVE_LOG instead"
+  echo "curl not found -- skipping the readiness check, watch the output instead"
 else
   # Loading ~893 GB of shards and compiling takes many minutes; the first health
-  # check will fail long before the server is actually up.
+  # check will fail long before the server is actually up. vLLM's own log is the
+  # progress indicator, so this prints once and then keeps quiet.
   printf 'Waiting up to %ss for %s (weights load + compile is ~10-20 min)\n' \
     "$HEALTH_TIMEOUT" "$HEALTH_URL"
   wait_start=$SECONDS
@@ -179,14 +173,12 @@ else
       status=0
       wait "$SERVE_PID" 2>/dev/null || status=$?
       SERVE_PID=""
-      echo "Server exited (status $status) before becoming healthy." >&2
-      log_tail
+      echo "Server exited (status $status) before becoming healthy -- see above." >&2
       exit "$((status == 0 ? 1 : status))"
     fi
     if [ "$SECONDS" -ge "$deadline" ]; then
       echo "Timed out after ${HEALTH_TIMEOUT}s waiting for $HEALTH_URL." >&2
       echo "Still loading? Raise the budget: serve_model.sh HEALTH_TIMEOUT=3600" >&2
-      log_tail
       exit 1
     fi
     sleep 5
@@ -206,6 +198,5 @@ SERVE_PID=""
 
 if [ "$status" -ne 0 ]; then
   echo "Server exited with status $status." >&2
-  log_tail
 fi
 exit "$status"

@@ -10,5 +10,6 @@ venv/
 # Model weights: repo-local HF hub cache (many GB).
 .hf-cache/
 
-# Server log from serve_model.sh.
+# serve_model.sh writes to stdout; this is where you land if you redirect it:
+#   ./serve_model.sh > serve.log 2>&1
 serve.log

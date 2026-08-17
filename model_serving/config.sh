@@ -80,8 +80,7 @@ load_config() {
   esac
   : "${VLLM_BIN:=$VENV_BIN/vllm}"
   : "${PYTHON_BIN:=$VENV_BIN/python}"
-  : "${SERVE_LOG:=$REPO_ROOT/serve.log}"
-  export VLLM_BIN PYTHON_BIN SERVE_LOG
+  export VLLM_BIN PYTHON_BIN
 }
 
 # Abort with an actionable message when a required setting has no value.
